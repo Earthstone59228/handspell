@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://handspell.dev/schemas/content-pack-v1.json",
+  "title": "Handspell content pack",
+  "description": "One versioned lesson pack bundled in android/app/src/main/assets/content/packs/. Packs are read-only, shipped in the APK, and never fetched over the network.",
+  "type": "object",
+  "required": ["schemaVersion", "packId", "packVersion", "kind", "tier", "title", "summary", "releasedOn", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "packId": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "packVersion": { "type": "integer", "minimum": 1 },
+    "kind": { "enum": ["drill", "story", "speed"] },
+    "tier": { "enum": ["free", "pro"] },
+    "title": { "type": "string", "minLength": 1, "maxLength": 60 },
+    "summary": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "releasedOn": { "type": "string", "format": "date" },
+    "items": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/item" } }
+  },
+  "allOf": [
+    { "if": { "properties": { "kind": { "const": "drill" } } },
+      "then": { "properties": { "items": { "items": { "$ref": "#/$defs/drill" } } } } },
+    { "if": { "properties": { "kind": { "const": "story" } } },
+      "then": { "properties": { "items": { "items": { "$ref": "#/$defs/storyStep" } } } } },
+    { "if": { "properties": { "kind": { "const": "speed" } } },
+      "then": { "properties": { "items": { "items": { "$ref": "#/$defs/speedRound" } } } } }
+  ],
+  "$defs": {
+    "letter": {
+      "description": "A static ASL alphabet letter. J and Z are excluded because they require motion.",
+      "type": "string",
+      "pattern": "^[A-IK-Y]$"
+    },
+    "item": { "oneOf": [
+      { "$ref": "#/$defs/drill" },
+      { "$ref": "#/$defs/storyStep" },
+      { "$ref": "#/$defs/speedRound" }
+    ] },
+    "drill": {
+      "type": "object",
+      "required": ["id", "type", "letter", "prompt", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "type": { "const": "drill" },
+        "letter": { "$ref": "#/$defs/letter" },
+        "prompt": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "description": {
+          "description": "Original handshape wording. Must not be copied or closely paraphrased from Lifeprint/ASL University, whose terms forbid app use; see docs/research/data-and-asl-reference.md section 2.",
+          "type": "string", "minLength": 1, "maxLength": 220
+        },
+        "hintId": {
+          "description": "Key into strings.xml for the adjust-state nudge. Null means the generic hint is used.",
+          "type": ["string", "null"], "pattern": "^hint_[a-z0-9_]+$"
+        }
+      }
+    },
+    "storyStep": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "type": { "const": "storyStep" },
+        "narration": { "type": ["string", "null"], "maxLength": 300 },
+        "spellWord": { "type": ["string", "null"], "pattern": "^[A-Za-z]{1,12}$" },
+        "letters": { "type": "array", "items": { "$ref": "#/$defs/letter" }, "maxItems": 12 }
+      },
+      "anyOf": [
+        { "required": ["narration"], "properties": { "narration": { "type": "string" } } },
+        { "required": ["spellWord"], "properties": { "spellWord": { "type": "string" } } }
+      ]
+    },
+    "speedRound": {
+      "type": "object",
+      "required": ["id", "type", "title", "durationSeconds", "letters", "targetCorrect"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+        "type": { "const": "speedRound" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "durationSeconds": { "type": "integer", "minimum": 15, "maximum": 300 },
+        "letters": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/letter" } },
+        "targetCorrect": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

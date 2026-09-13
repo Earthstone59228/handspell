@@ -1,0 +1,204 @@
+{
+  "schemaVersion": 1,
+  "packId": "drills-core",
+  "packVersion": 1,
+  "kind": "drill",
+  "tier": "free",
+  "title": "The alphabet, one letter at a time",
+  "summary": "All 24 static letters, each with a plain-language handshape description and a nudge for its most common mix-up.",
+  "releasedOn": "2026-09-13",
+  "items": [
+    {
+      "id": "drill-a",
+      "type": "drill",
+      "letter": "A",
+      "prompt": "Show the letter A",
+      "description": "Make a fist and rest your thumb flat against the side of your curled fingers.",
+      "hintId": "hint_thumb_to_side"
+    },
+    {
+      "id": "drill-b",
+      "type": "drill",
+      "letter": "B",
+      "prompt": "Show the letter B",
+      "description": "Hold your hand flat with your fingers together and pointing up, thumb folded across your palm.",
+      "hintId": "hint_fingers_together"
+    },
+    {
+      "id": "drill-c",
+      "type": "drill",
+      "letter": "C",
+      "prompt": "Show the letter C",
+      "description": "Curve your hand into a C shape, letting your thumb and fingers both bend to match the curve.",
+      "hintId": "hint_generic"
+    },
+    {
+      "id": "drill-d",
+      "type": "drill",
+      "letter": "D",
+      "prompt": "Show the letter D",
+      "description": "Point your index finger straight up, touch your thumb to your middle finger, and curl the rest in.",
+      "hintId": "hint_index_up_curled"
+    },
+    {
+      "id": "drill-e",
+      "type": "drill",
+      "letter": "E",
+      "prompt": "Show the letter E",
+      "description": "Curl your fingertips down to meet your thumb, making a tight claw-like shape.",
+      "hintId": "hint_generic"
+    },
+    {
+      "id": "drill-f",
+      "type": "drill",
+      "letter": "F",
+      "prompt": "Show the letter F",
+      "description": "Touch your thumb to your index fingertip and hold your other three fingers straight and spread.",
+      "hintId": "hint_three_straight"
+    },
+    {
+      "id": "drill-g",
+      "type": "drill",
+      "letter": "G",
+      "prompt": "Show the letter G",
+      "description": "Point your index finger and thumb straight out, side by side, with your hand turned sideways.",
+      "hintId": "hint_point_forward"
+    },
+    {
+      "id": "drill-h",
+      "type": "drill",
+      "letter": "H",
+      "prompt": "Show the letter H",
+      "description": "Hold your index and middle fingers straight out together, turned sideways.",
+      "hintId": "hint_fingers_together"
+    },
+    {
+      "id": "drill-i",
+      "type": "drill",
+      "letter": "I",
+      "prompt": "Show the letter I",
+      "description": "Make a fist and let only your pinky finger point straight up.",
+      "hintId": "hint_generic"
+    },
+    {
+      "id": "drill-k",
+      "type": "drill",
+      "letter": "K",
+      "prompt": "Show the letter K",
+      "description": "Form a V with your index and middle fingers and press your thumb between them at the base.",
+      "hintId": "hint_point_forward"
+    },
+    {
+      "id": "drill-l",
+      "type": "drill",
+      "letter": "L",
+      "prompt": "Show the letter L",
+      "description": "Point your index finger up and your thumb out to the side, making an L shape.",
+      "hintId": "hint_generic"
+    },
+    {
+      "id": "drill-m",
+      "type": "drill",
+      "letter": "M",
+      "prompt": "Show the letter M",
+      "description": "Tuck your thumb under your index, middle, and ring fingers, with your pinky resting on top.",
+      "hintId": "hint_thumb_under_three"
+    },
+    {
+      "id": "drill-n",
+      "type": "drill",
+      "letter": "N",
+      "prompt": "Show the letter N",
+      "description": "Tuck your thumb under your index and middle fingers, with your ring and pinky curled on top.",
+      "hintId": "hint_thumb_under_two"
+    },
+    {
+      "id": "drill-o",
+      "type": "drill",
+      "letter": "O",
+      "prompt": "Show the letter O",
+      "description": "Curve your fingers and thumb together into a rounded O shape.",
+      "hintId": "hint_generic"
+    },
+    {
+      "id": "drill-p",
+      "type": "drill",
+      "letter": "P",
+      "prompt": "Show the letter P",
+      "description": "Form the same shape as K, but turn your hand to point down toward the floor.",
+      "hintId": "hint_point_down"
+    },
+    {
+      "id": "drill-q",
+      "type": "drill",
+      "letter": "Q",
+      "prompt": "Show the letter Q",
+      "description": "Form the same shape as G, but turn your hand to point down toward the floor.",
+      "hintId": "hint_point_down"
+    },
+    {
+      "id": "drill-r",
+      "type": "drill",
+      "letter": "R",
+      "prompt": "Show the letter R",
+      "description": "Cross your index finger over your middle finger, resting your thumb against your other knuckles.",
+      "hintId": "hint_cross_fingers"
+    },
+    {
+      "id": "drill-s",
+      "type": "drill",
+      "letter": "S",
+      "prompt": "Show the letter S",
+      "description": "Make a fist and cross your thumb flat over the front of your curled fingers.",
+      "hintId": "hint_thumb_across_front"
+    },
+    {
+      "id": "drill-t",
+      "type": "drill",
+      "letter": "T",
+      "prompt": "Show the letter T",
+      "description": "Make a fist and tuck your thumb between your index and middle fingers so it pokes out slightly.",
+      "hintId": "hint_thumb_between_index_middle"
+    },
+    {
+      "id": "drill-u",
+      "type": "drill",
+      "letter": "U",
+      "prompt": "Show the letter U",
+      "description": "Hold your index and middle fingers straight up together, touching, palm facing out.",
+      "hintId": "hint_fingers_together"
+    },
+    {
+      "id": "drill-v",
+      "type": "drill",
+      "letter": "V",
+      "prompt": "Show the letter V",
+      "description": "Hold your index and middle fingers straight up and spread apart, palm facing out.",
+      "hintId": "hint_spread_fingers"
+    },
+    {
+      "id": "drill-w",
+      "type": "drill",
+      "letter": "W",
+      "prompt": "Show the letter W",
+      "description": "Hold your index, middle, and ring fingers up and spread apart, with your thumb pinning your pinky down.",
+      "hintId": "hint_spread_fingers"
+    },
+    {
+      "id": "drill-x",
+      "type": "drill",
+      "letter": "X",
+      "prompt": "Show the letter X",
+      "description": "Curl your index finger into a hook and rest your thumb against your curled middle finger.",
+      "hintId": "hint_hook_index"
+    },
+    {
+      "id": "drill-y",
+      "type": "drill",
+      "letter": "Y",
+      "prompt": "Show the letter Y",
+      "description": "Stick your thumb and pinky out to the sides and curl your other three fingers into your palm.",
+      "hintId": "hint_generic"
+    }
+  ]
+}

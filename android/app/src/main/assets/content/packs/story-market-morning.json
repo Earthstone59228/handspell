@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "packId": "story-market-morning",
+  "packVersion": 1,
+  "kind": "story",
+  "tier": "pro",
+  "title": "Market morning",
+  "summary": "Wander a morning market and spell five things you find along the way.",
+  "releasedOn": "2026-09-13",
+  "items": [
+    {
+      "id": "market-narration-1",
+      "type": "storyStep",
+      "narration": "You walk through the market as the stalls open for the morning."
+    },
+    {
+      "id": "market-spell-bread",
+      "type": "storyStep",
+      "spellWord": "BREAD",
+      "letters": ["B", "R", "E", "A", "D"]
+    },
+    {
+      "id": "market-narration-2",
+      "type": "storyStep",
+      "narration": "The bakery stand smells warm, and a fresh loaf sits on the counter."
+    },
+    {
+      "id": "market-spell-loaf",
+      "type": "storyStep",
+      "spellWord": "LOAF",
+      "letters": ["L", "O", "A", "F"]
+    },
+    {
+      "id": "market-narration-3",
+      "type": "storyStep",
+      "narration": "A friendly vendor waves you over to see the vegetables."
+    },
+    {
+      "id": "market-spell-salad",
+      "type": "storyStep",
+      "spellWord": "SALAD",
+      "letters": ["S", "A", "L", "A", "D"]
+    },
+    {
+      "id": "market-narration-4",
+      "type": "storyStep",
+      "narration": "A gentle crowd moves between the tables, everyone taking their time."
+    },
+    {
+      "id": "market-spell-crowd",
+      "type": "storyStep",
+      "spellWord": "CROWD",
+      "letters": ["C", "R", "O", "W", "D"]
+    },
+    {
+      "id": "market-narration-5",
+      "type": "storyStep",
+      "narration": "You watch the vendor weigh a bag of peaches before you pay."
+    },
+    {
+      "id": "market-spell-scale",
+      "type": "storyStep",
+      "spellWord": "SCALE",
+      "letters": ["S", "C", "A", "L", "E"]
+    }
+  ]
+}

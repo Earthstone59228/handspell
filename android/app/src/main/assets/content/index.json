@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "packs": [
+    {
+      "packId": "drills-core",
+      "path": "content/packs/drills-core.json",
+      "tier": "free",
+      "kind": "drill"
+    },
+    {
+      "packId": "story-market-morning",
+      "path": "content/packs/story-market-morning.json",
+      "tier": "pro",
+      "kind": "story"
+    },
+    {
+      "packId": "story-river-walk",
+      "path": "content/packs/story-river-walk.json",
+      "tier": "pro",
+      "kind": "story"
+    },
+    {
+      "packId": "story-bedtime-routine",
+      "path": "content/packs/story-bedtime-routine.json",
+      "tier": "pro",
+      "kind": "story"
+    },
+    {
+      "packId": "speed-core",
+      "path": "content/packs/speed-core.json",
+      "tier": "pro",
+      "kind": "speed"
+    }
+  ]
+}

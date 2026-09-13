@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "packId": "story-river-walk",
+  "packVersion": 1,
+  "kind": "story",
+  "tier": "pro",
+  "title": "River walk",
+  "summary": "Follow a quiet path along the river and spell five things you notice.",
+  "releasedOn": "2026-09-13",
+  "items": [
+    {
+      "id": "river-narration-1",
+      "type": "storyStep",
+      "narration": "You follow a path along the river as morning light spreads over the water."
+    },
+    {
+      "id": "river-spell-river",
+      "type": "storyStep",
+      "spellWord": "RIVER",
+      "letters": ["R", "I", "V", "E", "R"]
+    },
+    {
+      "id": "river-narration-2",
+      "type": "storyStep",
+      "narration": "A cool breeze carries a single leaf past your feet."
+    },
+    {
+      "id": "river-spell-leaf",
+      "type": "storyStep",
+      "spellWord": "LEAF",
+      "letters": ["L", "E", "A", "F"]
+    },
+    {
+      "id": "river-narration-3",
+      "type": "storyStep",
+      "narration": "A small bird lands nearby, watching you with its head tilted."
+    },
+    {
+      "id": "river-spell-bird",
+      "type": "storyStep",
+      "spellWord": "BIRD",
+      "letters": ["B", "I", "R", "D"]
+    },
+    {
+      "id": "river-narration-4",
+      "type": "storyStep",
+      "narration": "Ahead, an old wooden bridge crosses to the other side."
+    },
+    {
+      "id": "river-spell-bridge",
+      "type": "storyStep",
+      "spellWord": "BRIDGE",
+      "letters": ["B", "R", "I", "D", "G", "E"]
+    },
+    {
+      "id": "river-narration-5",
+      "type": "storyStep",
+      "narration": "You follow the road back home as the sky turns pink."
+    },
+    {
+      "id": "river-spell-road",
+      "type": "storyStep",
+      "spellWord": "ROAD",
+      "letters": ["R", "O", "A", "D"]
+    }
+  ]
+}

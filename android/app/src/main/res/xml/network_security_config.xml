@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Documents, rather than enforces on its own, that api.revenuecat.com is the only host this app
+  contacts (docs/ARCHITECTURE.md §10). This is a domain allowlist and a cleartext ban, not a
+  firewall: it stops accidental plaintext HTTP and stops the app trusting arbitrary domains over
+  cleartext, but does not itself prove no other host is contacted — that is verified separately by
+  capturing traffic during a full session (docs/QUALITY.md §8).
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">api.revenuecat.com</domain>
+    </domain-config>
+</network-security-config>

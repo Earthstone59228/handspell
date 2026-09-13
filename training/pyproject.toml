@@ -1,0 +1,22 @@
+[project]
+name = "shipaton-training"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "mediapipe>=0.10,<2",
+    "numpy>=2.5,<3",
+    "scikit-learn>=1.9,<2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<10",
+]
+
+[project.scripts]
+shipaton-training = "shipaton_training:main"
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"

@@ -1,0 +1,9 @@
+# Copy this file to android/local.properties (gitignored) and fill in real values for your machine.
+
+# Path to your Android SDK install.
+sdk.dir=/home/YOUR_USER/Android/Sdk
+
+# RevenueCat Test Store public API key (Dashboard -> Apps and providers -> Test Store).
+# Safe to ship in a compiled app (it is a public key), but kept out of git for repo hygiene.
+# Leave blank to build without RevenueCat configured; BuildConfig.REVENUECAT_API_KEY defaults to "".
+revenuecat.apiKey=

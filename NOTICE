@@ -1,0 +1,29 @@
+Handspell — third-party notices
+
+This repository is MIT-licensed (see LICENSE). It redistributes or adapts the following
+Apache License 2.0 components, whose notices are preserved here per docs/QUALITY.md §1:
+
+1. MediaPipe Hand Landmarker model
+   hand_landmarker.task model (c) Google LLC, licensed under the Apache License 2.0
+   (https://github.com/google-ai-edge/mediapipe/blob/master/LICENSE), obtained from
+   https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task
+   Full license text ships alongside the model at
+   android/app/src/main/assets/models/LICENSE.
+
+2. MediaPipe Tasks (com.google.mediapipe:tasks-vision)
+   Copyright Google LLC, licensed under the Apache License 2.0.
+   https://github.com/google-ai-edge/mediapipe
+
+3. AndroidX libraries (androidx.core, androidx.activity, androidx.lifecycle,
+   androidx.navigation, androidx.camera, androidx.datastore, androidx.compose, ...)
+   Copyright The Android Open Source Project, licensed under the Apache License 2.0.
+   https://developer.android.com/jetpack/androidx
+
+4. Material Symbols
+   Copyright Google LLC, licensed under the Apache License 2.0.
+   https://github.com/google/material-design-icons
+
+RevenueCat SDK (com.revenuecat.purchases:purchases) is licensed under the MIT License.
+https://github.com/RevenueCat/purchases-android
+
+Apache License 2.0 full text: https://www.apache.org/licenses/LICENSE-2.0

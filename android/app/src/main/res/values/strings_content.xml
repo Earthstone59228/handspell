@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adjust-state hint strings for content packs (docs/DESIGN.md §3, §6).
+  Each hint names one geometric cue from docs/research/data-and-asl-reference.md §3.
+  Keys are referenced by packs/*.json via "hintId"; every hintId used anywhere
+  must have a matching entry here (enforced by training/scripts/validate_content.py).
+-->
+<resources>
+    <string name="hint_thumb_between_index_middle">Tuck your thumb between your index and middle fingers</string>
+    <string name="hint_thumb_across_front">Cross your thumb flat across the front of your fist</string>
+    <string name="hint_thumb_to_side">Rest your thumb flat against the side of your fist</string>
+    <string name="hint_thumb_under_three">Tuck your thumb under three fingers, not two</string>
+    <string name="hint_thumb_under_two">Tuck your thumb under two fingers, not three</string>
+    <string name="hint_spread_fingers">Spread your fingers apart instead of holding them together</string>
+    <string name="hint_fingers_together">Hold your fingers together instead of spreading them</string>
+    <string name="hint_cross_fingers">Cross your index finger over your middle finger</string>
+    <string name="hint_point_down">Turn your hand so it points down, not forward</string>
+    <string name="hint_point_forward">Turn your hand so it points forward, not down</string>
+    <string name="hint_index_up_curled">Keep only your index finger up and curl the rest in</string>
+    <string name="hint_three_straight">Keep three fingers straight up, not just one</string>
+    <string name="hint_hook_index">Bend your index finger into a hook shape</string>
+    <string name="hint_generic">Check the shape against the description and try again</string>
+</resources>

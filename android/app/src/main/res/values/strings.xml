@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Handspell</string>
+    <string name="home_description">Practise ASL fingerspelling with live feedback from your front camera.</string>
+</resources>

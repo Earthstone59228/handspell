@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "packId": "speed-core",
+  "packVersion": 1,
+  "kind": "speed",
+  "tier": "pro",
+  "title": "Speed rounds",
+  "summary": "Three timed rounds, from visually distinct letters up to the trickiest look-alikes.",
+  "releasedOn": "2026-09-13",
+  "items": [
+    {
+      "id": "round-warm-up",
+      "type": "speedRound",
+      "title": "Warm-up",
+      "durationSeconds": 30,
+      "letters": ["B", "C", "L", "O", "Y", "W", "I", "V"],
+      "targetCorrect": 10
+    },
+    {
+      "id": "round-all-letters",
+      "type": "speedRound",
+      "title": "All letters",
+      "durationSeconds": 60,
+      "letters": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y"],
+      "targetCorrect": 15
+    },
+    {
+      "id": "round-look-alikes",
+      "type": "speedRound",
+      "title": "Look-alikes",
+      "durationSeconds": 60,
+      "letters": ["A", "S", "T", "M", "N", "E", "K", "P", "G", "Q", "H", "U", "V", "R", "D", "F"],
+      "targetCorrect": 10
+    }
+  ]
+}

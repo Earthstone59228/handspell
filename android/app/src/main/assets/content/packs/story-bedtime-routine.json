@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "packId": "story-bedtime-routine",
+  "packVersion": 1,
+  "kind": "story",
+  "tier": "pro",
+  "title": "Bedtime routine",
+  "summary": "Wind down for the night and spell five steps of a quiet bedtime routine.",
+  "releasedOn": "2026-09-13",
+  "items": [
+    {
+      "id": "bedtime-narration-1",
+      "type": "storyStep",
+      "narration": "It has been a long day, and the house grows quiet."
+    },
+    {
+      "id": "bedtime-spell-brush",
+      "type": "storyStep",
+      "spellWord": "BRUSH",
+      "letters": ["B", "R", "U", "S", "H"]
+    },
+    {
+      "id": "bedtime-narration-2",
+      "type": "storyStep",
+      "narration": "You pull on a soft robe before heading toward your room."
+    },
+    {
+      "id": "bedtime-spell-robe",
+      "type": "storyStep",
+      "spellWord": "ROBE",
+      "letters": ["R", "O", "B", "E"]
+    },
+    {
+      "id": "bedtime-narration-3",
+      "type": "storyStep",
+      "narration": "The hall is dim, lit only by a small lamp near the door."
+    },
+    {
+      "id": "bedtime-spell-hall",
+      "type": "storyStep",
+      "spellWord": "HALL",
+      "letters": ["H", "A", "L", "L"]
+    },
+    {
+      "id": "bedtime-narration-4",
+      "type": "storyStep",
+      "narration": "You close the door gently behind you."
+    },
+    {
+      "id": "bedtime-spell-door",
+      "type": "storyStep",
+      "spellWord": "DOOR",
+      "letters": ["D", "O", "O", "R"]
+    },
+    {
+      "id": "bedtime-narration-5",
+      "type": "storyStep",
+      "narration": "At last, you climb into bed and pull up the blanket."
+    },
+    {
+      "id": "bedtime-spell-bed",
+      "type": "storyStep",
+      "spellWord": "BED",
+      "letters": ["B", "E", "D"]
+    }
+  ]
+}

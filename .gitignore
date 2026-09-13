@@ -1,0 +1,32 @@
+# --- Android Studio / Gradle ---
+.gradle/
+build/
+*.iml
+.idea/
+captures/
+.cxx/
+local.properties
+android/local.properties
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# --- Signing / secrets ---
+*.keystore
+*.jks
+.env
+.env.*
+
+# --- Python / uv ---
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- OS cruft ---
+.DS_Store
