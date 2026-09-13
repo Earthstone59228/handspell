@@ -2,4 +2,15 @@
 <resources>
     <string name="app_name">Handspell</string>
     <string name="home_description">Practise ASL fingerspelling with live feedback from your front camera.</string>
+
+    <!--
+      Detector failure messages. Keyed by ClassifierAssetException.messageId so the vision layer can
+      report a failure without holding a Context or rendering an exception string
+      (docs/QUALITY.md §3). The camera screen resolves the key and offers a retry.
+    -->
+    <string name="error_classifier_asset_missing">This build has no handshape data yet, so it cannot score your signs.</string>
+    <string name="error_classifier_asset_unreadable">Handspell could not read its handshape data on this device.</string>
+    <string name="error_classifier_asset_malformed">The handshape data in this build is damaged, so scoring is turned off.</string>
+    <string name="error_classifier_spec_mismatch">The handshape data in this build was made for a different version of the app.</string>
+    <string name="error_classifier_asset_corrupt">The handshape data failed its integrity check, so scoring is turned off.</string>
 </resources>
