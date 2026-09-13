@@ -13,4 +13,5 @@
     <string name="error_classifier_asset_malformed">The handshape data in this build is damaged, so scoring is turned off.</string>
     <string name="error_classifier_spec_mismatch">The handshape data in this build was made for a different version of the app.</string>
     <string name="error_classifier_asset_corrupt">The handshape data failed its integrity check, so scoring is turned off.</string>
+    <string name="error_landmarker_failed">Handspell could not start hand detection on this device.</string>
 </resources>
