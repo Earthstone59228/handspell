@@ -1,0 +1,4 @@
+# The local virtual environment and the matplotlib font cache the preview writes
+# at runtime. Neither is ever committed; setup.bat recreates the first.
+.venv/
+.mpl-cache/

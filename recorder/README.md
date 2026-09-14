@@ -21,8 +21,8 @@ run.bat                # record
 ```
 
 To measure how well the recorded set actually recognises hands, use the leave-one-out report in the
-desktop preview: `preview-windows\run.bat --eval` (`docs/WINDOWS_PREVIEW.md`). The classifier lives in
-one place on purpose, and this folder is not it.
+desktop preview: `..\preview-windows\run.bat --eval` (`docs/WINDOWS_PREVIEW.md`). The classifier
+lives in one place on purpose, and this folder is not it.
 
 ## Setup and run (any OS)
 

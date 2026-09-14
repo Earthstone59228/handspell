@@ -18,36 +18,32 @@ app's detector stack — the Android side still wires the real
 
 ## Layout
 
-The preview lives in a separate folder, `preview-windows/`, next to this repo's
-checkout (not inside it):
-
 ```
 preview-windows/
 ├── hand_preview.py           # the preview app
 ├── reference_classifier.py   # the app's stage-1 pipeline, ported to Python
 ├── run.bat                   # double-click launcher
 ├── setup.bat                 # one-time environment setup
-├── requirements.txt
-└── models/
-    ├── hand_landmarker.task
-    ├── LICENSE
-    └── ATTRIBUTION.txt
+└── requirements.txt
 ```
 
-The model is copied from
-`android/app/src/main/assets/models/hand_landmarker.task`, so the preview uses
-exactly the same model file as the app.
+The preview reads `hand_landmarker.task` straight out of
+`android/app/src/main/assets/models/`, so it uses exactly the same model file as
+the app and the repository does not carry a second 8 MB copy of it. `--model`
+still overrides the path, and a `models/` folder next to the script is still
+honoured as a fallback for pointing the preview at a different landmark model.
 
 ## Prerequisites
 
 - Windows 10/11 with a working webcam
 - [uv](https://docs.astral.sh/uv/) on `PATH`
-- No system Python required; `setup.bat` installs Python 3.12 locally into the
-  preview folder via uv
+- No system Python required; `setup.bat` has uv fetch Python 3.12 and build the
+  virtual environment
 
 ## Setup (once)
 
-Double-click `setup.bat`, or run the equivalent:
+Double-click `setup.bat`, or run the equivalent, which also works on Linux and
+macOS if you swap `.venv\Scripts\python.exe` for `.venv/bin/python`:
 
 ```powershell
 cd preview-windows
@@ -58,11 +54,13 @@ uv pip install --python .venv\Scripts\python.exe -r requirements.txt
 
 Notes:
 
-- The setup scripts clear `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY` for the
-  window, because the proxy environment variables on the original machine break
-  package downloads.
-- Everything (Python, cache, virtualenv) stays inside `preview-windows/`; the
-  system is not modified. Deleting the folder removes it all.
+- `setup.bat` clears `HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROXY` for the window,
+  because the proxy environment variables on the original machine break package
+  downloads.
+- The virtual environment lives in `preview-windows/.venv` and is gitignored;
+  `setup.bat` rebuilds it from `requirements.txt`. uv's package cache is shared
+  rather than local, so `recorder/`, which needs the same three packages, does
+  not download a second copy of them.
 
 ## Run
 
@@ -125,8 +123,7 @@ scoring the set against itself would only be measuring memory.
 --max-hands N      max hands to detect (default 2)
 --min-detection X  min detection confidence (default 0.5)
 --no-flip          do not mirror the preview
---repo PATH        Handspell checkout, for the normaliser (default: the sibling
-                   handspell/ folder)
+--repo PATH        Handspell checkout, for the normaliser (default: this repo)
 --references PATH  references-v1.csv to identify against (default: the repo's
                    assets copy)
 --no-identify      skip the reference set and draw landmarks only
@@ -148,8 +145,9 @@ handedness head being right, which is why mirroring stays on by default.
 ## Model and licensing
 
 `hand_landmarker.task` is the MediaPipe hand landmark model, Apache-2.0
-licensed. `models/LICENSE` and `models/ATTRIBUTION.txt` are copied alongside it
-to satisfy the attribution requirements. The URL used to obtain the model:
+licensed. `LICENSE` and `ATTRIBUTION.txt` sit next to it in
+`android/app/src/main/assets/models/` to satisfy the attribution requirements.
+The URL used to obtain the model:
 
 ```
 https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task

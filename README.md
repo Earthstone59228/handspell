@@ -46,6 +46,9 @@ entitlement gate just reports `Unavailable`.
 ```
 android/    Gradle project, single :app module (dev.handspell.app)
 docs/       Architecture, contracts, quality bar, and research notes this build follows
+preview-windows/
+            Desktop camera preview: skeleton overlay plus the app's stage-1 pipeline, so
+            recognition can be measured on a laptop (docs/WINDOWS_PREVIEW.md)
 recorder/   Desktop tool that records the stage-1 reference set; stands in for the debug-only
             capture screen that is not written yet (docs/RECORDER.md)
 training/   Python pipeline that records landmark data and trains the offline classifier

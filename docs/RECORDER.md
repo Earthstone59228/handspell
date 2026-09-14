@@ -92,7 +92,7 @@ version, vector dimension and thresholds it picked up, which is enough to tell a
 from a broken recording.
 
 Accuracy is **not** measured here. The classifier lives in exactly one place — the ported stage-1
-pipeline in the desktop preview — and `preview-windows\run.bat --eval` runs a leave-one-out report
+pipeline in the desktop preview — and `preview-windows/run.bat --eval` runs a leave-one-out report
 over whatever `references-v1.csv` holds (`docs/WINDOWS_PREVIEW.md`). Splitting the k-NN across two
 tools would be two implementations to keep in step, which is how the numbers stop meaning anything.
 
