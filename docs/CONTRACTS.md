@@ -62,8 +62,9 @@ screen owns the `Preview` and `ImageAnalysis` use cases and hands the analyzer t
 
 `FakeSignDetector(scope, stepMillis = 900)` implements the same contract with no camera, no model
 and no permission: it cycles NoHand → NotRecognized → Adjust(0.3) → Adjust(0.8) → Match on a timer
-and drops every frame it is given. UI and content work builds against it from day one; the swap is
-one line in `AppContainer`.
+and drops every frame it is given. UI and content work was built against it from day one; the swap
+to the real detector in `AppContainer` has since happened, and the fake now serves UI work and
+screenshot tests only.
 
 `DetectorStatus.Failed(messageId, cause)` carries a string-resource key, not a message — the UI never
 renders an exception.
@@ -159,11 +160,12 @@ says "can't check your subscription right now" rather than "upgrade".
 | Workstream | Implements | Consumes (already exists) |
 |---|---|---|
 | Vision | `HandNormalizer`, `LetterClassifier`, `FeedbackEngine`, `CameraSignDetector` | `core/model` |
-| UI + content | screens, ViewModels, `ContentRepository` impl, packs | `SignDetector` (via `FakeSignDetector`), `ProgressStore`, `EntitlementGate` |
+| UI + content | screens, ViewModels, `ContentRepository` impl, packs | `SignDetector` (via `CameraSignDetector`), `ProgressStore`, `EntitlementGate` |
 | Monetization | `EntitlementGate` impl, RevenueCat config, paywall host | `PaywallSource` |
 | Docs | README, privacy copy, NOTICE, CI | all of the above |
 
-Two swaps are scheduled: `FakeSignDetector` → `CameraSignDetector` once the pipeline runs, and
-`KnnLetterClassifier` → `MlpLetterClassifier` if stage 2 wins at the Sep 24 checkpoint. Both are one
-line in `AppContainer`. If a workstream needs a third swap point, it is a design smell — say so
-before adding it.
+Both swaps have landed in `AppContainer`: the real `CameraSignDetector` is wired (constructed in a
+`Failed` state while `assets/classifier/references-v1.csv` is absent, so nothing is scored against a
+missing classifier), and the stage-1 `KnnLetterClassifier` is used only when the stage-2
+`MlpLetterClassifier` weights cannot be loaded. If a workstream needs a third swap point, it is a
+design smell — say so before adding it.

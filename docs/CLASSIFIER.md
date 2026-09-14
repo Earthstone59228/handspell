@@ -93,9 +93,9 @@ gravity. Practising while lying down will degrade K/P and G/Q. Acceptable for a 
 `training/testdata/normalizer_golden.json`: an array of cases, each `{ handedness, world: [[x,y,z] ×
 21], expected: [66 floats] }`, covering at least one hand per confusable group, one left hand, one
 right hand, and two degenerate inputs whose `expected` is `null`. Floats are written with 9
-significant digits. Both `NormalizerGoldenTest.kt` and `tests/test_normalize.py` read this same file
-and assert **1e-6 absolute** agreement. The Gradle scaffold must add
-`sourceSets.getByName("test").resources.srcDir("../../training/testdata")` so the JVM test can read it.
+significant digits. Both `DefaultHandNormalizerTest.kt` and `tests/test_normalize.py` read this same
+file and assert **1e-6 absolute** agreement. `android/app/build.gradle.kts` points the test source
+set's resources at `../../training/testdata` so the JVM test can read it.
 
 ## 3. Stage 1 — k-nearest-neighbour over self-recorded exemplars
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The pre-Android-12 half of the policy in data_extraction_rules.xml: exclude every domain, so a
+  release running Android 11 or lower has nothing to back up even if allowBackup is ever flipped
+  back on.
+
+  At runtime today this file is inert, because android:allowBackup="false" disables Auto Backup
+  outright on these releases. It is declared anyway so the policy is stated in the format those
+  Android versions read, rather than living only in a boolean whose name does not mention device
+  transfer at all.
+
+  path="." means the whole domain; see
+  https://developer.android.com/identity/data/autobackup
+-->
+<full-backup-content>
+    <exclude domain="root" path="." />
+    <exclude domain="file" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="external" path="." />
+</full-backup-content>

@@ -18,7 +18,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-
 from handspell.golden import build_cases, golden_json_text
 from handspell.normalize import (
     ORIENTATION_DIM,

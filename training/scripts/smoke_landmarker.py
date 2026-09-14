@@ -22,8 +22,8 @@ for _k in list(os.environ):
     if _k.startswith(_SESSION_VAR_PREFIXES) or _k in _SESSION_VARS:
         os.environ.pop(_k, None)
 
-import numpy as np
 import mediapipe as mp
+import numpy as np
 from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.core.base_options import BaseOptions
 

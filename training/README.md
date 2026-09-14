@@ -11,6 +11,8 @@ vectors, and (later) exemplar/reference building and MLP training. See
 - `testdata/normalizer_golden.json` — the cross-language contract (see below).
 - `tests/test_normalize.py` — golden reproduction, analytic invariants, freshness check.
 - `models/`, `scripts/`, `src/` — MediaPipe model asset and unrelated project scaffolding.
+- `../recorder/` — the desktop tool that records `assets/classifier/references-v1.csv`, standing in
+  for the in-app capture screen that is not written yet (`docs/RECORDER.md`).
 
 ## Run the tests
 
@@ -38,7 +40,7 @@ unregenerated fixture fails the test suite rather than silently drifting.
 ## The golden file is a cross-language contract
 
 `testdata/normalizer_golden.json` is read by **both** this package's tests
-and the Kotlin `NormalizerGoldenTest.kt` on the Android side
+and the Kotlin `DefaultHandNormalizerTest.kt` on the Android side
 (`vision/normalize/DefaultHandNormalizer.kt`), which both assert 1e-6 absolute
 agreement against the same cases. Do not edit the JSON by hand or change its
 shape without updating both test suites — see `docs/CLASSIFIER.md` §2.
