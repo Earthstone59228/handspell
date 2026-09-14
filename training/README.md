@@ -11,6 +11,8 @@ vectors, and (later) exemplar/reference building and MLP training. See
 - `testdata/normalizer_golden.json` — the cross-language contract (see below).
 - `tests/test_normalize.py` — golden reproduction, analytic invariants, freshness check.
 - `models/`, `scripts/`, `src/` — MediaPipe model asset and unrelated project scaffolding.
+- `../recorder/` — the desktop tool that records `assets/classifier/references-v1.csv`, standing in
+  for the in-app capture screen that is not written yet (`docs/RECORDER.md`).
 
 ## Run the tests
 

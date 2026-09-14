@@ -1,8 +1,24 @@
 # Training data — provenance and consent
 
-All training data for the letter classifier is self-recorded by members of the Handspell team, using
-the app's own debug-only capture screen (see `docs/CLASSIFIER.md` §7). Nothing is scraped, licensed,
-or sourced from a third party.
+All training data for the letter classifier is self-recorded by members of the Handspell team.
+Nothing is scraped, licensed, or sourced from a third party.
+
+The intended capture path is the app's debug-only capture screen (`docs/CLASSIFIER.md` §7), which
+writes the full 141-column capture CSVs described below. **That screen is not written yet.** The
+reference set currently in the repository was recorded with the desktop tool in
+[`recorder/`](../recorder/README.md) (`docs/RECORDER.md`), which normalises through the same
+`handspell/normalize.py` and writes `assets/classifier/references-v1.csv` directly.
+
+Two consequences of that detour, stated because they are easy to forget:
+
+- **No signer attribution.** `references-v1.csv` is a fixed 67-column format that
+  `KnnLetterClassifier` parses strictly, so a `signer_id` cannot ride along inside it. Until the
+  capture screen lands, signer attribution for that file has to live outside it, and the
+  leave-one-signer-out protocol in `docs/CLASSIFIER.md` §8 cannot be run on it — which makes any
+  accuracy number measured from it a same-signer number, and therefore an optimistic one.
+- **No raw rows.** Image landmarks, timestamps and device metadata are never written, so the
+  xy-image-space ablation in `docs/CLASSIFIER.md` §8 cannot be evaluated from what the recorder
+  leaves behind; it needs the capture CSVs.
 
 ## What a capture row contains
 
