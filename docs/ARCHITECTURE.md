@@ -23,7 +23,7 @@ core/model/                  Letter, HandLandmarks, NormalizedHand, Classificati
                              SignFeedbackState. Pure Kotlin, no Android imports except none.
 core/time/                   Clock abstraction so the feedback engine is testable without a device.
 vision/                      HandNormalizer, LetterClassifier, FeedbackEngine, SignDetector
-                             contracts + FakeSignDetector.
+                             contracts, plus FakeSignDetector for UI work and screenshot tests.
 vision/camera/               CameraX binding, ImageProxy -> MPImage conversion.
 vision/landmarker/           MediaPipe HandLandmarker wrapper (LIVE_STREAM mode).
 vision/normalize/            The one Kotlin implementation of the normalisation spec.
@@ -107,8 +107,9 @@ only — no ViewModel reference below the screen-root composable.
 **Hand-written `AppContainer`, no Hilt.** The graph is roughly a dozen objects with no scoping
 beyond "singleton" and "per-screen"; Hilt would add KSP, a plugin, generated-code build time and a
 whole class of annotation errors to debug for no benefit at this size. ViewModels are created via a
-`ViewModelProvider.Factory` that reads from the container. Swapping `FakeSignDetector` for
-`CameraSignDetector` is one line in `AppContainer`.
+`ViewModelProvider.Factory` that reads from the container. The swap from `FakeSignDetector` to
+`CameraSignDetector` was that one line in `AppContainer`, and it has happened; the fake is kept for
+UI work and screenshot tests.
 
 ## 7. Storage
 

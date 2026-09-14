@@ -38,7 +38,7 @@ unregenerated fixture fails the test suite rather than silently drifting.
 ## The golden file is a cross-language contract
 
 `testdata/normalizer_golden.json` is read by **both** this package's tests
-and the Kotlin `NormalizerGoldenTest.kt` on the Android side
+and the Kotlin `DefaultHandNormalizerTest.kt` on the Android side
 (`vision/normalize/DefaultHandNormalizer.kt`), which both assert 1e-6 absolute
 agreement against the same cases. Do not edit the JSON by hand or change its
 shape without updating both test suites — see `docs/CLASSIFIER.md` §2.

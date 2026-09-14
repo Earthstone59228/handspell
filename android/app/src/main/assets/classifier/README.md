@@ -41,13 +41,15 @@ would be worse than none. The required container behaviour, in order:
    cannot find the file. It never returns an empty classifier — a classifier with no exemplars would
    report `supportedLetters = []`, and every drill, story and speed screen would render empty with no
    explanation.
-2. `AppContainer` catches that at construction and **keeps `FakeSignDetector` wired** as the
-   `SignDetector`. The fake is a scripted demo, not a classifier, so this is only acceptable while
-   the app is visibly pre-capture; it is not a release fallback.
-3. Once `CameraSignDetector` is wired, a missing reference set must surface as
-   `DetectorStatus.Failed(exception.messageId, exception)` — the camera screen then shows the real
-   message from `strings.xml` and a retry, per docs/QUALITY.md §3. It must not fall back to the fake
-   detector, and must not show a camera preview that silently scores nothing.
+2. `AppContainer` catches that at construction and wires the real `CameraSignDetector` anyway, with
+   `classifier = null` and `initialFailure` set. Its `status` is `Failed` from the moment it is
+   constructed, so the camera screen never binds the analyser and no frame is ever scored against a
+   missing classifier. `FakeSignDetector` is **not** wired here; it stays available for UI work and
+   screenshot tests only.
+3. A missing reference set surfaces as `DetectorStatus.Failed(exception.messageId, exception)` — the
+   camera screen shows the real message from `strings.xml` and a retry, per docs/QUALITY.md §3. It
+   must not fall back to the fake detector, and must not show a camera preview that silently scores
+   nothing.
 4. A corrupt, mis-versioned or unreadable file is a *different* failure (`Malformed`,
    `SpecVersionMismatch`, `ChecksumMismatch`, `Unreadable`) with its own message, because "we haven't
    recorded the data yet" and "the data in your install is damaged" are different things to tell
