@@ -52,7 +52,9 @@ class AppContainer(context: Context) {
             source = { assets.open(KnnLetterClassifier.ASSET_NAME) },
         )
         return try {
-            val weights = MlpWeights.parse { assets.open(MlpWeights.ASSET_NAME) }
+            // Named argument, not a trailing lambda: `parse`'s last parameter is `assetName:
+            // String`, so a trailing lambda would bind to that parameter and leave `source` unset.
+            val weights = MlpWeights.parse(source = { assets.open(MlpWeights.ASSET_NAME) })
             MlpLetterClassifier(weights)
         } catch (_: ClassifierAssetException) {
             // Stage 2 missing or unreadable: run stage 1. The visible "stage 1" notice is a UI

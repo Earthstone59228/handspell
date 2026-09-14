@@ -74,8 +74,8 @@ class HandLandmarkerHelper(
      * the strength of that contract, which the landmarker itself guarantees.
      */
     private fun toHandLandmarks(result: HandLandmarkerResult): List<HandLandmarks> {
-        val world = result.handWorldLandmarks()
-        val image = result.handLandmarks()
+        val world = result.worldLandmarks()
+        val image = result.landmarks()
         val handedness = result.handedness()
 
         return List(world.size) { i ->
