@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only manifest fragment, merged into the release-excluded debug build (docs/ARCHITECTURE.md
+  §2, docs/QUALITY.md §8 "debug surface excluded"). `CaptureActivity` lives in `src/debug`, so it
+  cannot ship in `assembleRelease` output no matter what this file declares.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name=".ui.capture.CaptureActivity"
+            android:exported="false"
+            android:label="@string/capture_activity_label"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Material.Light.NoActionBar" />
+    </application>
+</manifest>

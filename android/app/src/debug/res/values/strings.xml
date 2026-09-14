@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings for the debug-only capture screen (docs/CLASSIFIER.md §7). Never shipped in release. -->
+<resources>
+    <string name="capture_activity_label">Handspell capture</string>
+
+    <string name="capture_permission_explainer">This dev tool records hand landmarks to CSV files for training the letter classifier. It needs the camera to do that.</string>
+    <string name="capture_permission_rationale">Camera access is required to capture landmark frames. Grant it to continue.</string>
+    <string name="capture_permission_denied_permanently">Camera access was denied. Enable it for Handspell in system Settings, then relaunch this screen.</string>
+    <string name="capture_grant_camera">Grant camera access</string>
+
+    <string name="capture_select_signer">Choose a signer id to begin.</string>
+    <string name="capture_select_letter">Choose a letter to capture.</string>
+    <string name="capture_no_hand">No hand in view.</string>
+    <string name="capture_ready">Ready. %1$d frames captured for this letter.</string>
+    <string name="capture_recording">Recording — %1$d frames captured for this letter.</string>
+    <string name="capture_engine_error">Hand tracking hit a problem. Close and reopen this screen.</string>
+
+    <string name="capture_hold_to_record">Hold to record</string>
+    <string name="capture_hold_recording">Recording…</string>
+</resources>
