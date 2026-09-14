@@ -278,19 +278,29 @@ class Recorder:
         return message
 
 
-def open_camera(index: int):
+def open_camera(index: int, attempts: int = 5, delay: float = 0.4):
+    """Open the camera, retrying across the Windows backends.
+
+    The retry matters: an ASUS FHD webcam on the machine this was written on
+    rejects the first open on both DirectShow and Media Foundation, then succeeds
+    a moment later, which reads as a busy camera when it is nothing of the sort.
+    """
     import cv2
 
     backends = (cv2.CAP_DSHOW, cv2.CAP_ANY) if sys.platform == "win32" else (cv2.CAP_ANY,)
     last = None
-    for backend in backends:
-        cap = cv2.VideoCapture(index, backend)
-        if cap.isOpened():
-            return cap
-        cap.release()
-        last = f"index {index} (backend {backend})"
+    for attempt in range(attempts):
+        for backend in backends:
+            cap = cv2.VideoCapture(index, backend)
+            if cap.isOpened():
+                return cap
+            cap.release()
+            last = f"index {index} (backend {backend})"
+        if attempt + 1 < attempts:
+            time.sleep(delay)
     raise RuntimeError(
-        f"Could not open camera {last}. Try --camera 1, and close anything else using the webcam."
+        f"Could not open camera {last} after {attempts} attempts. Try --camera 1, "
+        "and close anything else using the webcam."
     )
 
 

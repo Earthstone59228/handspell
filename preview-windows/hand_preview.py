@@ -191,24 +191,36 @@ def find_model(explicit: Path | None) -> Path:
     )
 
 
-def open_camera(index: int) -> cv2.VideoCapture:
-    """Open the camera, trying the most reliable Windows backends first."""
+def open_camera(index: int, attempts: int = 5, delay: float = 0.4) -> cv2.VideoCapture:
+    """Open the camera, trying the most reliable Windows backends first, then
+    retrying.
+
+    The retry is not superstition. On the machine this was written on, an ASUS
+    FHD webcam rejects the first open on both DirectShow and Media Foundation
+    with "backend is generally available but can't be used to capture by index",
+    then succeeds a moment later -- which looks exactly like a camera some other
+    app is holding. Five attempts cost under two seconds in the worst case and
+    turn an intermittent "could not open camera" into a start that works.
+    """
     if sys.platform == "win32":
         backends = (cv2.CAP_DSHOW, cv2.CAP_ANY)
     else:
         backends = (cv2.CAP_ANY,)
 
     last_error = None
-    for backend in backends:
-        cap = cv2.VideoCapture(index, backend)
-        if cap.isOpened():
-            return cap
-        cap.release()
-        last_error = f"camera index {index} (backend {backend})"
+    for attempt in range(attempts):
+        for backend in backends:
+            cap = cv2.VideoCapture(index, backend)
+            if cap.isOpened():
+                return cap
+            cap.release()
+            last_error = f"camera index {index} (backend {backend})"
+        if attempt + 1 < attempts:
+            time.sleep(delay)
 
     raise RuntimeError(
-        f"Could not open {last_error}. Check the index with --camera and make "
-        "sure no other app is using the webcam."
+        f"Could not open {last_error} after {attempts} attempts. Check the index "
+        "with --camera and make sure no other app is using the webcam."
     )
 
 
