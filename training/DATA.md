@@ -46,6 +46,39 @@ No third-party dataset was used, per `docs/research/data-and-asl-reference.md` �
 - Other candidates surveyed in the same review (danrasband test set, lexset synthetic set) were
   rejected for the same reason: no clearly stated permissive license found on the dataset page.
 
+### Re-checked 2026-09-14
+
+The review above concluded that no permissively licensed, multi-signer, landmark-format ASL dataset
+existed. That was wrong, and the correction is recorded here rather than edited out of the notes:
+**FSBoard** ([Kaggle](https://www.kaggle.com/datasets/googleai/fsboard),
+[arXiv:2407.15806](https://arxiv.org/abs/2407.15806)) is CC BY 4.0, was recorded by 147 paid and
+consenting Deaf signers, and ships 30 Hz MediaPipe Holistic landmarks as one Parquet row per frame.
+
+It is still not used for training, and the reason is about the problem rather than the licence:
+
+- **Its labels are whole phrases, not per-frame letters.** The paper's baseline is a sequence model
+  (ByT5-Small over landmarks, 11.1% character error rate on a test set of unseen phrases *and*
+  signers). There is no per-frame letter ground truth in it, so using it would mean replacing the
+  stage-1 classifier's shape rather than adding data to it — out of scope for this build.
+- **Self-recorded data matches the domain that gets demoed**: one webcam, one mount, one distance,
+  a handful of teammates. It is also the set we can extend the same afternoon a confusable pair
+  turns out to be hard, which a 1.38 TB download is not.
+
+FSBoard is a candidate **evaluation** set — it is the only source of the cross-signer numbers this
+project would like but cannot produce from three people — and the legitimate starting point if a
+later version takes on continuous fingerspelling recognition. If it is used, CC BY 4.0 requires
+attribution, and the release additionally asks that signers' faces be blurred when publicising
+examples, that signers not be re-identified, and that the Deaf community be involved in applications
+built for them.
+
+One rule for anything else that turns up: **a licence tag on a re-upload is not a licence.**
+`granthgaurav/asl-mediapipe-converted-dataset` (MIT), `psewmuthu/how2sign-holistic` (MIT) and
+`nguyenchitinh/asl-citizen` (MIT) all claim permissive licences over features derived from datasets
+their uploaders do not own. Derivative sets also inherit share-alike terms: the CC BY-SA landmark
+sets on Kaggle would pull this repo's derived classifier and data under CC BY-SA, and the CC BY-NC
+fingerspelling sets would forbid the paid tier entirely. Full detail in
+`docs/research/data-and-asl-reference.md` §1.1 and §1.2.
+
 ## Lifeprint rule
 
 Lifeprint / ASL University's own permission page forbids using its material to build apps. No

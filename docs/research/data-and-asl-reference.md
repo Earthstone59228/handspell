@@ -1,6 +1,7 @@
 # Data & ASL Reference
 
-verified 2026-09-13
+verified 2026-09-13; section 1 re-checked 2026-09-14 (see 1.1 and 1.2 — the original verdict was
+wrong about landmark datasets existing, and that is recorded rather than quietly edited away)
 
 ## 1. Dataset licenses
 
@@ -10,9 +11,40 @@ verified 2026-09-13
 | [Kaggle ASL Alphabet Test (danrasband)](https://www.kaggle.com/datasets/danrasband/asl-alphabet-test) | Small supplementary test set, multiple contributors' photos | small (test-only) | Not clearly stated on page (same caveat as above) | No — same ambiguity |
 | [Kaggle Sign Language MNIST (datamunge)](https://www.kaggle.com/datasets/datamunge/sign-language-mnist) | Derived from the same style of single/few-signer image set | 34,627 images total across 24 classes (J, Z excluded) | **CC0** for the original content, MIT for packaging, confirmed via the [Hugging Face mirror README](https://huggingface.co/datasets/Voxel51/American-Sign-Language-MNIST) | **Not useful for this project regardless of license** — images are 28x28 grayscale pixel crops with no hand/finger geometry preserved at that resolution; MediaPipe landmark extraction requires a full-resolution hand image, which this dataset does not provide |
 | [Kaggle Synthetic ASL Alphabet (lexset)](https://www.kaggle.com/datasets/lexset/synthetic-asl-alphabet) | Synthetic (Lexset "Seahaven" render pipeline), varied poses/lighting per letter, no real signer diversity | Multiple synthetic renders per letter | License not displayed in fetched content — **unverified**, must be checked manually on Kaggle before use | Unknown until license confirmed; even if permissive, synthetic-render domain gap to real webcam hands is a separate risk |
-| MediaPipe-native landmark datasets (searched GitHub/Kaggle/HuggingFace) | — | — | No maintained, clearly-licensed, multi-signer dataset of raw MediaPipe landmark coordinates (not images) for the ASL alphabet was found. Repos such as [ts42a/asl-landmark-classifier](https://github.com/ts42a/asl-landmark-classifier) and [cortictechnology/hand_asl_recognition](https://github.com/cortictechnology/hand_asl_recognition) generate landmarks from their own small self-collected image sets rather than distributing a standalone permissively-licensed landmark corpus | Not applicable — nothing to adopt |
+| [**Google FSBoard**](https://www.kaggle.com/datasets/googleai/fsboard) ([paper](https://arxiv.org/abs/2407.15806)) | **147 paid, consenting Deaf signers**, Pixel 4A selfie cameras, varied environments; the paper evaluates on **unseen signers** | >3M characters / >250 h; 30 Hz MediaPipe Holistic landmarks, **one parquet row per frame**, plus the RGB video | **CC BY 4.0** — permissive, commercial use allowed, attribution required | **Landmarks yes, per-frame letter labels no.** Labels are whole phrases and the baseline is seq2seq (ByT5-Small, 11.1% CER), so it feeds a sequence model or an eval set, not a per-frame letter k-NN. Full release is 1.38 TB with video |
+| [ChicagoFSWild](https://www.kaggle.com/datasets/joebeachcapital/chicagofswild) | Multiple signers, in-the-wild footage | 13.6 GB, and it has the **frame-level letter labels** FSBoard lacks | "Other (specified in description)" — **not permissive** | No — nothing derived from it may ship in an MIT repo. Offline research/eval only |
+| Re-uploaded landmark derivatives on Kaggle | Usually one source signer or one small original set | 3 MB – 220 MB | Tagged MIT / Apache / CC BY-SA by the uploader, but derived from grassknoted or How2Sign — see 1.2 | No — a re-uploader cannot license data they do not own |
 
-**Verdict: self-record only.** No dataset found in this search combines (a) a clearly-stated permissive license (CC0/MIT/Apache/CC-BY), (b) multi-signer diversity, and (c) resolution/format suitable for MediaPipe landmark extraction. Sign Language MNIST is confirmed CC0 but is unusable due to 28x28 resolution. The larger, more useful image sets (grassknoted ASL Alphabet, danrasband test set, lexset synthetic) have licenses that could not be confirmed as permissive from the dataset pages during this review, and grassknoted's set is essentially single-signer, which would bias the classifier toward one person's handshape idiosyncrasies anyway. Do not bundle any of these into a public MIT repo without first opening the Kaggle page directly and confirming a named license in the "Usability"/license panel. Recommend proceeding with self-recorded teammate data only, and treating third-party datasets purely as an offline sanity-check/eval set (not shipped, not trained-on-and-redistributed) if their license is manually re-verified before use.
+**Verdict, revised 2026-09-14: still self-record for the shipped classifier — but no longer because nothing exists.** The 2026-09-13 review concluded that no permissively licensed, multi-signer, landmark-format ASL dataset existed. That conclusion was wrong: FSBoard is all three (1.1). Two other reasons still point at self-recorded data for *this* build, and they are the honest ones:
+
+1. **Shape mismatch.** FSBoard labels whole phrases. The shipped stage-1 classifier is a per-frame 24-way k-NN over a single handshape. Turning FSBoard into per-frame letter labels means solving the alignment problem, i.e. building a sequence model — a different project with a different risk profile, not a data swap.
+2. **Domain match.** The app sees one webcam, one mount position, one distance, a handful of teammates. A model fitted to 147 strangers' phone cameras is not obviously better at recognising the people who will actually demo it, and the self-recorded set is the one we can extend the same afternoon a confusable pair turns out to be hard.
+
+FSBoard is still worth pulling as an **evaluation** set, and it is the only legitimate starting point if the project later wants continuous fingerspelling recognition. What must not happen is bundling any re-tagged derivative (1.2) into this repo or into a distributed model.
+
+### 1.1 FSBoard — why this section exists
+
+[FSboard](https://www.kaggle.com/datasets/googleai/fsboard), described in [arXiv:2407.15806](https://arxiv.org/abs/2407.15806), is the largest fingerspelling recognition dataset to date by more than 10x: 147 paid and consenting Deaf signers recorded with Pixel 4A selfie cameras in a variety of environments, >3 million characters over >250 hours, released under **CC BY 4.0**. It ships 30 Hz MediaPipe Holistic landmarks as Parquet — one row per landmark frame — and now also the underlying RGB video. The paper's baseline fine-tunes those landmarks into ByT5-Small for 11.1% character error rate, and it reports that number on a test set of unique phrases *and unique signers*, which is the cross-signer evaluation this project wants but cannot produce from three teammates.
+
+The release asks three things of users, and they are not optional decoration: blur signers' faces when publicising examples, do not attempt to re-identify signers or use their likeness, and involve the Deaf community in the creation of applications targeted at them. Attribution is required by the licence; cite the dataset and the paper wherever it is used.
+
+Its limitation is the reason it does not replace self-recorded data here: it labels phrases, not frames. There is no per-frame letter ground truth to train the k-NN on.
+
+### 1.2 A licence tag on a re-upload is not a licence
+
+Searching Kaggle for "ASL landmark" returns roughly a dozen small datasets that look like exactly what this project needs. Most are not, and the failure mode is uniform: someone derived landmarks from a dataset they do not own and attached their own permissive licence to the result.
+
+| Dataset | Claimed licence | Why the claim does not hold |
+|---|---|---|
+| `granthgaurav/asl-mediapipe-converted-dataset` | MIT | Its own subtitle says "Preprocessed ASL Image Dataset of all 26 letters from A-Z using Mediapipe" — it is grassknoted-derived, and grassknoted's licence is the unverified one already rejected above |
+| `psewmuthu/how2sign-holistic` | MIT | "Mediapipe Holistic Landmark Features Extracted from the How2Sign ASL Dataset". How2Sign is not MIT, so the uploader had no standing to relicense it |
+| `nguyenchitinh/asl-citizen` | MIT | ASL-Citizen-Keypoints; ASL Citizen's own release terms are not MIT. Verify at the source before touching it |
+| `srisahithis/american-sign-language-a-z-dataset-hand-landmarks` | Apache 2.0 | Ships JPEG images plus landmarks, i.e. the same grassknoted lineage, relicensed by a third party |
+| `siruyyy/asl-hand-landmarks-24-letters-v1-a-y-no-jz` | CC BY-SA 4.0 | Same 24-letter scope as this project, which is tempting and irrelevant: a derivative of an unverified source, and share-alike would force the derived artefact under CC BY-SA |
+| `iamavinashkr090502/asl-hand-landmark-and-gesture-dataset`, `googleai/fleurs-asl` | CC BY-SA 4.0 | Share-alike. Acceptable inputs, but they would pull the derived classifier and data under CC BY-SA, which conflicts with this repo's MIT licence |
+| Several `ISL-Fingerspelling` sets | CC BY-NC 4.0 | Non-commercial. Incompatible with the paid tier this app ships |
+
+Two rules follow, and they apply to anything found later as well. **Check the licence at the original source, not on a mirror.** And **a share-alike or non-commercial licence on a training input is a product decision, not a footnote** — it propagates to what the app may do with the result.
 
 ## 2. Authoritative handshape reference
 
