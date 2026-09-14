@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Live hand-landmark detection from the front camera; never leaves the device. -->
     <uses-permission android:name="android.permission.CAMERA" />
@@ -15,21 +16,39 @@
         android:name="android.hardware.camera.front"
         android:required="false" />
 
+    <!-- Both backup formats are declared, one per Android era, and both exclude everything. The app
+         persists only progress the user can delete (docs/ARCHITECTURE.md §10, docs/PRIVACY.md), and
+         none of it belongs on a new phone.
+
+         allowBackup="false" already switches Auto Backup off, which is why the pre-12 rules file is
+         a no-op at runtime today. It is here so the policy is stated in the format the platform
+         actually reads on those releases, and so that flipping allowBackup cannot quietly start
+         backing any of this up. -->
     <application
         android:name=".HandspellApplication"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
+        <!-- Portrait is deliberate: this is a front-camera practice app and the framing in
+             docs/DESIGN.md §4 assumes a portrait selfie. Android 16 stops honouring orientation
+             restrictions on displays with smallest width >= 600dp — phones keep it, tablets,
+             unfolded foldables and desktop windowing do not — so there the attribute is simply
+             ignored and whichever camera screen gets built has to lay itself out for the space it
+             is given. Suppressed rather than removed so the intent stays visible and a second
+             locked activity has to justify itself too. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Material.Light.NoActionBar">
+            android:theme="@android:style/Theme.Material.Light.NoActionBar"
+            tools:ignore="LockedOrientationActivity,DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

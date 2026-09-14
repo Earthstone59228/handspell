@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Every domain is excluded from both channels, so nothing this app writes is restored onto a new
+  device or carried over by a device-to-device transfer.
+
+  android:allowBackup="false" already covers cloud backup on all releases. From Android 12 the two
+  channels are configured separately and allowBackup no longer speaks for device transfer, which is
+  the gap this file closes: the app's own privacy claim is that progress is a local file the user
+  can delete (docs/ARCHITECTURE.md section 10, docs/PRIVACY.md), and a copy riding along to the next
+  phone is not covered by that sentence.
+
+  path="." means the whole domain, per the syntax sample in
+  https://developer.android.com/identity/data/autobackup
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="root" path="." />
+        <exclude domain="file" path="." />
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="external" path="." />
+    </device-transfer>
+</data-extraction-rules>
