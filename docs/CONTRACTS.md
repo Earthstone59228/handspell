@@ -14,7 +14,7 @@ Root package: `dev.handspell.app`. All paths below are relative to
 | `Letter.kt` | `enum Letter` | 26 entries. `J` and `Z` carry `requiresMotion = true`; `Letter.staticLetters` is the 24-entry list whose **index is the classifier's class index**. |
 | `HandLandmarks.kt` | `Handedness`, `Landmark3`, `HandLandmarks` | 21 world points + 21 image points + handedness + score + monotonic `timestampMs` + frame size. Constructor validates both lists are 21 long. Index constants `WRIST`, `INDEX_MCP`, `MIDDLE_MCP`, `PINKY_MCP` live here. |
 | `NormalizedHand.kt` | `value class NormalizedHand(FloatArray)` | 66 floats: 60 shape + 6 orientation. `SPEC_VERSION`, `SHAPE_DIM`, `ORIENTATION_DIM`, `VECTOR_DIM`. |
-| `Classification.kt` | `LetterScore`, `Classification` | `ranked` is every known letter, descending. `nearestDistance` is stage-1 only (`NaN` from the MLP). `probabilityOf(letter)` returns 0 for unknown letters. |
+| `Classification.kt` | `LetterScore`, `Classification` | `ranked` is every known letter, descending. `nearestDistance` is the weighted stage-1 distance; `nearestShapeDistance` is its paired orientation-invariant component (both `NaN` from the MLP). Feedback uses shape distance only for direction-agnostic A–D. `probabilityOf(letter)` returns 0 for unknown letters. |
 | `SignFeedbackState.kt` | sealed `SignFeedbackState`, `FeedbackHint` | `NoHand`, `NotRecognized`, `Adjust`, `Match`. `Adjust` and `Match` have a non-null `target`; the other two allow null for the dev capture screen. `Adjust.holdProgress` is 0..1 and drives the progress ring. `FeedbackHint.id` keys a string resource. |
 
 Frame convention is baked into the KDoc on `Landmark3` and `Handedness`: all coordinates are in the

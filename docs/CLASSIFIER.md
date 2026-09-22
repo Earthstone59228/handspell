@@ -105,7 +105,9 @@ set's resources at `../../training/testdata` so the JVM test can read it.
   only if its Euclidean distance to every already-kept exemplar of that letter is ≥ 0.05; stop at 64.
   This keeps pose variety and throws away the near-duplicate frames a 30 fps capture produces.
 - **Inference**: Euclidean distance in the 66-d space with the orientation block weighted 0.5 (it is
-  noisier and less discriminative than shape, but must not be ignored — see K/P). Take `k = 5`
+  noisier and less discriminative than shape, but must not be ignored — see K/P). The classifier also
+  exposes the closest exemplar's shape-only distance; the feedback gate uses that only for A–D, whose
+  static handshapes are direction-agnostic. Take `k = 5`
   nearest exemplars, weight each by `1 / (d + 0.01)`, sum per letter, normalise to sum 1 → ranked
   probabilities. `Classification.nearestDistance` = distance to the single closest exemplar.
 - **Why k-NN, not a per-letter centroid**: letters like G and O have genuinely multi-modal exemplar

@@ -94,11 +94,16 @@ class DefaultFeedbackEngine(
         val runnerUpProbability = runnerUp?.let { smoothed[it.ordinal] } ?: 0f
         val distance = classification.nearestDistance
         val isStageOne = !distance.isNaN()
+        val acceptanceDistance = if (target in DIRECTION_AGNOSTIC_LETTERS) {
+            classification.nearestShapeDistance
+        } else {
+            distance
+        }
 
         val matchConditionsMet = known[target.ordinal] &&
             targetProbability >= thresholds.matchProbability &&
             targetProbability - runnerUpProbability >= thresholds.matchMargin &&
-            (!isStageOne || distance <= thresholds.matchDistance)
+            (!isStageOne || acceptanceDistance <= thresholds.matchDistance)
 
         matchedAtMs?.let { matchedAt ->
             if (now - matchedAt < thresholds.matchLatchMs) {
@@ -133,7 +138,7 @@ class DefaultFeedbackEngine(
         // Any failed condition breaks continuity; the next qualifying frame starts a fresh window.
         holdStartMs = null
 
-        if (isStageOne && distance > thresholds.rejectDistance) {
+        if (isStageOne && acceptanceDistance > thresholds.rejectDistance) {
             // Nothing in the reference set is close to this hand, so no letter gets named no matter
             // what the weighted neighbour vote says.
             return emit(SignFeedbackState.NotRecognized(target, targetProbability))
@@ -244,5 +249,6 @@ class DefaultFeedbackEngine(
     private companion object {
         /** "Target is in the top 3" from docs/CLASSIFIER.md §6. */
         const val TOP_N = 3
+        val DIRECTION_AGNOSTIC_LETTERS = setOf(Letter.A, Letter.B, Letter.C, Letter.D)
     }
 }

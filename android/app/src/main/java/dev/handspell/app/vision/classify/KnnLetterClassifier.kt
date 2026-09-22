@@ -57,6 +57,7 @@ class KnnLetterClassifier private constructor(
 
     override fun classify(hand: NormalizedHand, timestampMs: Long): Classification {
         val neighbourDistances = DoubleArray(k) { Double.MAX_VALUE }
+        val neighbourShapeDistances = DoubleArray(k) { Double.MAX_VALUE }
         val neighbourLetters = IntArray(k) { -1 }
         var filled = 0
 
@@ -68,10 +69,12 @@ class KnnLetterClassifier private constructor(
                 var slot = if (filled < k) filled else k - 1
                 while (slot > 0 && neighbourDistances[slot - 1] > distance) {
                     neighbourDistances[slot] = neighbourDistances[slot - 1]
+                    neighbourShapeDistances[slot] = neighbourShapeDistances[slot - 1]
                     neighbourLetters[slot] = neighbourLetters[slot - 1]
                     slot--
                 }
                 neighbourDistances[slot] = distance
+                neighbourShapeDistances[slot] = shapeDistanceTo(vector, exemplar)
                 neighbourLetters[slot] = exemplarLetters[exemplar]
                 if (filled < k) filled++
             }
@@ -94,6 +97,7 @@ class KnnLetterClassifier private constructor(
         return Classification(
             ranked = ranked,
             nearestDistance = neighbourDistances[0].toFloat(),
+            nearestShapeDistance = neighbourShapeDistances[0].toFloat(),
             timestampMs = timestampMs,
         )
     }
@@ -111,6 +115,16 @@ class KnnLetterClassifier private constructor(
             orientationSum += delta * delta
         }
         return sqrt(sum + ORIENTATION_WEIGHT * orientationSum)
+    }
+
+    private fun shapeDistanceTo(vector: FloatArray, exemplar: Int): Double {
+        val base = exemplar * NormalizedHand.VECTOR_DIM
+        var sum = 0.0
+        for (i in 0 until NormalizedHand.SHAPE_DIM) {
+            val delta = vector[i].toDouble() - exemplars[base + i]
+            sum += delta * delta
+        }
+        return sqrt(sum)
     }
 
     companion object {

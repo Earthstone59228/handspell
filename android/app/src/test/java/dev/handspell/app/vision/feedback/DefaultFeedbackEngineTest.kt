@@ -30,12 +30,18 @@ class DefaultFeedbackEngineTest {
         timestampMs: Long,
         competitor: Letter = Letter.S,
         distance: Float = 0.1f,
+        shapeDistance: Float = distance,
     ): Classification {
         val scores = listOf(
             LetterScore(target, probability),
             LetterScore(competitor, 1f - probability),
         ).sortedByDescending { it.probability }
-        return Classification(ranked = scores, nearestDistance = distance, timestampMs = timestampMs)
+        return Classification(
+            ranked = scores,
+            nearestDistance = distance,
+            nearestShapeDistance = shapeDistance,
+            timestampMs = timestampMs,
+        )
     }
 
     private fun engine(thresholds: FeedbackThresholds = this.thresholds, target: Letter? = Letter.A) =
@@ -182,6 +188,44 @@ class DefaultFeedbackEngineTest {
             assertTrue(state is SignFeedbackState.Adjust)
             timestamp += FRAME_INTERVAL_MS
         }
+    }
+
+    @Test
+    fun `direction agnostic letters use shape distance for acceptance`() {
+        val engine = engine(target = Letter.A)
+        val weightedDistance = thresholds.rejectDistance + 0.1f
+        val shapeDistance = thresholds.matchDistance - 0.1f
+
+        var timestamp = 0L
+        while (timestamp < thresholds.holdToConfirmMs) {
+            assertTrue(
+                engine.onFrame(
+                    frame(Letter.A, 0.99f, timestamp, distance = weightedDistance, shapeDistance = shapeDistance),
+                ) is SignFeedbackState.Adjust,
+            )
+            timestamp += FRAME_INTERVAL_MS
+        }
+        assertTrue(
+            engine.onFrame(
+                frame(Letter.A, 0.99f, timestamp, distance = weightedDistance, shapeDistance = shapeDistance),
+            ) is SignFeedbackState.Match,
+        )
+    }
+
+    @Test
+    fun `direction sensitive letters retain weighted distance acceptance`() {
+        val engine = engine(target = Letter.K)
+        val state = engine.onFrame(
+            frame(
+                Letter.K,
+                0.99f,
+                0L,
+                distance = thresholds.rejectDistance + 0.1f,
+                shapeDistance = thresholds.matchDistance - 0.1f,
+            ),
+        )
+
+        assertTrue(state is SignFeedbackState.NotRecognized)
     }
 
     @Test

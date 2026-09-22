@@ -8,8 +8,8 @@ before anything in `android/` is touched:
                         the exact module the golden-vector tests pin the Kotlin
                         `DefaultHandNormalizer` against.
 * k-nearest-neighbour -> `KnnLetterClassifier.kt`: Euclidean distance in the
-                        66-d space with the orientation block weighted
-                        0.5, k = 5, each neighbour voting 1/(d + 0.01).
+                        66-d space with the orientation block weighted 0.5,
+                        k = 5, each neighbour voting 1/(d + 0.01).
 * thresholds          -> `FeedbackThresholds` in `FeedbackEngine.kt`.
 
 The one deliberate difference is the target. The app compares against the
@@ -36,6 +36,7 @@ VECTOR_DIM = 66
 # --- KnnLetterClassifier.kt ------------------------------------------------------------------
 K = 5
 ORIENTATION_WEIGHT = 0.5
+DIRECTION_AGNOSTIC_LETTERS = frozenset("ABCD")
 DISTANCE_EPSILON = 0.01
 
 # --- FeedbackThresholds (FeedbackEngine.kt) --------------------------------------------------
@@ -169,23 +170,30 @@ def distances_to_exemplars(vector: np.ndarray, vectors: np.ndarray) -> np.ndarra
     return np.sqrt(total)
 
 
+def shape_distances_to_exemplars(vector: np.ndarray, vectors: np.ndarray) -> np.ndarray:
+    """Orientation-invariant shape distances exposed alongside the weighted k-NN metric."""
+    delta = vectors[:, :SHAPE_DIM] - vector[:SHAPE_DIM]
+    return np.sqrt((delta * delta).sum(axis=1))
+
+
 def classify_frame(
     vector: np.ndarray,
     vectors: np.ndarray,
     exemplar_letters: list[str],
     candidates: list[str],
     k: int = K,
-) -> tuple[list[tuple[str, float]], float]:
-    """Return (ranked [(letter, probability)], nearest exemplar distance).
+) -> tuple[list[tuple[str, float]], float, float]:
+    """Return (ranked [(letter, probability)], weighted nearest, paired shape distance).
 
     Mirrors `KnnLetterClassifier.classify`: the k nearest exemplars each vote
     `1 / (d + 0.01)`, votes are summed per letter and normalised, and ties fall
     back to letter order because the candidates are already sorted.
     """
     if len(vectors) == 0:
-        return [(letter, 0.0) for letter in candidates], float("inf")
+        return [(letter, 0.0) for letter in candidates], float("inf"), float("inf")
 
     distances = distances_to_exemplars(vector, vectors)
+    shape_distances = shape_distances_to_exemplars(vector, vectors)
     # Stable sort so equidistant exemplars keep file order, matching the Kotlin
     # insertion loop, which only displaces a neighbour on a strictly smaller distance.
     nearest = np.argsort(distances, kind="stable")[:k]
@@ -201,7 +209,8 @@ def classify_frame(
         ((letter, weight[letter] / total) for letter in candidates),
         key=lambda pair: (-pair[1], pair[0]),
     )
-    return ranked, float(distances[int(nearest[0])])
+    nearest_index = int(nearest[0])
+    return ranked, float(distances[nearest_index]), float(shape_distances[nearest_index])
 
 
 @dataclass
@@ -249,7 +258,7 @@ class HandIdentifier:
             return self.no_hand(timestamp_ms)
 
         self.hand_free_frames = 0
-        ranked, nearest = classify_frame(
+        ranked, nearest, nearest_shape = classify_frame(
             vector,
             self.reference.vectors,
             self.reference.exemplar_letters,
@@ -273,11 +282,12 @@ class HandIdentifier:
         top_probability = self.smoothed[top]
         runner_up = ordered[1] if len(ordered) > 1 else None
         runner_up_probability = self.smoothed[runner_up] if runner_up else 0.0
+        acceptance_distance = nearest_shape if top in DIRECTION_AGNOSTIC_LETTERS else nearest
 
         conditions_met = (
             top_probability >= MATCH_PROBABILITY
             and top_probability - runner_up_probability >= MATCH_MARGIN
-            and nearest <= MATCH_DISTANCE
+            and acceptance_distance <= MATCH_DISTANCE
         )
 
         hold_progress = 0.0
@@ -303,7 +313,7 @@ class HandIdentifier:
             else:
                 # Any failed condition breaks continuity; the next qualifying frame starts over.
                 self.hold_start_ms = None
-                if nearest > REJECT_DISTANCE:
+                if acceptance_distance > REJECT_DISTANCE:
                     verdict = NOT_RECOGNISED
                 elif top_probability >= ADJUST_PROBABILITY:
                     verdict = ADJUST
@@ -313,7 +323,7 @@ class HandIdentifier:
             top_probability=top_probability,
             runner_up=runner_up,
             runner_up_probability=runner_up_probability,
-            nearest_distance=nearest,
+            nearest_distance=acceptance_distance,
             verdict=verdict,
             hold_progress=hold_progress,
             ranked=ranked,
@@ -366,7 +376,7 @@ def evaluate_leave_one_out(reference: ReferenceSet, k: int = K) -> dict:
             untestable[truth] = untestable.get(truth, 0) + 1
             continue
         candidates = sorted(set(remaining_letters))
-        ranked, nearest = classify_frame(
+        ranked, nearest, _ = classify_frame(
             vectors[index], vectors[keep], remaining_letters, candidates, k
         )
         predicted = ranked[0][0] if ranked else None
