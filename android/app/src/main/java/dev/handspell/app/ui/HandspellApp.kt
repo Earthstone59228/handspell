@@ -2,6 +2,7 @@ package dev.handspell.app.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -22,7 +23,11 @@ fun HandspellApp(signDetector: SignDetector, contentRepository: ContentRepositor
     val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(contentRepository))
     val homeState by homeViewModel.uiState.collectAsStateWithLifecycle()
 
-    NavHost(navController = navController, startDestination = PRACTICE_ROUTE) {
+    NavHost(
+        navController = navController,
+        startDestination = PRACTICE_ROUTE,
+        modifier = androidx.compose.ui.Modifier.safeDrawingPadding(),
+    ) {
         composable(PRACTICE_ROUTE) {
             HomeScreen(homeState, onSelectDrill = { drill -> navController.navigate("$DRILL_ROUTE/${drill.id}") }, onRetry = homeViewModel::reload)
         }
