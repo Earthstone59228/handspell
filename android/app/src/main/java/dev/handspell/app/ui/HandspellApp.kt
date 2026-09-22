@@ -25,6 +25,7 @@ fun HandspellApp(
     signDetector: SignDetector,
     contentRepository: ContentRepository,
     canonicalHandshapeCatalog: CanonicalHandshapeCatalog,
+    onOpenCapture: (() -> Unit)? = null,
 ) {
     val navController = rememberNavController()
     val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(contentRepository))
@@ -69,7 +70,10 @@ fun HandspellApp(
             }
         }
         composable(SETTINGS_ROUTE) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenCapture = onOpenCapture,
+            )
         }
     }
 }

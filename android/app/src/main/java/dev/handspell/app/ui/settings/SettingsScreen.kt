@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -29,7 +30,11 @@ import dev.handspell.app.ui.theme.Spacing
  * there are no account, telemetry, or camera-storage controls for this app to configure.
  */
 @Composable
-fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun SettingsScreen(
+    onBack: () -> Unit,
+    onOpenCapture: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalAslColors.current
     Column(modifier.fillMaxSize().background(colors.backgroundGrouped)) {
         Row(
@@ -78,6 +83,27 @@ fun SettingsScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
                         title = stringResource(R.string.settings_network_title),
                         body = stringResource(R.string.settings_network_body),
                     )
+                }
+            }
+            if (onOpenCapture != null) {
+                SettingsGroup {
+                    Column(
+                        modifier = Modifier.padding(Spacing.md),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    ) {
+                        Text(
+                            stringResource(R.string.debug_capture_title),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            stringResource(R.string.debug_capture_body),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.labelSecondary,
+                        )
+                        Button(onClick = onOpenCapture) {
+                            Text(stringResource(R.string.debug_capture_open))
+                        }
+                    }
                 }
             }
         }

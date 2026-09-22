@@ -4,11 +4,12 @@
 `android/app/src/main/assets/classifier/references-v1.csv` — the only file `KnnLetterClassifier`
 reads (`docs/CLASSIFIER.md` §3).
 
-It is a stand-in for a screen that does not exist yet. The intended capture path is the in-app
-debug-only capture screen (`docs/CLASSIFIER.md` §7), which writes full 141-column capture CSVs under
-`training/data/<signer_id>/` and lets `training/scripts/build_references.py` derive the reference
-set. That screen is still an empty package, so until it lands this tool is how the reference set
-gets made.
+For calibration evidence, prefer the in-app debug-only capture screen (`docs/CLASSIFIER.md` §7).
+It is opened from **Settings → Calibration capture** in a debug build, uses an opaque signer ID, and
+writes full 141-column CSVs under the app's external-files `captures/<signer_id>/` directory. Pull
+those files outside the repository, review consent, then use
+`training/scripts/build_references.py` to derive a candidate reference set. The activity deliberately
+remains non-exported; it cannot be opened directly with `adb shell am start`.
 
 ## Why it is trustworthy
 

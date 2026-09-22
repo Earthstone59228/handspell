@@ -34,7 +34,8 @@ import dev.handspell.app.ui.theme.HandspellTheme
  * for building the k-NN reference set and training the stage-2 MLP. Lives entirely in `src/debug`
  * so `assembleRelease` never contains it (docs/QUALITY.md §8). Launched from adb, not from any UI:
  *
- * `adb shell am start -n dev.handspell.app/.ui.capture.CaptureActivity`
+ * Opened only from the debug build's internal Settings launcher. It stays non-exported, so an
+ * external adb shell or another app cannot start a screen that writes raw calibration landmarks.
  */
 class CaptureActivity : ComponentActivity() {
 

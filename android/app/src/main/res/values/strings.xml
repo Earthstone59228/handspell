@@ -10,6 +10,9 @@
     <string name="settings_data_body">Handspell has no account, analytics SDK or crash reporter. Practice content and handshape references are bundled with the app.</string>
     <string name="settings_network_title">Network use</string>
     <string name="settings_network_body">If purchases are added, the Test Store checks an entitlement through RevenueCat. Camera frames and hand landmarks never leave your device.</string>
+    <string name="debug_capture_title">Calibration capture</string>
+    <string name="debug_capture_body">Debug build only. Records landmark rows while held; never use a real name as the signer ID.</string>
+    <string name="debug_capture_open">Open calibration capture</string>
     <string name="home_description">Practise ASL fingerspelling with live feedback from your front camera.</string>
     <string name="practice_title">Practice</string>
     <string name="practice_letters_heading">Available letters</string>

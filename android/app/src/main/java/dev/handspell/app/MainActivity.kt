@@ -1,5 +1,6 @@
 package dev.handspell.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -24,9 +25,22 @@ class MainActivity : ComponentActivity() {
                         signDetector = container.signDetector,
                         contentRepository = container.contentRepository,
                         canonicalHandshapeCatalog = container.canonicalHandshapeCatalog,
+                        onOpenCapture = if (BuildConfig.DEBUG) {
+                            {
+                                startActivity(Intent().setClassName(this, DEBUG_CAPTURE_ACTIVITY))
+                            }
+                        } else {
+                            null
+                        },
                     )
                 }
             }
         }
+    }
+
+    private companion object {
+        // The activity exists only in src/debug and remains non-exported. A class-name string lets
+        // this release-compiled activity launch it internally without a release dependency.
+        const val DEBUG_CAPTURE_ACTIVITY = "dev.handspell.app.ui.capture.CaptureActivity"
     }
 }
