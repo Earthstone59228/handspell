@@ -100,7 +100,7 @@ set's resources at `../../training/testdata` so the JVM test can read it.
 ## 3. Stage 1 — k-nearest-neighbour over self-recorded exemplars
 
 - **Reference set**: `assets/classifier/references-v1.csv`, one row per exemplar: `letter` followed
-  by 66 floats. Built by `training/build_references.py` from capture CSVs.
+  by 66 floats. Built by `training/scripts/build_references.py` from capture CSVs.
 - **Selection**: per letter, greedy dedupe — walk the captured frames in capture order, keep a frame
   only if its Euclidean distance to every already-kept exemplar of that letter is ≥ 0.05; stop at 64.
   This keeps pose variety and throws away the near-duplicate frames a 30 fps capture produces.

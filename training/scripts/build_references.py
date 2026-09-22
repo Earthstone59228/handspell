@@ -18,6 +18,12 @@ import argparse
 import sys
 from pathlib import Path
 
+# `uv run python scripts/build_references.py` puts scripts/, not training/, on sys.path. Keep the
+# documented direct invocation working without requiring callers to set PYTHONPATH themselves.
+_TRAINING_ROOT = Path(__file__).resolve().parents[1]
+if str(_TRAINING_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TRAINING_ROOT))
+
 from handspell.references import (
     DEDUPE_DISTANCE,
     MAX_EXEMPLARS_PER_LETTER,
