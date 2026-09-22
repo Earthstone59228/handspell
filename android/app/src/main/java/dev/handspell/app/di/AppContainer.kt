@@ -26,18 +26,13 @@ import dev.handspell.app.vision.normalize.DefaultHandNormalizer
  */
 class AppContainer(context: Context) {
 
-    private val classifier: LetterClassifier?
-    private val classifierFailure: ClassifierAssetException?
-
-    init {
-        try {
-            classifier = loadClassifier(context.assets)
-            classifierFailure = null
-        } catch (failure: ClassifierAssetException) {
-            classifier = null
-            classifierFailure = failure
-        }
+    private val classifierLoad = try {
+        ClassifierLoad(classifier = loadClassifier(context.assets), failure = null)
+    } catch (failure: ClassifierAssetException) {
+        ClassifierLoad(classifier = null, failure = failure)
     }
+    private val classifier get() = classifierLoad.classifier
+    private val classifierFailure get() = classifierLoad.failure
 
     val contentRepository: ContentRepository = AssetContentRepository(context.assets) {
         classifier?.supportedLetters.orEmpty()
@@ -66,4 +61,9 @@ class AppContainer(context: Context) {
             stage1
         }
     }
+
+    private data class ClassifierLoad(
+        val classifier: LetterClassifier?,
+        val failure: ClassifierAssetException?,
+    )
 }

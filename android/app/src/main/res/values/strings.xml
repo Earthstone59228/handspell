@@ -2,6 +2,33 @@
 <resources>
     <string name="app_name">Handspell</string>
     <string name="home_description">Practise ASL fingerspelling with live feedback from your front camera.</string>
+    <string name="practice_title">Practice</string>
+    <string name="practice_letters_heading">Available letters</string>
+    <string name="practice_letters_summary">%1$d letters are ready to practise in this build.</string>
+    <string name="letter_tile_content_description">Practise letter %1$s</string>
+    <string name="content_loading">Loading practice content</string>
+    <string name="content_unavailable_title">Practice content is unavailable</string>
+    <string name="content_unavailable_body">Handspell could not load the letters in this build. Try again.</string>
+    <string name="retry">Try again</string>
+    <string name="back">Back</string>
+    <string name="drill_title">Letter practice</string>
+    <string name="camera_permission_title">Use your camera to practise</string>
+    <string name="camera_permission_body">Handspell uses the front camera to see your hand shape. Frames are processed on your phone and never recorded, saved or uploaded.</string>
+    <string name="allow_camera">Allow camera</string>
+    <string name="open_settings">Open settings</string>
+    <string name="camera_preview_content_description">Front camera preview for handshape practice</string>
+    <string name="camera_unavailable">The front camera is unavailable. Close any other app using it, then return to Practice and reopen this letter.</string>
+    <string name="drill_unavailable_title">This letter cannot be scored right now</string>
+    <string name="skip_letter">Skip this letter</string>
+    <string name="feedback_no_hand_glyph">○</string>
+    <string name="feedback_not_recognized_glyph">?</string>
+    <string name="feedback_adjust_glyph">↻</string>
+    <string name="feedback_match_glyph">✓</string>
+    <string name="feedback_no_hand">Show your hand to the camera</string>
+    <string name="feedback_not_recognized">Not sure yet — try turning your hand toward the camera</string>
+    <string name="feedback_adjust">Close. %1$s</string>
+    <string name="feedback_match">That’s %1$s</string>
+    <string name="classifier_stage1_notice">Using the stage 1 handshape model.</string>
 
     <!--
       Detector failure messages. Keyed by ClassifierAssetException.messageId so the vision layer can

@@ -4,12 +4,10 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import dev.handspell.app.ui.home.HomeScreen
+import dev.handspell.app.ui.HandspellApp
+import dev.handspell.app.ui.theme.HandspellTheme
 
 /**
  * Single activity (docs/ARCHITECTURE.md §1). `singleTop` because RevenueCat's paywall flow
@@ -18,25 +16,13 @@ import dev.handspell.app.ui.home.HomeScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val container = (application as HandspellApplication).container
         setContent {
             HandspellTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    HomeScreen()
+                    HandspellApp(signDetector = container.signDetector, contentRepository = container.contentRepository)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun HandspellTheme(content: @Composable () -> Unit) {
-    MaterialTheme(content = content)
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun HomeScreenPreview() {
-    HandspellTheme {
-        HomeScreen()
     }
 }

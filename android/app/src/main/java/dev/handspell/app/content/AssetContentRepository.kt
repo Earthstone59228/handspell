@@ -11,6 +11,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -49,9 +50,8 @@ class AssetContentRepository(
             .toList()
     }
 
-    private suspend fun ensureLoaded() = loadMutex.withLock {
-        if (loaded) return
-        loaded = true
+    private suspend fun ensureLoaded(): Unit = loadMutex.withLock {
+        if (loaded) return@withLock
         val errors = mutableListOf<ContentError>()
         val parsedPacks = mutableListOf<ContentPack>()
         try {
@@ -83,6 +83,9 @@ class AssetContentRepository(
         }
         packsState.value = parsedPacks
         errorsState.value = errors
+        // Assets are immutable in a normal APK, but do not turn a transient/read failure into a
+        // permanently cached blank screen: the Home retry action must perform another read.
+        loaded = errors.isEmpty()
     }
 
     private fun parsePack(root: JsonObject): ContentPack {

@@ -29,6 +29,9 @@ sealed interface DetectorStatus {
 interface SignDetector {
     val status: StateFlow<DetectorStatus>
 
+    /** Identifier of the active classifier, so the UI can disclose the stage-1 fallback. */
+    val classifierModelId: String?
+
     /** Emits at most one state per analysed frame; conflate on the UI side. */
     val feedback: Flow<SignFeedbackState>
 

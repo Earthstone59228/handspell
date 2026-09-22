@@ -35,6 +35,8 @@ class FakeSignDetector(
 
     override val status: StateFlow<DetectorStatus> = statusState.asStateFlow()
 
+    override val classifierModelId: String = "fake"
+
     override val feedback: Flow<SignFeedbackState> = feedbackState.asStateFlow()
 
     override val overlay: StateFlow<HandOverlay?> = MutableStateFlow(null).asStateFlow()

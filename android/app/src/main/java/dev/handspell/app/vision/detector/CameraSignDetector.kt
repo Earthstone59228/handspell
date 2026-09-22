@@ -45,9 +45,8 @@ class CameraSignDetector(
     initialFailure: ClassifierAssetException? = null,
 ) : SignDetector {
 
-    private val statusState = MutableStateFlow<DetectorStatus>(
-        initialFailure?.let { DetectorStatus.Failed(it.messageId, it) } ?: DetectorStatus.Idle,
-    )
+    private val initialFailureStatus = initialFailure?.let { DetectorStatus.Failed(it.messageId, it) }
+    private val statusState = MutableStateFlow<DetectorStatus>(initialFailureStatus ?: DetectorStatus.Idle)
     private val feedbackState = MutableStateFlow<SignFeedbackState>(SignFeedbackState.NoHand(null))
     private val overlayState = MutableStateFlow<HandOverlay?>(null)
     private val lock = Any()
@@ -56,6 +55,7 @@ class CameraSignDetector(
     }
 
     override val status: StateFlow<DetectorStatus> = statusState.asStateFlow()
+    override val classifierModelId: String? = classifier?.modelId
     override val feedback: Flow<SignFeedbackState> = feedbackState.asStateFlow()
     override val overlay: StateFlow<HandOverlay?> = overlayState.asStateFlow()
     override val analyzerExecutor: Executor = analysisExecutor
@@ -66,17 +66,17 @@ class CameraSignDetector(
     private var target: Letter? = null
 
     override val analyzer: ImageAnalysis.Analyzer = ImageAnalysis.Analyzer { imageProxy ->
-        val helper = landmarkerHelper
-        if (helper != null) {
-            try {
+        try {
+            val helper = landmarkerHelper
+            if (helper != null) {
                 val frame = frameConverter.convert(imageProxy)
                 helper.detect(frame.image, SystemClock.uptimeMillis(), frame.width, frame.height)
-            } catch (_: Throwable) {
-                // A single unreadable frame is dropped. Fatal landmarker failures arrive via the
-                // error listener, not here.
             }
+        } finally {
+            // CameraX owns the image buffer; it must be released even if conversion or inference
+            // submission fails so the keep-latest pipeline never stalls.
+            imageProxy.close()
         }
-        imageProxy.close()
     }
 
     override fun setTarget(target: Letter?) {
@@ -111,12 +111,13 @@ class CameraSignDetector(
             feedbackState.value = SignFeedbackState.NoHand(target)
             overlayState.value = null
         }
-        statusState.value = DetectorStatus.Idle
+        statusState.value = initialFailureStatus ?: DetectorStatus.Idle
     }
 
     private fun onHandLandmarks(hands: List<HandLandmarks>) {
         synchronized(lock) {
             if (hands.isEmpty()) {
+                overlayState.value = null
                 feedbackState.value = feedbackEngine.onNoHand(SystemClock.uptimeMillis())
                 return
             }

@@ -47,6 +47,7 @@ data class FeedbackThresholds(/* the §6 table in CLASSIFIER.md, all with defaul
 
 interface SignDetector {
     val status: StateFlow<DetectorStatus>          // Idle / Starting / Running / Failed
+    val classifierModelId: String?                 // `knn-v1` / `mlp-v1`, null if unavailable
     val feedback: Flow<SignFeedbackState>          // at most one per analysed frame
     val overlay: StateFlow<HandOverlay?>           // current image landmarks, null = no hand
     val analyzer: ImageAnalysis.Analyzer           // bind to CameraX; must close every ImageProxy

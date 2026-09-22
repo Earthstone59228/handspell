@@ -36,7 +36,7 @@ private val TARGET_RESOLUTION = Size(640, 480)
  *
  * Deliberately generic over [analyzer]/[analyzerExecutor] rather than taking a
  * `dev.handspell.app.vision.SignDetector` directly: the debug capture screen
- * (docs/CLASSIFIER.md §7) drives [dev.handspell.app.vision.landmarker.HandLandmarkerEngine]
+ * (docs/CLASSIFIER.md §7) drives [dev.handspell.app.vision.landmarker.HandLandmarkerHelper]
  * straight from its own analyzer, with no classifier and no `SignDetector` in the picture, and
  * reuses this same composable.
  *
@@ -88,15 +88,17 @@ fun CameraFrame(
                     onCameraError(CameraBindError.NoFrontCamera)
                     return@addListener
                 }
-                preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
-                analysis = ImageAnalysis.Builder()
+                val builtPreview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
+                val builtAnalysis = ImageAnalysis.Builder()
                     .setResolutionSelector(resolutionSelector)
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
                     .also { it.setAnalyzer(analyzerExecutor, analyzer) }
+                preview = builtPreview
+                analysis = builtAnalysis
                 provider.unbindAll()
-                provider.bindToLifecycle(lifecycleOwner, selector, preview!!, analysis!!)
+                provider.bindToLifecycle(lifecycleOwner, selector, builtPreview, builtAnalysis)
                 boundProvider = provider
             } catch (error: Throwable) {
                 onCameraError(CameraBindError.BindFailed(error))
