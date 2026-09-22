@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -17,7 +18,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,22 +39,50 @@ fun HomeScreen(
     state: HomeUiState,
     onSelectDrill: (PackItem.Drill) -> Unit,
     onRetry: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
-) = when {
-    state.isLoading -> LoadingHome(modifier)
-    state.error -> UnavailableHome(onRetry, modifier)
-    else -> PracticeHome(state.drills, onSelectDrill, modifier)
+) {
+    val colors = LocalAslColors.current
+    Column(modifier = modifier.fillMaxSize().background(colors.backgroundGrouped)) {
+        HomeTopBar(onOpenSettings)
+        when {
+            state.isLoading -> LoadingHome(Modifier.weight(1f))
+            state.error -> UnavailableHome(onRetry, Modifier.weight(1f))
+            else -> PracticeHome(state.drills, onSelectDrill, Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun HomeTopBar(onOpenSettings: () -> Unit) = Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .background(MaterialTheme.colorScheme.background)
+        .padding(start = Spacing.md, end = Spacing.xs, top = Spacing.xs, bottom = Spacing.xs),
+    verticalAlignment = Alignment.CenterVertically,
+) {
+    Text(
+        text = stringResource(R.string.app_name),
+        style = MaterialTheme.typography.titleLarge,
+        modifier = Modifier.weight(1f),
+    )
+    TextButton(
+        onClick = onOpenSettings,
+        modifier = Modifier.sizeIn(minWidth = Spacing.touchTarget, minHeight = Spacing.touchTarget),
+    ) {
+        Text(stringResource(R.string.settings))
+    }
 }
 
 @Composable
 private fun PracticeHome(drills: List<PackItem.Drill>, onSelectDrill: (PackItem.Drill) -> Unit, modifier: Modifier) {
     val colors = LocalAslColors.current
     Column(
-        modifier = modifier.fillMaxSize().background(colors.backgroundGrouped),
+        modifier = modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(Spacing.xl),
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(Spacing.md),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.lg),
             verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
             Text(text = stringResource(R.string.practice_title), style = MaterialTheme.typography.headlineMedium)
@@ -77,17 +108,23 @@ private fun PracticeHome(drills: List<PackItem.Drill>, onSelectDrill: (PackItem.
 private fun LetterTile(drill: PackItem.Drill, onSelectDrill: (PackItem.Drill) -> Unit) {
     val colors = LocalAslColors.current
     val description = stringResource(R.string.letter_tile_content_description, drill.letter.display)
-    Column(
+    Surface(
         modifier = Modifier
             .sizeIn(minWidth = Spacing.touchTarget, minHeight = Spacing.touchTarget)
             .heightIn(min = Spacing.letterTile)
-            .background(colors.surface, RoundedCornerShape(AslShapes.medium))
             .clickable(role = Role.Button, onClick = { onSelectDrill(drill) })
             .semantics { contentDescription = description },
+        shape = RoundedCornerShape(AslShapes.medium),
+        color = colors.surface,
+        border = androidx.compose.foundation.BorderStroke(Spacing.hairline, colors.separator),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text(text = drill.letter.display, style = MaterialTheme.typography.titleLarge, color = colors.accent)
+        ) {
+            Text(text = drill.letter.display, style = MaterialTheme.typography.titleLarge, color = colors.accent)
+        }
     }
 }
 

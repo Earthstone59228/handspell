@@ -20,7 +20,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             HandspellTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    HandspellApp(signDetector = container.signDetector, contentRepository = container.contentRepository)
+                    HandspellApp(
+                        signDetector = container.signDetector,
+                        contentRepository = container.contentRepository,
+                        canonicalHandshapeCatalog = container.canonicalHandshapeCatalog,
+                    )
                 }
             }
         }

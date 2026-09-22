@@ -30,6 +30,7 @@ object Spacing {
     val xxxl = 40.dp
     val huge = 48.dp
     val letterTile: Dp = 64.dp
+    val referenceGuide: Dp = 88.dp
     val touchTarget: Dp = 48.dp
 }
 

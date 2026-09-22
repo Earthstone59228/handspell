@@ -7,6 +7,7 @@ import dev.handspell.app.content.ContentRepository
 import dev.handspell.app.vision.LetterClassifier
 import dev.handspell.app.vision.SignDetector
 import dev.handspell.app.vision.classify.ClassifierAssetException
+import dev.handspell.app.vision.classify.CanonicalHandshapeCatalog
 import dev.handspell.app.vision.classify.KnnLetterClassifier
 import dev.handspell.app.vision.classify.MlpLetterClassifier
 import dev.handspell.app.vision.classify.MlpWeights
@@ -37,6 +38,8 @@ class AppContainer(context: Context) {
     val contentRepository: ContentRepository = AssetContentRepository(context.assets) {
         classifier?.supportedLetters.orEmpty()
     }
+
+    val canonicalHandshapeCatalog = CanonicalHandshapeCatalog(context.assets)
 
     val signDetector: SignDetector = CameraSignDetector(
         context = context,

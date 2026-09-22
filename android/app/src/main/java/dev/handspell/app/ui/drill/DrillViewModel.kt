@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import dev.handspell.app.content.PackItem
 import dev.handspell.app.core.model.HandOverlay
+import dev.handspell.app.core.model.CanonicalHandshape
 import dev.handspell.app.core.model.SignFeedbackState
 import dev.handspell.app.vision.DetectorStatus
 import dev.handspell.app.vision.SignDetector
+import dev.handspell.app.vision.classify.CanonicalHandshapeCatalog
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,13 +31,17 @@ data class DrillUiState(
     val detectorStatus: DetectorStatus = DetectorStatus.Idle,
     val feedback: SignFeedbackState = SignFeedbackState.NoHand(null),
     val overlay: HandOverlay? = null,
+    val canonicalHandshape: CanonicalHandshape? = null,
     val classifierModelId: String? = null,
     val cameraBinding: DrillCameraBinding? = null,
     val cameraUnavailable: Boolean = false,
     val cameraSession: Int = 0,
 )
 
-class DrillViewModel(private val signDetector: SignDetector) : ViewModel() {
+class DrillViewModel(
+    private val signDetector: SignDetector,
+    private val canonicalHandshapeCatalog: CanonicalHandshapeCatalog,
+) : ViewModel() {
     private val mutableUiState = MutableStateFlow(
         DrillUiState(
             cameraBinding = DrillCameraBinding(signDetector.analyzer, signDetector.analyzerExecutor),
@@ -72,8 +78,15 @@ class DrillViewModel(private val signDetector: SignDetector) : ViewModel() {
             drills = drills,
             feedback = SignFeedbackState.NoHand(drill.letter),
             overlay = null,
+            canonicalHandshape = null,
             cameraUnavailable = false,
         )
+        viewModelScope.launch {
+            val canonicalHandshape = canonicalHandshapeCatalog.handshapeFor(drill.letter)
+            if (mutableUiState.value.drill?.id == drill.id) {
+                mutableUiState.value = mutableUiState.value.copy(canonicalHandshape = canonicalHandshape)
+            }
+        }
     }
 
     fun startDetector() {
@@ -101,11 +114,14 @@ class DrillViewModel(private val signDetector: SignDetector) : ViewModel() {
     }
 
     companion object {
-        fun factory(signDetector: SignDetector): ViewModelProvider.Factory =
+        fun factory(
+            signDetector: SignDetector,
+            canonicalHandshapeCatalog: CanonicalHandshapeCatalog,
+        ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    DrillViewModel(signDetector) as T
+                    DrillViewModel(signDetector, canonicalHandshapeCatalog) as T
             }
     }
 }

@@ -59,6 +59,7 @@ import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 import dev.handspell.app.vision.DetectorStatus
 import dev.handspell.app.vision.SignDetector
+import dev.handspell.app.vision.classify.CanonicalHandshapeCatalog
 
 private const val CAMERA_PREVIEW_ASPECT_RATIO = 0.75f
 
@@ -68,12 +69,13 @@ fun LetterDrillRoute(
     drill: PackItem.Drill,
     drills: List<PackItem.Drill>,
     signDetector: SignDetector,
+    canonicalHandshapeCatalog: CanonicalHandshapeCatalog,
     onBack: () -> Unit,
     onSkip: (PackItem.Drill) -> Unit,
 ) {
     val viewModel: DrillViewModel = viewModel(
         key = "drill-${drill.id}",
-        factory = DrillViewModel.factory(signDetector),
+        factory = DrillViewModel.factory(signDetector, canonicalHandshapeCatalog),
     )
     LaunchedEffect(drill, drills) { viewModel.setDrill(drill, drills) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -193,6 +195,10 @@ private fun ActiveDrill(
                     LandmarkOverlay(state.overlay, Modifier.fillMaxSize().semantics {
                         contentDescription = cameraDescription
                     })
+                    dev.handspell.app.ui.components.HandshapeGuide(
+                        handshape = state.canonicalHandshape,
+                        modifier = Modifier.align(Alignment.TopStart).padding(Spacing.sm),
+                    )
                 }
             }
             Text(drill.prompt, style = MaterialTheme.typography.displaySmall)
