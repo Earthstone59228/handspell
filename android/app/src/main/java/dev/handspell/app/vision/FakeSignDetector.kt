@@ -2,6 +2,7 @@ package dev.handspell.app.vision
 
 import androidx.camera.core.ImageAnalysis
 import dev.handspell.app.core.model.FeedbackHint
+import dev.handspell.app.core.model.HandOverlay
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.core.model.SignFeedbackState
 import kotlinx.coroutines.CoroutineScope
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executor
 
 /**
  * A [SignDetector] that needs no camera, no model files and no permission.
@@ -35,8 +37,12 @@ class FakeSignDetector(
 
     override val feedback: Flow<SignFeedbackState> = feedbackState.asStateFlow()
 
+    override val overlay: StateFlow<HandOverlay?> = MutableStateFlow(null).asStateFlow()
+
     /** Drops every frame; the fake never looks at pixels. */
     override val analyzer: ImageAnalysis.Analyzer = ImageAnalysis.Analyzer { image -> image.close() }
+
+    override val analyzerExecutor: Executor = Executor { command -> command.run() }
 
     override fun setTarget(target: Letter?) {
         this.target = target

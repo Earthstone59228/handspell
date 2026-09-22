@@ -10,6 +10,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -63,54 +64,54 @@ fun CameraFrame(
             .build()
     }
 
-    AndroidView(
-        modifier = modifier.fillMaxSize(),
-        factory = { ctx ->
-            PreviewView(ctx).apply {
-                // Selfie mirror: CameraX's front-camera output is not flipped by default, so the
-                // preview is mirrored here to match what the user sees in an actual mirror and to
-                // match the mirror-then-rotate convention FrameConverter feeds MediaPipe
-                // (docs/CLASSIFIER.md §1). The overlay draws on top with no extra flip.
-                scaleX = -1f
+    val previewView = remember(context) {
+        PreviewView(context).apply {
+            // CameraX front-camera output is unmirrored. Keep this transform in step with the
+            // selfie-mirrored frame supplied to MediaPipe; LandmarkOverlay applies the same map.
+            scaleX = -1f
+            scaleType = PreviewView.ScaleType.FILL_CENTER
+        }
+    }
+    val providerFuture = remember(context) { ProcessCameraProvider.getInstance(context) }
+
+    DisposableEffect(lifecycleOwner, providerFuture, analyzer, analyzerExecutor, resolutionSelector) {
+        var disposed = false
+        var boundProvider: ProcessCameraProvider? = null
+        var preview: Preview? = null
+        var analysis: ImageAnalysis? = null
+        providerFuture.addListener({
+            if (disposed) return@addListener
+            try {
+                val provider = providerFuture.get()
+                val selector = CameraSelector.DEFAULT_FRONT_CAMERA
+                if (!provider.hasCamera(selector)) {
+                    onCameraError(CameraBindError.NoFrontCamera)
+                    return@addListener
+                }
+                preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
+                analysis = ImageAnalysis.Builder()
+                    .setResolutionSelector(resolutionSelector)
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+                    .also { it.setAnalyzer(analyzerExecutor, analyzer) }
+                provider.unbindAll()
+                provider.bindToLifecycle(lifecycleOwner, selector, preview!!, analysis!!)
+                boundProvider = provider
+            } catch (error: Throwable) {
+                onCameraError(CameraBindError.BindFailed(error))
             }
-        },
-        update = { previewView ->
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-            cameraProviderFuture.addListener(
-                {
-                    try {
-                        val cameraProvider = cameraProviderFuture.get()
-                        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+        }, ContextCompat.getMainExecutor(context))
+        onDispose {
+            disposed = true
+            val provider = boundProvider
+            val boundPreview = preview
+            val boundAnalysis = analysis
+            if (provider != null && boundPreview != null && boundAnalysis != null) {
+                provider.unbind(boundPreview, boundAnalysis)
+            }
+        }
+    }
 
-                        if (!cameraProvider.hasCamera(cameraSelector)) {
-                            onCameraError(CameraBindError.NoFrontCamera)
-                            return@addListener
-                        }
-
-                        val preview = Preview.Builder().build().also {
-                            it.surfaceProvider = previewView.surfaceProvider
-                        }
-
-                        val imageAnalysis = ImageAnalysis.Builder()
-                            .setResolutionSelector(resolutionSelector)
-                            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                            .build()
-                        imageAnalysis.setAnalyzer(analyzerExecutor, analyzer)
-
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageAnalysis,
-                        )
-                    } catch (t: Throwable) {
-                        onCameraError(CameraBindError.BindFailed(t))
-                    }
-                },
-                ContextCompat.getMainExecutor(context),
-            )
-        },
-    )
+    AndroidView(modifier = modifier.fillMaxSize(), factory = { previewView })
 }

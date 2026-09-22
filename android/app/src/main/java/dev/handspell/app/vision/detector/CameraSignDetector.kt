@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.SystemClock
 import androidx.camera.core.ImageAnalysis
 import dev.handspell.app.core.model.HandLandmarks
+import dev.handspell.app.core.model.HandOverlay
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.core.model.SignFeedbackState
 import dev.handspell.app.vision.DetectorStatus
@@ -18,6 +19,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 /**
  * The real [SignDetector]: CameraX frame -> MediaPipe Hand Landmarker -> normalise -> classify ->
@@ -45,10 +49,16 @@ class CameraSignDetector(
         initialFailure?.let { DetectorStatus.Failed(it.messageId, it) } ?: DetectorStatus.Idle,
     )
     private val feedbackState = MutableStateFlow<SignFeedbackState>(SignFeedbackState.NoHand(null))
+    private val overlayState = MutableStateFlow<HandOverlay?>(null)
     private val lock = Any()
+    private val analysisExecutor: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "handspell-analysis")
+    }
 
     override val status: StateFlow<DetectorStatus> = statusState.asStateFlow()
     override val feedback: Flow<SignFeedbackState> = feedbackState.asStateFlow()
+    override val overlay: StateFlow<HandOverlay?> = overlayState.asStateFlow()
+    override val analyzerExecutor: Executor = analysisExecutor
 
     @Volatile
     private var landmarkerHelper: HandLandmarkerHelper? = null
@@ -99,6 +109,7 @@ class CameraSignDetector(
         synchronized(lock) {
             feedbackEngine.reset()
             feedbackState.value = SignFeedbackState.NoHand(target)
+            overlayState.value = null
         }
         statusState.value = DetectorStatus.Idle
     }
@@ -113,6 +124,12 @@ class CameraSignDetector(
 
             // Single-target practice uses the first hand MediaPipe reports.
             val hand = hands.first()
+            overlayState.value = HandOverlay(
+                imageLandmarks = hand.image,
+                imageWidth = hand.imageWidth,
+                imageHeight = hand.imageHeight,
+                timestampMs = hand.timestampMs,
+            )
             val normalized = normalizer.normalize(hand)
             if (normalized == null) {
                 feedbackState.value = feedbackEngine.onNoHand(hand.timestampMs)
@@ -124,6 +141,7 @@ class CameraSignDetector(
     }
 
     private fun onLandmarkerError(error: RuntimeException) {
+        overlayState.value = null
         statusState.value = DetectorStatus.Failed(ERROR_LANDMARKER_FAILED, error)
     }
 

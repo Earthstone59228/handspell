@@ -1,8 +1,10 @@
 package dev.handspell.app.vision
 
 import androidx.camera.core.ImageAnalysis
+import dev.handspell.app.core.model.HandOverlay
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.core.model.SignFeedbackState
+import java.util.concurrent.Executor
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -30,8 +32,14 @@ interface SignDetector {
     /** Emits at most one state per analysed frame; conflate on the UI side. */
     val feedback: Flow<SignFeedbackState>
 
+    /** Image-space landmarks for the live camera overlay; null while no hand is in frame. */
+    val overlay: StateFlow<HandOverlay?>
+
     /** CameraX analyzer. Implementations must close every `ImageProxy` they receive. */
     val analyzer: ImageAnalysis.Analyzer
+
+    /** The serial executor CameraX must use for [analyzer]. */
+    val analyzerExecutor: Executor
 
     /** Null means "classify freely and report the top letter", used by the dev capture screen. */
     fun setTarget(target: Letter?)

@@ -26,8 +26,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import dev.handspell.app.HandspellTheme
 import dev.handspell.app.R
+import dev.handspell.app.ui.theme.HandspellTheme
 
 /**
  * Dev-only capture screen (docs/CLASSIFIER.md §7): records signer-labelled landmark frames to CSV

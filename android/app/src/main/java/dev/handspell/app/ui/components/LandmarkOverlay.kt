@@ -31,10 +31,10 @@ private const val LINE_WIDTH_PX = 4f
 
 /**
  * Draws the 21 hand landmarks and their connections from [overlay], scaled from the analysed
- * frame's pixel space onto this composable's own size the same way `PreviewView`'s default
- * `FILL_CENTER` scale type maps the camera stream onto the screen (docs/CLASSIFIER.md §1: image
- * landmarks are already in the mirrored, display-upright frame, so no extra flip is applied here —
- * this must be stacked directly over [CameraFrame] with a matching size for the two to align).
+ * normalised image space onto this composable's own size the same way `PreviewView`'s default
+ * `FILL_CENTER` scale type maps the camera stream onto the screen. CameraFrame mirrors its front
+ * preview, so this applies the matching visual x transform after MediaPipe has seen the
+ * selfie-mirrored input (docs/CLASSIFIER.md §1).
  */
 @Composable
 fun LandmarkOverlay(overlay: HandOverlay?, modifier: Modifier = Modifier) {
@@ -48,7 +48,10 @@ fun LandmarkOverlay(overlay: HandOverlay?, modifier: Modifier = Modifier) {
 
         fun point(index: Int): Offset {
             val landmark = overlay.imageLandmarks[index]
-            return Offset(landmark.x * scale + offsetX, landmark.y * scale + offsetY)
+            return Offset(
+                (1f - landmark.x) * overlay.imageWidth * scale + offsetX,
+                landmark.y * overlay.imageHeight * scale + offsetY,
+            )
         }
 
         for (connection in HandLandmarker.HAND_CONNECTIONS) {

@@ -48,17 +48,22 @@ data class FeedbackThresholds(/* the §6 table in CLASSIFIER.md, all with defaul
 interface SignDetector {
     val status: StateFlow<DetectorStatus>          // Idle / Starting / Running / Failed
     val feedback: Flow<SignFeedbackState>          // at most one per analysed frame
+    val overlay: StateFlow<HandOverlay?>           // current image landmarks, null = no hand
     val analyzer: ImageAnalysis.Analyzer           // bind to CameraX; must close every ImageProxy
+    val analyzerExecutor: Executor                 // single `handspell-analysis` executor
     fun setTarget(target: Letter?)                 // null = report the top letter freely
     fun start()
     fun stop()
 }
 ```
 
-`SignDetector` is deliberately the *only* vision type the UI touches, and it does expose a CameraX
-`ImageAnalysis.Analyzer` rather than hiding it behind another abstraction: CameraX is an app-wide
-dependency either way, and a pass-through wrapper would buy nothing but a layer to debug. The camera
-screen owns the `Preview` and `ImageAnalysis` use cases and hands the analyzer to CameraX.
+`SignDetector` is deliberately the *only* vision type the UI touches. It exposes the live overlay,
+the CameraX `ImageAnalysis.Analyzer`, and its single serial executor rather than hiding CameraX
+behind another abstraction: CameraX is an app-wide dependency either way, and a pass-through wrapper
+would buy nothing but a layer to debug. The camera screen owns the `Preview` and `ImageAnalysis` use
+cases and hands both the analyzer and executor to CameraX. The overlay is required for the drill as
+well as debug capture: it confirms that the on-device detector sees the learner's hand without
+exposing world landmarks or classifier internals.
 
 `FakeSignDetector(scope, stepMillis = 900)` implements the same contract with no camera, no model
 and no permission: it cycles NoHand → NotRecognized → Adjust(0.3) → Adjust(0.8) → Match on a timer

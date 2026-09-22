@@ -2,6 +2,8 @@ package dev.handspell.app.di
 
 import android.content.Context
 import android.content.res.AssetManager
+import dev.handspell.app.content.AssetContentRepository
+import dev.handspell.app.content.ContentRepository
 import dev.handspell.app.vision.LetterClassifier
 import dev.handspell.app.vision.SignDetector
 import dev.handspell.app.vision.classify.ClassifierAssetException
@@ -24,28 +26,30 @@ import dev.handspell.app.vision.normalize.DefaultHandNormalizer
  */
 class AppContainer(context: Context) {
 
-    val signDetector: SignDetector = buildSignDetector(context)
+    private val classifier: LetterClassifier?
+    private val classifierFailure: ClassifierAssetException?
 
-    private fun buildSignDetector(context: Context): SignDetector {
-        val classifier = try {
-            loadClassifier(context.assets)
+    init {
+        try {
+            classifier = loadClassifier(context.assets)
+            classifierFailure = null
         } catch (failure: ClassifierAssetException) {
-            return CameraSignDetector(
-                context = context,
-                normalizer = DefaultHandNormalizer(),
-                classifier = null,
-                feedbackEngine = DefaultFeedbackEngine(),
-                initialFailure = failure,
-            )
+            classifier = null
+            classifierFailure = failure
         }
-
-        return CameraSignDetector(
-            context = context,
-            normalizer = DefaultHandNormalizer(),
-            classifier = classifier,
-            feedbackEngine = DefaultFeedbackEngine(),
-        )
     }
+
+    val contentRepository: ContentRepository = AssetContentRepository(context.assets) {
+        classifier?.supportedLetters.orEmpty()
+    }
+
+    val signDetector: SignDetector = CameraSignDetector(
+        context = context,
+        normalizer = DefaultHandNormalizer(),
+        classifier = classifier,
+        feedbackEngine = DefaultFeedbackEngine(),
+        initialFailure = classifierFailure,
+    )
 
     private fun loadClassifier(assets: AssetManager): LetterClassifier {
         val stage1 = KnnLetterClassifier.load(
