@@ -1,6 +1,6 @@
 # Privacy notice
 
-Dated 2026-09-13. Handspell is a student hackathon project (Next Gen), not a company product.
+Dated 2026-09-22. Handspell is a student hackathon project (Next Gen), not a company product.
 
 ## Short version
 
@@ -8,7 +8,9 @@ Handspell reads your camera to find your hand on the screen and tell you which l
 That happens entirely on your phone: camera frames are never saved, never turned into a photo or
 video file, and never sent anywhere. The app has no accounts, no analytics and no crash reporting.
 Your practice progress (letter counts, story steps, speed-run results, streaks) is saved only on
-your phone, and you can delete all of it from Settings. The only network connection the app makes is
+your phone, and you can delete all of it from Settings. If the optional **Improve recognition**
+feature is enabled in a later app update, its local calibration measurements will be disclosed and
+deletable in Settings before recording begins. The only network connection the app makes is
 to RevenueCat, to check whether you have Pro — and every purchase shown in demo builds runs through
 RevenueCat's Test Store, so no real money is charged.
 
@@ -36,9 +38,15 @@ that's running it, pulled off by a teammate over a USB cable — never automatic
 The app keeps one small file of your progress: how many times you have practised each letter, which
 story steps you have finished, up to your last 50 speed-run results, your current and best streak,
 and whether you have completed onboarding. That's it — no photos, no video, no raw landmark data.
+The backend foundation for the optional **Improve recognition** feature is not exposed in this build.
+When it is exposed, it will separately keep up to 24 normalized 66-number handshape measurements for
+each letter the user deliberately saves. They are derived locally from a held camera sample; they are
+not photos, video, raw landmarks, a signer name, or a capture history, and they never leave the phone.
 
-To delete it, go to **Settings → Delete all data**. This removes the file immediately; relaunching
-the app starts you fresh, as if newly installed.
+To delete progress, go to **Settings → Delete all data**. The optional calibration feature is not
+currently exposed. When enabled, it will offer deletion for one letter or all saved calibration in
+**Settings → Improve recognition**; those actions will remove the corresponding local data
+immediately.
 
 ## Network use and RevenueCat
 

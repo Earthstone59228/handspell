@@ -39,9 +39,10 @@ class KnnLetterClassifier private constructor(
     private val exemplarLetters: IntArray,
     override val supportedLetters: List<Letter>,
     private val k: Int,
+    private val classifierModelId: String = MODEL_ID,
 ) : LetterClassifier {
 
-    override val modelId: String = MODEL_ID
+    override val modelId: String = classifierModelId
 
     override val specVersion: Int = NormalizedHand.SPEC_VERSION
 
@@ -53,6 +54,49 @@ class KnnLetterClassifier private constructor(
         val letterIndex = supportedLetters.indexOf(letter)
         if (letterIndex < 0) return 0
         return exemplarLetters.count { it == letterIndex }
+    }
+
+    /**
+     * Returns a separate immutable classifier with the user's local examples appended. The bundled
+     * reference arrays are never mutated, so an analyser can finish a frame against the old model
+     * while a calibration screen prepares a replacement. Personal examples are intentionally not
+     * written into an asset or shared outside this device.
+     */
+    fun withPersonalExemplars(personal: Map<Letter, List<NormalizedHand>>): KnnLetterClassifier {
+        val accepted = personal
+            .filterKeys { it in supportedLetters && !it.requiresMotion }
+            .toSortedMap(compareBy { it.ordinal })
+        val additionalCount = accepted.values.sumOf(List<NormalizedHand>::size)
+        if (additionalCount == 0) return this
+
+        require(accepted.values.all { hands -> hands.size in 8..24 }) {
+            "personal calibration needs 8..24 exemplars per letter"
+        }
+        require(accepted.values.flatten().all { hand ->
+            hand.vector.size == NormalizedHand.VECTOR_DIM && hand.vector.all(Float::isFinite)
+        }) { "personal exemplars must be finite ${NormalizedHand.VECTOR_DIM}-float vectors" }
+
+        val combinedVectors = FloatArray(exemplars.size + additionalCount * NormalizedHand.VECTOR_DIM)
+        exemplars.copyInto(combinedVectors)
+        val combinedLetters = IntArray(exemplarLetters.size + additionalCount)
+        exemplarLetters.copyInto(combinedLetters)
+        var exemplar = exemplarLetters.size
+        for ((letter, hands) in accepted) {
+            val index = supportedLetters.indexOf(letter)
+            for (hand in hands) {
+                hand.vector.copyInto(combinedVectors, exemplar * NormalizedHand.VECTOR_DIM)
+                combinedLetters[exemplar] = index
+                exemplar++
+            }
+        }
+        return KnnLetterClassifier(
+            assetName = assetName,
+            exemplars = combinedVectors,
+            exemplarLetters = combinedLetters,
+            supportedLetters = supportedLetters,
+            k = k,
+            classifierModelId = "$MODEL_ID+personal-v1",
+        )
     }
 
     override fun classify(hand: NormalizedHand, timestampMs: Long): Classification {

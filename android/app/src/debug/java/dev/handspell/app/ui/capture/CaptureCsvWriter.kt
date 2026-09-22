@@ -1,6 +1,7 @@
 package dev.handspell.app.ui.capture
 
 import android.content.Context
+import dev.handspell.app.calibration.DebugSignerId
 import dev.handspell.app.core.model.HandLandmarks
 import dev.handspell.app.core.model.Letter
 import java.io.File
@@ -13,7 +14,7 @@ const val CAPTURE_FRAME_CONVENTION = "selfie-upright-v1"
 const val CAPTURE_SCHEMA_VERSION = 1
 
 /** Opaque signer labels the capture screen offers — never a real name (docs/CLASSIFIER.md §7). */
-val CAPTURE_SIGNER_IDS: List<String> = listOf("s1", "s2", "s3", "s4", "s5")
+val CAPTURE_SIGNER_IDS: List<String> = DebugSignerId.quickChoices.map(DebugSignerId::value)
 
 /**
  * Column order for the capture CSV, exactly per docs/CLASSIFIER.md §7: 15 metadata columns, 21
@@ -49,6 +50,9 @@ data class CaptureRowContext(
  * `CaptureCsvRowTest` can assert the 141-column layout without a device or a `Context`.
  */
 fun buildCaptureCsvRow(context: CaptureRowContext, landmarks: HandLandmarks): List<String> {
+    require(DebugSignerId.parse(context.signerId) != null) {
+        "signer id must be an opaque s-prefixed number, not a name or free text"
+    }
     val metadata = listOf(
         CAPTURE_SCHEMA_VERSION.toString(),
         CAPTURE_FRAME_CONVENTION,

@@ -75,6 +75,16 @@ screenshot tests only.
 `DetectorStatus.Failed(messageId, cause)` carries a string-resource key, not a message — the UI never
 renders an exception.
 
+## 2.1. Personal calibration — `calibration/`
+
+`PersonalCalibrationSession` is the only capture-facing backend. It normalizes a deliberate held
+sample, deduplicates within the active letter at Euclidean distance `< 0.05`, and permits save only
+after 8 through 24 finite vectors. It rejects J/Z. `PersonalCalibrationStore` exposes a
+`Flow<PersonalCalibrationSnapshot>` plus replace/delete/clear operations; its DataStore implementation
+stores normalized vectors only and reports unreadable/corrupt storage explicitly. `DebugSignerId` is
+for debug research capture only and accepts opaque `s` + 1–6 digit IDs, never names. `ReloadableKnnLetterClassifier`
+swaps complete immutable stage-1 models atomically; it does not silently override the stage-2 MLP.
+
 ## 3. Content — `content/`
 
 ```kotlin

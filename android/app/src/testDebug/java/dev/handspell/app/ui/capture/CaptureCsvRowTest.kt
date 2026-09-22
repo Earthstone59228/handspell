@@ -5,6 +5,7 @@ import dev.handspell.app.core.model.Handedness
 import dev.handspell.app.core.model.Landmark3
 import dev.handspell.app.core.model.Letter
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -87,5 +88,13 @@ class CaptureCsvRowTest {
     @Test
     fun `five opaque signer ids are offered, never a name`() {
         assertEquals(listOf("s1", "s2", "s3", "s4", "s5"), CAPTURE_SIGNER_IDS)
+    }
+
+    @Test
+    fun `capture rejects a free-text signer id before a row can be written`() {
+        val invalid = sampleContext().copy(signerId = "Taylor")
+        assertThrows(IllegalArgumentException::class.java) {
+            buildCaptureCsvRow(invalid, sampleLandmarks())
+        }
     }
 }

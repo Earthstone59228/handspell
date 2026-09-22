@@ -216,9 +216,19 @@ landmarker_model,wx0,wy0,wz0,...,wx20,wy20,wz20,ix0,iy0,iz0,...,ix20,iy20,iz20
 
 15 metadata columns + 63 world + 63 image = **141 columns**. Image landmarks are recorded even though
 the normaliser ignores them, so an xy-image-space fallback can be evaluated offline without
-re-capturing. `signer_id` is a short opaque label (`s1`…`s5`) chosen in the app, never a name. The
+re-capturing. `signer_id` is a short opaque label (`s1`…`s5` by default; advanced debug entry accepts
+`s` plus a non-zero number of up to six digits) chosen in the app, never a name. The
 screen shows the target letter, a live landmark overlay, a frame counter per letter, and requires the
 signer id to be set before it will write anything.
+
+## 7.1. Personal calibration
+
+Release builds may let a learner deliberately save 8–24 distinct normalized vectors for one static
+letter to improve recognition on that device. This is not debug capture: no signer ID, raw/world/image
+landmarks, frame, timestamp, or CSV is retained. The vectors remain in app-private storage and can be
+deleted per letter or all at once from Settings. Because a personalized k-NN reference set and the
+shipped MLP are different models, enabling personal samples for live scoring must be an explicit,
+evaluated product decision — never an invisible global MLP downgrade.
 
 ## 8. Evaluation protocol
 

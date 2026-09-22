@@ -8,6 +8,7 @@ import java.io.IOException
 import java.io.InputStream
 import kotlin.math.sqrt
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -138,6 +139,24 @@ class KnnLetterClassifierTest {
         val classifier = load(referenceCsv(defaultRows()))
         assertEquals("knn-v1", classifier.modelId)
         assertEquals(NormalizedHand.SPEC_VERSION, classifier.specVersion)
+    }
+
+    @Test
+    fun `personal exemplars can be swapped in and cleared without mutating bundled references`() {
+        val bundled = load(referenceCsv(defaultRows()))
+        val classifier = ReloadableKnnLetterClassifier(bundled)
+        val aPose = NormalizedHand(exemplar(0, 0))
+
+        assertEquals(Letter.A, classifier.classify(aPose, 0L).top?.letter)
+        classifier.replacePersonalExemplars(mapOf(Letter.B to List(8) { aPose }))
+        assertTrue(classifier.hasPersonalExemplars)
+        assertEquals("knn-v1+personal-v1", classifier.modelId)
+        assertEquals(Letter.B, classifier.classify(aPose, 0L).top?.letter)
+
+        classifier.replacePersonalExemplars(emptyMap())
+        assertFalse(classifier.hasPersonalExemplars)
+        assertEquals("knn-v1", classifier.modelId)
+        assertEquals(Letter.A, classifier.classify(aPose, 0L).top?.letter)
     }
 
     @Test

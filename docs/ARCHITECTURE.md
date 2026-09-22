@@ -33,6 +33,7 @@ vision/feedback/             DefaultFeedbackEngine: EMA smoothing + hold-to-conf
 vision/detector/             CameraSignDetector: wires the above into the SignDetector façade.
 content/                     ContentRepository + pack data classes + JSON parsing.
 progress/                    ProgressStore over DataStore.
+calibration/                 Local personal-calibration session and DataStore boundary; no raw frames.
 billing/                     EntitlementGate + RevenueCat implementation.
 ui/theme/                    Tokens: Spacing, AslColors, AslTypography, Shapes, Motion.
 ui/components/               FeedbackBadge, CameraFrame, LetterTile, PrimaryButton, StateScaffold.
@@ -120,8 +121,11 @@ migrations, a compiler plugin and DAO tests for a document that is always read w
 `ProgressSnapshot.SCHEMA_VERSION`; an unreadable or newer document is replaced with a fresh one
 rather than crashing. `clearAll()` deletes the file, and it is reachable from Settings.
 
-Reference exemplars and MLP weights are read-only assets, not storage. Dev captures are written as
-CSV to the app-specific external files dir in debug builds only, pulled with `adb pull`.
+Reference exemplars and MLP weights are read-only assets, not storage. Personal calibration is a
+separate app-private DataStore document containing only up to 24 user-selected, normalized 66-float
+vectors per static letter; it contains no frames, raw/image/world landmarks, signer IDs, or capture
+timestamps and has per-letter and clear-all deletion operations. Dev captures are written as CSV to
+the app-specific external files dir in debug builds only, pulled with `adb pull`.
 
 ## 8. Content packs
 
