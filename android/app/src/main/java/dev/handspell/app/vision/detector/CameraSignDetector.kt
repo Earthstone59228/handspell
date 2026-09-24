@@ -3,6 +3,7 @@ package dev.handspell.app.vision.detector
 import android.content.Context
 import android.os.SystemClock
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import dev.handspell.app.core.model.HandLandmarks
 import dev.handspell.app.core.model.HandOverlay
 import dev.handspell.app.core.model.Letter
@@ -49,6 +50,8 @@ class CameraSignDetector(
     private val statusState = MutableStateFlow<DetectorStatus>(initialFailureStatus ?: DetectorStatus.Idle)
     private val feedbackState = MutableStateFlow<SignFeedbackState>(SignFeedbackState.NoHand(null))
     private val overlayState = MutableStateFlow<HandOverlay?>(null)
+    private val lowLightState = MutableStateFlow(false)
+    private val thumbnailState = MutableStateFlow<android.graphics.Bitmap?>(null)
     private val lock = Any()
     private val analysisExecutor: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
         Thread(runnable, "handspell-analysis")
@@ -58,18 +61,26 @@ class CameraSignDetector(
     override val classifierModelId: String? = classifier?.modelId
     override val feedback: Flow<SignFeedbackState> = feedbackState.asStateFlow()
     override val overlay: StateFlow<HandOverlay?> = overlayState.asStateFlow()
+    override val lowLightNotice: StateFlow<Boolean> = lowLightState.asStateFlow()
+    override val previewThumbnail: StateFlow<android.graphics.Bitmap?> = thumbnailState.asStateFlow()
     override val analyzerExecutor: Executor = analysisExecutor
 
     @Volatile
     private var landmarkerHelper: HandLandmarkerHelper? = null
 
     private var target: Letter? = null
+    @Volatile private var lastHandSeenMs = 0L
+    @Volatile private var lowLightDismissed = false
 
     override val analyzer: ImageAnalysis.Analyzer = ImageAnalysis.Analyzer { imageProxy ->
         try {
             val helper = landmarkerHelper
             if (helper != null) {
+                val now = SystemClock.uptimeMillis()
+                if (!lowLightDismissed && now - lastHandSeenMs >= LOW_LIGHT_WAIT_MS &&
+                    isLowLight(imageProxy)) lowLightState.value = true
                 val frame = frameConverter.convert(imageProxy)
+                thumbnailState.value = frame.thumbnail
                 helper.detect(frame.image, SystemClock.uptimeMillis(), frame.width, frame.height)
             }
         } finally {
@@ -91,6 +102,8 @@ class CameraSignDetector(
         if (statusState.value == DetectorStatus.Running) return
         if (statusState.value is DetectorStatus.Failed) return
         statusState.value = DetectorStatus.Starting
+        lastHandSeenMs = SystemClock.uptimeMillis()
+        lowLightState.value = false
         try {
             landmarkerHelper = HandLandmarkerHelper(
                 context = context,
@@ -110,8 +123,15 @@ class CameraSignDetector(
             feedbackEngine.reset()
             feedbackState.value = SignFeedbackState.NoHand(target)
             overlayState.value = null
+            thumbnailState.value = null
         }
         statusState.value = initialFailureStatus ?: DetectorStatus.Idle
+        lowLightState.value = false
+    }
+
+    override fun dismissLowLightNotice() {
+        lowLightDismissed = true
+        lowLightState.value = false
     }
 
     private fun onHandLandmarks(hands: List<HandLandmarks>) {
@@ -122,6 +142,8 @@ class CameraSignDetector(
                 return
             }
             val classifier = classifier ?: return
+            lastHandSeenMs = SystemClock.uptimeMillis()
+            lowLightState.value = false
 
             // Single-target practice uses the first hand MediaPipe reports.
             val hand = hands.first()
@@ -148,5 +170,25 @@ class CameraSignDetector(
 
     companion object {
         private const val ERROR_LANDMARKER_FAILED = "error_landmarker_failed"
+        private const val LOW_LIGHT_WAIT_MS = 5_000L
+        private const val LOW_LIGHT_MEAN_RGB = 45
+    }
+
+    private fun isLowLight(image: ImageProxy): Boolean {
+        val plane = image.planes.firstOrNull() ?: return false
+        val buffer = plane.buffer
+        var total = 0L
+        var samples = 0
+        for (row in 0 until 8) for (column in 0 until 8) {
+            val x = (column * image.width / 8).coerceAtMost(image.width - 1)
+            val y = (row * image.height / 8).coerceAtMost(image.height - 1)
+            val index = y * plane.rowStride + x * plane.pixelStride
+            if (index + 2 >= buffer.limit()) continue
+            total += (buffer.get(index).toInt() and 0xff) +
+                (buffer.get(index + 1).toInt() and 0xff) +
+                (buffer.get(index + 2).toInt() and 0xff)
+            samples++
+        }
+        return samples > 0 && total < LOW_LIGHT_MEAN_RGB * 3L * samples
     }
 }

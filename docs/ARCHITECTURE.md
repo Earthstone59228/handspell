@@ -11,7 +11,7 @@ build log rather than in code.
 | `applicationId` / Kotlin root package | `dev.handspell.app` | Reverse-DNS, no `com.example` (Play rejects it), no personal name to strip later. |
 | Module | single `:app` | One module builds faster than four in a 17-day window and there is no second consumer of any layer. |
 | `minSdk` / `targetSdk` | 24 / current stable | MediaPipe Tasks requires 24; RevenueCat requires 23. 24 wins. |
-| Language / UI | Kotlin, Jetpack Compose, Material 3 | Google's first-party, best-documented path; see the build plan's stack decision. |
+| Language / UI | Kotlin, Jetpack Compose, Material 3, bundled Ionic alphabet | Compose owns camera, progress, settings, content and billing. The unchanged alphabet build is shown in a local WebView. |
 
 ## 2. Package layout (`android/app/src/main/java/dev/handspell/app/`)
 
@@ -119,7 +119,7 @@ dataset is 24 letter counters, a set of completed story step ids, ≤50 speed ru
 numbers — a few kilobytes with no queries, no joins and no partial updates. Room would mean a schema,
 migrations, a compiler plugin and DAO tests for a document that is always read whole. Versioned by
 `ProgressSnapshot.SCHEMA_VERSION`; an unreadable or newer document is replaced with a fresh one
-rather than crashing. `clearAll()` deletes the file, and it is reachable from Settings.
+rather than crashing. `clearAll()` clears the DataStore document atomically, and it is reachable from Settings.
 
 Reference exemplars and MLP weights are read-only assets, not storage. Personal calibration is a
 separate app-private DataStore document containing only up to 24 user-selected, normalized 66-float
@@ -155,7 +155,10 @@ build we ship for judging.
 There is no server, no account, no login, no analytics SDK, no crash reporter, no remote config and
 no content CDN. Camera frames exist only as a `Bitmap` inside the analysis thread and are never
 written to disk, encoded, uploaded or logged. Landmarks are never persisted outside the debug-only
-capture screen. Progress is a local file.
+capture screen. Camera and lesson progress is in DataStore. The unchanged Ionic alphabet build is
+bundled in `assets/web`, loaded through `WebViewAssetLoader`, and keeps its self-reported checkmarks
+in WebView local storage. The paper icon opens the bundled privacy, MIT license and attribution files;
+the Settings deletion action clears both progress stores.
 
 The app does declare `android.permission.INTERNET`, because the RevenueCat SDK needs it to validate
 the `pro` entitlement. That is the only reason, the only network user, and `api.revenuecat.com` is
@@ -170,7 +173,8 @@ app is offline when it is not.
 | Hand landmarking, normalisation, classification, smoothing | on the phone, CPU, in-process |
 | Reference exemplars / MLP weights | bundled in `assets/`, read-only |
 | Lesson content | bundled in `assets/`, read-only |
-| Progress and settings | DataStore file in app-private storage |
+| Camera/lesson progress and settings | DataStore file in app-private storage |
+| Alphabet checkmarks | WebView local storage for the bundled asset origin |
 | MLP training, evaluation, weight export | `training/`, Python on a laptop, offline, never on the phone |
 | Entitlement check and purchase | RevenueCat SDK ↔ RevenueCat Test Store |
 | Dev capture CSV | debug builds only, app-specific external files dir, pulled over adb |

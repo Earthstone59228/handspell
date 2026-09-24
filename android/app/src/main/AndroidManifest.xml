@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- Only used by the RevenueCat SDK to validate the "pro" entitlement (docs/ARCHITECTURE.md §10). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Very light haptic ticks on the alphabet scrubber; a normal permission, no prompt. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- Both declared android:required="false": lint (PermissionImpliesUnsupportedChromeOsHardware)
          wants the general camera feature disclaimed too, since CAMERA implies it by default. -->
@@ -33,7 +35,7 @@
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@style/Theme.Handspell">
 
         <!-- Portrait is deliberate: this is a front-camera practice app and the framing in
              docs/DESIGN.md §4 assumes a portrait selfie. Android 16 stops honouring orientation
@@ -47,7 +49,7 @@
             android:exported="true"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.Material.Light.NoActionBar"
+            android:theme="@style/Theme.Handspell"
             tools:ignore="LockedOrientationActivity,DiscouragedApi">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

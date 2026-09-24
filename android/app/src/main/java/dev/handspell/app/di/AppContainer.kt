@@ -2,8 +2,16 @@ package dev.handspell.app.di
 
 import android.content.Context
 import android.content.res.AssetManager
+import dev.handspell.app.billing.EntitlementGate
+import dev.handspell.app.billing.NoopEntitlementGate
+import dev.handspell.app.billing.RevenueCatEntitlementGate
+import dev.handspell.app.BuildConfig
 import dev.handspell.app.content.AssetContentRepository
 import dev.handspell.app.content.ContentRepository
+import dev.handspell.app.prefs.AppPreferencesStore
+import dev.handspell.app.prefs.DataStoreAppPreferencesStore
+import dev.handspell.app.progress.DataStoreProgressStore
+import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.vision.LetterClassifier
 import dev.handspell.app.vision.SignDetector
 import dev.handspell.app.vision.classify.ClassifierAssetException
@@ -26,6 +34,14 @@ import dev.handspell.app.vision.normalize.DefaultHandNormalizer
  * UI work and screenshot tests, but is no longer wired here.
  */
 class AppContainer(context: Context) {
+
+    val appPreferencesStore: AppPreferencesStore = DataStoreAppPreferencesStore(context)
+    val progressStore: ProgressStore = DataStoreProgressStore(context)
+    val entitlementGate: EntitlementGate = if (BuildConfig.REVENUECAT_API_KEY.isBlank()) {
+        NoopEntitlementGate()
+    } else {
+        RevenueCatEntitlementGate(context, BuildConfig.REVENUECAT_API_KEY)
+    }
 
     private val classifierLoad = try {
         ClassifierLoad(classifier = loadClassifier(context.assets), failure = null)

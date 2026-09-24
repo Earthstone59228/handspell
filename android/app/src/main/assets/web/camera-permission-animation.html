@@ -1,0 +1,33 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden}
+#stage{position:fixed;left:0;top:0;width:100%;height:100%;display:block}
+#arc{stroke-dasharray:848;transform:rotate(-90deg);transform-origin:190px 190px;animation:arc 4.8s cubic-bezier(.65,0,.35,1) infinite}
+#lens-ring{transform-origin:190px 134px;animation:lens 2.4s ease-out infinite}
+#scan{animation:scan 2.4s ease-in-out infinite alternate}
+.corner{animation:frame 2.4s ease-in-out infinite alternate;transform-origin:190px 214px}
+@keyframes arc{0%{stroke-dashoffset:848;opacity:1}62%{stroke-dashoffset:0;opacity:1}90%{stroke-dashoffset:0;opacity:0}100%{stroke-dashoffset:848;opacity:0}}
+@keyframes lens{0%{transform:scale(1);opacity:.75}100%{transform:scale(2.6);opacity:0}}
+@keyframes scan{from{transform:translateY(-58px)}to{transform:translateY(58px)}}
+@keyframes frame{from{transform:scale(1)}to{transform:scale(.94)}}
+@media (prefers-reduced-motion:reduce){#arc,#lens-ring,#scan,.corner{animation:none}#arc{stroke-dashoffset:212}}
+</style>
+<svg id="stage" viewBox="0 0 380 380" role="img" xmlns="http://www.w3.org/2000/svg">
+<title>A phone camera watching for a hand</title>
+<desc>A smartphone facing you with a pulsing camera lens and a scan line moving across its screen, inside a blue ring that fills clockwise.</desc>
+<circle cx="190" cy="190" r="135" fill="none" stroke="#D6E8FF" stroke-width="10"/>
+<circle id="arc" cx="190" cy="190" r="135" fill="none" stroke="#007AFF" stroke-width="10" stroke-linecap="round"/>
+<g stroke="#007AFF" stroke-linejoin="round" stroke-linecap="round">
+  <rect x="136" y="92" width="108" height="196" rx="24" fill="#FFFFFF" stroke-width="5"/>
+  <rect x="145" y="101" width="90" height="178" rx="17" fill="#EEF5FF" stroke-width="2.2"/>
+  <circle id="lens-ring" cx="190" cy="134" r="8" fill="none" stroke-width="2.5"/>
+  <circle cx="190" cy="134" r="6" fill="#007AFF" stroke-width="1"/>
+  <g fill="none" stroke-width="5">
+    <path class="corner" d="M158 178v-13h13M222 178v-13h-13M158 250v13h13M222 250v13h-13"/>
+  </g>
+  <clipPath id="screen"><rect x="158" y="165" width="64" height="98"/></clipPath>
+  <g clip-path="url(#screen)"><g id="scan"><path d="M158 214h64" fill="none" stroke-width="5"/></g></g>
+</g>
+</svg>

@@ -40,6 +40,9 @@ class FakeSignDetector(
     override val feedback: Flow<SignFeedbackState> = feedbackState.asStateFlow()
 
     override val overlay: StateFlow<HandOverlay?> = MutableStateFlow(null).asStateFlow()
+    override val previewThumbnail: StateFlow<android.graphics.Bitmap?> = MutableStateFlow<android.graphics.Bitmap?>(null).asStateFlow()
+    override val lowLightNotice: StateFlow<Boolean> = MutableStateFlow(false).asStateFlow()
+    override fun dismissLowLightNotice() = Unit
 
     /** Drops every frame; the fake never looks at pixels. */
     override val analyzer: ImageAnalysis.Analyzer = ImageAnalysis.Analyzer { image -> image.close() }

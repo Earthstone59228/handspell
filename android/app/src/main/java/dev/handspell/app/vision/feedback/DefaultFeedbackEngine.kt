@@ -38,6 +38,10 @@ class DefaultFeedbackEngine(
         require(thresholds.noHandFrames >= 1) {
             "noHandFrames must be at least 1, got ${thresholds.noHandFrames}"
         }
+        require(
+            thresholds.probabilityBand >= 0f && thresholds.marginBand >= 0f && thresholds.distanceBand >= 0f &&
+                thresholds.holdGraceMs >= 0L && thresholds.adjustDropDelayMs >= 0L,
+        ) { "hysteresis bands and delays must not be negative" }
     }
 
     /** Smoothed probability per [Letter.ordinal]; letters the classifier never reports stay at 0. */
@@ -59,6 +63,12 @@ class DefaultFeedbackEngine(
     /** How long the pose was actually held when the conditions last held; frozen during a dip. */
     private var heldMs = 0L
 
+    /** Last frame on which the hold conditions (enter or exit band, as applicable) were met. */
+    private var lastMetMs: Long? = null
+
+    /** Last time a genuine (not held-over) Adjust was produced; delays dropping to NotRecognized. */
+    private var lastAdjustMs: Long? = null
+
     private var lastState: SignFeedbackState? = null
 
     override fun setTarget(target: Letter?) {
@@ -76,6 +86,8 @@ class DefaultFeedbackEngine(
         holdStartMs = null
         matchedAtMs = null
         heldMs = 0L
+        lastMetMs = null
+        lastAdjustMs = null
         lastState = null
     }
 
@@ -100,14 +112,21 @@ class DefaultFeedbackEngine(
             distance
         }
 
+        // Hysteresis: starting a hold needs the strict "enter" band; an established hold (or latched match) only has
+        // to stay inside the looser "exit" band, so a score hovering around the threshold cannot make it flicker.
+        val engaged = holdStartMs != null || matchedAtMs != null
+        val probabilityNeeded = thresholds.matchProbability - if (engaged) thresholds.probabilityBand else 0f
+        val marginNeeded = thresholds.matchMargin - if (engaged) thresholds.marginBand else 0f
+        val distanceAllowed = thresholds.matchDistance + if (engaged) thresholds.distanceBand else 0f
         val matchConditionsMet = known[target.ordinal] &&
-            targetProbability >= thresholds.matchProbability &&
-            targetProbability - runnerUpProbability >= thresholds.matchMargin &&
-            (!isStageOne || acceptanceDistance <= thresholds.matchDistance)
+            targetProbability >= probabilityNeeded &&
+            targetProbability - runnerUpProbability >= marginNeeded &&
+            (!isStageOne || acceptanceDistance <= distanceAllowed)
 
         matchedAtMs?.let { matchedAt ->
             if (now - matchedAt < thresholds.matchLatchMs) {
                 if (matchConditionsMet) {
+                    lastMetMs = now
                     holdStartMs?.let { heldMs = now - it }
                 }
                 return emit(SignFeedbackState.Match(target, targetProbability, heldMs))
@@ -118,6 +137,7 @@ class DefaultFeedbackEngine(
         }
 
         if (matchConditionsMet) {
+            lastMetMs = now
             val holdStart = holdStartMs ?: now.also { holdStartMs = it }
             val elapsed = now - holdStart
             if (elapsed >= thresholds.holdToConfirmMs) {
@@ -125,6 +145,7 @@ class DefaultFeedbackEngine(
                 heldMs = elapsed
                 return emit(SignFeedbackState.Match(target, targetProbability, elapsed))
             }
+            lastAdjustMs = now
             return emit(
                 SignFeedbackState.Adjust(
                     target = target,
@@ -135,18 +156,34 @@ class DefaultFeedbackEngine(
             )
         }
 
-        // Any failed condition breaks continuity; the next qualifying frame starts a fresh window.
+        // One noisy frame must not throw away a hold that was going well: freeze its progress for a moment.
+        val holdStart = holdStartMs
+        val lastMet = lastMetMs
+        if (holdStart != null && lastMet != null && now - lastMet <= thresholds.holdGraceMs) {
+            lastAdjustMs = now
+            return emit(
+                SignFeedbackState.Adjust(
+                    target = target,
+                    confidence = targetProbability,
+                    hint = ConfusableHints.hintFor(target, runnerUp),
+                    holdProgress = holdProgress(lastMet - holdStart),
+                ),
+            )
+        }
+
+        // Any failed condition (beyond the grace above) breaks continuity; the next qualifying frame starts fresh.
         holdStartMs = null
 
         if (isStageOne && acceptanceDistance > thresholds.rejectDistance) {
             // Nothing in the reference set is close to this hand, so no letter gets named no matter
             // what the weighted neighbour vote says.
-            return emit(SignFeedbackState.NotRecognized(target, targetProbability))
+            return emit(notRecognized(target, targetProbability, runnerUp, now))
         }
 
         val worthNaming = known[target.ordinal] &&
             (targetProbability >= thresholds.adjustProbability || isInTopThree(target))
         return if (worthNaming) {
+            lastAdjustMs = now
             emit(
                 SignFeedbackState.Adjust(
                     target = target,
@@ -156,8 +193,26 @@ class DefaultFeedbackEngine(
                 ),
             )
         } else {
-            emit(SignFeedbackState.NotRecognized(target, targetProbability))
+            emit(notRecognized(target, targetProbability, runnerUp, now))
         }
+    }
+
+    /**
+     * "Not recognised" only replaces "keep adjusting" once the latter has been on screen for
+     * [FeedbackThresholds.adjustDropDelayMs]; until then the badge stays on Adjust (progress at zero), so a
+     * hand wobbling around the boundary does not strobe between the two messages.
+     */
+    private fun notRecognized(target: Letter, probability: Float, runnerUp: Letter?, now: Long): SignFeedbackState {
+        val lastAdjust = lastAdjustMs
+        if (lastState is SignFeedbackState.Adjust && lastAdjust != null && now - lastAdjust < thresholds.adjustDropDelayMs) {
+            return SignFeedbackState.Adjust(
+                target = target,
+                confidence = probability,
+                hint = ConfusableHints.hintFor(target, runnerUp),
+                holdProgress = 0f,
+            )
+        }
+        return SignFeedbackState.NotRecognized(target, probability)
     }
 
     override fun onNoHand(timestampMs: Long): SignFeedbackState {

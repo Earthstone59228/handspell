@@ -3,20 +3,20 @@ package dev.handspell.app.ui.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -30,6 +30,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import dev.handspell.app.R
 import dev.handspell.app.content.PackItem
+import dev.handspell.app.content.ContentPack
+import dev.handspell.app.content.PackKind
+import dev.handspell.app.core.model.Letter
 import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
@@ -40,109 +43,158 @@ fun HomeScreen(
     onSelectDrill: (PackItem.Drill) -> Unit,
     onRetry: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenPack: (ContentPack) -> Unit,
+    showProPacks: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val colors = LocalAslColors.current
-    Column(modifier = modifier.fillMaxSize().background(colors.backgroundGrouped)) {
-        HomeTopBar(onOpenSettings)
+    Column(modifier.fillMaxSize().background(colors.backgroundGrouped)) {
+        Row(
+            Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)
+                .padding(start = Spacing.md, end = Spacing.xs, top = Spacing.xs, bottom = Spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+            TextButton(onClick = onOpenSettings, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) {
+                Text(stringResource(R.string.settings))
+            }
+        }
         when {
-            state.isLoading -> LoadingHome(Modifier.weight(1f))
-            state.error -> UnavailableHome(onRetry, Modifier.weight(1f))
-            else -> PracticeHome(state.drills, onSelectDrill, Modifier.weight(1f))
+            state.isLoading -> HomeMessage(stringResource(R.string.content_loading), null, null, Modifier.weight(1f))
+            state.error -> HomeMessage(
+                stringResource(R.string.content_unavailable_title),
+                stringResource(R.string.content_unavailable_body), onRetry, Modifier.weight(1f),
+            )
+            else -> PracticeCatalogue(state, onSelectDrill, onOpenPack, showProPacks, Modifier.weight(1f))
         }
     }
 }
 
 @Composable
-private fun HomeTopBar(onOpenSettings: () -> Unit) = Row(
-    modifier = Modifier
-        .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.background)
-        .padding(start = Spacing.md, end = Spacing.xs, top = Spacing.xs, bottom = Spacing.xs),
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    Text(
-        text = stringResource(R.string.app_name),
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.weight(1f),
-    )
-    TextButton(
-        onClick = onOpenSettings,
-        modifier = Modifier.sizeIn(minWidth = Spacing.touchTarget, minHeight = Spacing.touchTarget),
-    ) {
-        Text(stringResource(R.string.settings))
-    }
-}
-
-@Composable
-private fun PracticeHome(drills: List<PackItem.Drill>, onSelectDrill: (PackItem.Drill) -> Unit, modifier: Modifier) {
-    val colors = LocalAslColors.current
-    Column(
+private fun PracticeCatalogue(state: HomeUiState, onSelectDrill: (PackItem.Drill) -> Unit,
+                              onOpenPack: (ContentPack) -> Unit, showProPacks: Boolean, modifier: Modifier) {
+    val practised = state.attemptCounts.values.count { it > 0 }
+    val next = state.drills.firstOrNull { (state.attemptCounts[it.letter] ?: 0) == 0 } ?: state.drills.firstOrNull()
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = Spacing.letterTile),
         modifier = modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(Spacing.xl),
+        contentPadding = PaddingValues(Spacing.md),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.md, vertical = Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-        ) {
-            Text(text = stringResource(R.string.practice_title), style = MaterialTheme.typography.headlineMedium)
-            Text(text = stringResource(R.string.home_description), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Column(Modifier.padding(bottom = Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(stringResource(R.string.practice_title), style = MaterialTheme.typography.headlineMedium)
+                Text(
+                    stringResource(R.string.home_description),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = LocalAslColors.current.labelSecondary,
+                )
+            }
         }
-        Column(modifier = Modifier.padding(horizontal = Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            Text(text = stringResource(R.string.practice_letters_heading), style = MaterialTheme.typography.titleMedium)
-            Text(text = stringResource(R.string.practice_letters_summary, drills.size), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
+        if (next != null) item(span = { GridItemSpan(maxLineSpan) }) {
+            FeaturedLetter(next, practised, onSelectDrill, Modifier.padding(bottom = Spacing.xl))
         }
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(minSize = Spacing.letterTile),
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = Spacing.md, vertical = Spacing.xs),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-        ) {
-            items(drills, key = { it.letter.name }) { drill -> LetterTile(drill, onSelectDrill) }
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Column(Modifier.padding(bottom = Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                Text(stringResource(R.string.practice_letters_heading), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.practice_letters_progress, practised, state.drills.size),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = LocalAslColors.current.labelSecondary,
+                )
+            }
+        }
+        items(state.drills, key = { it.letter.name }) { drill ->
+            LetterTile(drill, state.attemptCounts[drill.letter] ?: 0, onSelectDrill)
+        }
+        val proPacks = state.packs.filter { showProPacks && it.kind != PackKind.DRILL }
+        if (proPacks.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+            Text(stringResource(R.string.home_pro_packs), style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = Spacing.xl))
+        }
+        items(proPacks, key = { it.packId }, span = { GridItemSpan(maxLineSpan) }) { pack ->
+            Surface(
+                modifier = Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
+                    .clickable(role = Role.Button) { onOpenPack(pack) },
+                shape = RoundedCornerShape(AslShapes.large), color = LocalAslColors.current.surface,
+                contentColor = LocalAslColors.current.onSurface,
+            ) {
+                Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                    Text(pack.title, style = MaterialTheme.typography.titleMedium)
+                    Text(pack.summary, style = MaterialTheme.typography.bodyMedium,
+                        color = LocalAslColors.current.onSurfaceSecondary)
+                    Text(stringResource(R.string.home_pro_label), style = MaterialTheme.typography.bodyMedium,
+                        color = LocalAslColors.current.accent)
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun LetterTile(drill: PackItem.Drill, onSelectDrill: (PackItem.Drill) -> Unit) {
+private fun FeaturedLetter(
+    drill: PackItem.Drill,
+    practised: Int,
+    onSelectDrill: (PackItem.Drill) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalAslColors.current
-    val description = stringResource(R.string.letter_tile_content_description, drill.letter.display)
+    val description = stringResource(R.string.home_continue_description, drill.letter.display)
     Surface(
-        modifier = Modifier
-            .sizeIn(minWidth = Spacing.touchTarget, minHeight = Spacing.touchTarget)
-            .heightIn(min = Spacing.letterTile)
-            .clickable(role = Role.Button, onClick = { onSelectDrill(drill) })
+        modifier.fillMaxWidth().sizeIn(minHeight = Spacing.referenceGuide)
+            .clickable(role = Role.Button) { onSelectDrill(drill) }
             .semantics { contentDescription = description },
-        shape = RoundedCornerShape(AslShapes.medium),
-        color = colors.surface,
-        border = androidx.compose.foundation.BorderStroke(Spacing.hairline, colors.separator),
+        shape = RoundedCornerShape(AslShapes.large),
+        color = colors.accent,
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
+        Row(
+            Modifier.padding(Spacing.md),
+            horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(drill.letter.display, style = MaterialTheme.typography.displaySmall, color = MaterialTheme.colorScheme.onPrimary)
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                Text(
+                    stringResource(if (practised == 0) R.string.home_start_letter else R.string.home_continue_letter),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+                Text(drill.prompt, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimary)
+            }
+        }
+    }
+}
+
+@Composable
+private fun LetterTile(drill: PackItem.Drill, attempts: Int, onSelectDrill: (PackItem.Drill) -> Unit) {
+    val colors = LocalAslColors.current
+    val description = stringResource(R.string.letter_tile_progress_description, drill.letter.display, attempts)
+    Surface(
+        modifier = Modifier.fillMaxWidth().sizeIn(minWidth = Spacing.touchTarget, minHeight = Spacing.letterTile)
+            .clickable(role = Role.Button) { onSelectDrill(drill) }
+            .semantics { contentDescription = description },
+        shape = RoundedCornerShape(AslShapes.large),
+        color = colors.surface,
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(drill.letter.display, style = MaterialTheme.typography.titleLarge, color = colors.accent)
+        }
+    }
+}
+
+@Composable
+private fun HomeMessage(title: String, body: String?, onRetry: (() -> Unit)?, modifier: Modifier) {
+    Column(
+        modifier.fillMaxSize().padding(Spacing.md),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(text = drill.letter.display, style = MaterialTheme.typography.titleLarge, color = colors.accent)
-        }
-    }
-}
-
-@Composable
-private fun LoadingHome(modifier: Modifier) {
-    Column(modifier = modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        CircularProgressIndicator()
-        Text(text = stringResource(R.string.content_loading), modifier = Modifier.padding(top = Spacing.sm))
-    }
-}
-
-@Composable
-private fun UnavailableHome(onRetry: () -> Unit, modifier: Modifier) {
-    Column(modifier = modifier.fillMaxSize().padding(Spacing.md), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text = stringResource(R.string.content_unavailable_title), style = MaterialTheme.typography.headlineSmall)
-        Text(text = stringResource(R.string.content_unavailable_body), modifier = Modifier.padding(top = Spacing.xs))
-        Button(onClick = onRetry, modifier = Modifier.padding(top = Spacing.lg).sizeIn(minHeight = Spacing.touchTarget)) {
-            Text(stringResource(R.string.retry))
-        }
+    ) {
+        Text(title, style = MaterialTheme.typography.headlineSmall)
+        if (body != null) Text(body, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = Spacing.xs))
+        if (onRetry != null) Button(
+            onClick = onRetry,
+            modifier = Modifier.padding(top = Spacing.lg).sizeIn(minHeight = Spacing.touchTarget),
+        ) { Text(stringResource(R.string.retry)) }
     }
 }

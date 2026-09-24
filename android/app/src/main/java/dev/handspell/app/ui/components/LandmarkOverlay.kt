@@ -32,13 +32,17 @@ private const val LINE_WIDTH_PX = 4f
 /**
  * Draws the 21 hand landmarks and their connections from [overlay], scaled from the analysed
  * normalised image space onto this composable's own size the same way `PreviewView`'s default
- * `FILL_CENTER` scale type maps the camera stream onto the screen. CameraFrame mirrors its front
- * preview, so this applies the matching visual x/y transform after MediaPipe has seen the
- * selfie-mirrored input (docs/CLASSIFIER.md §1).
+ * `FILL_CENTER` scale type maps the camera stream onto the screen.
+ *
+ * Orientation, verified by dumping the analysed frame next to the screen: PreviewView already shows the front
+ * camera as a selfie mirror. The analysed frame is that mirror turned 180 degrees (FrameConverter mirrors in
+ * sensor space and then rotates), so a landmark maps to the screen with both axes flipped: (1 - x, 1 - y).
+ * The preview must NOT be flipped again in CameraFrame, or left and right look inverted.
  */
 @Composable
 fun LandmarkOverlay(overlay: HandOverlay?, modifier: Modifier = Modifier) {
     val color = MaterialTheme.colorScheme.primary
+    val dotColor = MaterialTheme.colorScheme.onPrimary
     Canvas(modifier = modifier) {
         if (overlay == null || overlay.imageWidth == 0 || overlay.imageHeight == 0) return@Canvas
 
@@ -64,7 +68,7 @@ fun LandmarkOverlay(overlay: HandOverlay?, modifier: Modifier = Modifier) {
             )
         }
         for (index in overlay.imageLandmarks.indices) {
-            drawCircle(color = color, radius = DOT_RADIUS_PX, center = point(index))
+            drawCircle(color = dotColor, radius = DOT_RADIUS_PX, center = point(index))
         }
     }
 }

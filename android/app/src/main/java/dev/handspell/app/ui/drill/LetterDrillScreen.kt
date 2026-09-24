@@ -14,18 +14,22 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -34,17 +38,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,16 +62,25 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.handspell.app.R
 import dev.handspell.app.content.PackItem
+import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.core.model.SignFeedbackState
+import dev.handspell.app.ui.components.AslButton
+import dev.handspell.app.ui.components.AslButtonStyle
+import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.components.CameraFrame
+import dev.handspell.app.ui.components.FrameGeometry
+import dev.handspell.app.ui.components.ScreenHeader
+import dev.handspell.app.ui.components.SetupScreen
 import dev.handspell.app.ui.components.LandmarkOverlay
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 import dev.handspell.app.vision.DetectorStatus
 import dev.handspell.app.vision.SignDetector
 import dev.handspell.app.vision.classify.CanonicalHandshapeCatalog
+import kotlinx.coroutines.launch
 
 private const val CAMERA_PREVIEW_ASPECT_RATIO = 0.75f
+private val CAMERA_FRAME_MAX_WIDTH = 420.dp
 
 /** Screen root: it owns the ViewModel; all children receive immutable state and callbacks. */
 @Composable
@@ -70,22 +89,31 @@ fun LetterDrillRoute(
     drills: List<PackItem.Drill>,
     signDetector: SignDetector,
     canonicalHandshapeCatalog: CanonicalHandshapeCatalog,
+    progressStore: ProgressStore,
     onBack: () -> Unit,
     onSkip: (PackItem.Drill) -> Unit,
+    onMatch: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    sessionKey: String = drill.id,
 ) {
     val viewModel: DrillViewModel = viewModel(
-        key = "drill-${drill.id}",
-        factory = DrillViewModel.factory(signDetector, canonicalHandshapeCatalog),
+        key = "drill",
+        factory = DrillViewModel.factory(signDetector, canonicalHandshapeCatalog, progressStore),
     )
-    LaunchedEffect(drill, drills) { viewModel.setDrill(drill, drills) }
+    LaunchedEffect(drill, drills, sessionKey) { viewModel.setDrill(drill, drills, sessionKey) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     LetterDrillScreen(
-        state = state,
+        state = if (state.sessionKey == sessionKey) state else DrillUiState(),
         onBack = onBack,
-        onSkip = onSkip,
+        onSkip = { next -> scope.launch { viewModel.recordSkip(); onSkip(next) } },
+        onMatch = onMatch,
+        modifier = modifier,
+        thumbnails = viewModel.previewThumbnail,
         onStartDetector = viewModel::startDetector,
         onRetry = viewModel::retryDetector,
         onCameraUnavailable = viewModel::onCameraUnavailable,
+        onDismissLowLight = viewModel::dismissLowLightNotice,
     )
 }
 
@@ -94,9 +122,13 @@ private fun LetterDrillScreen(
     state: DrillUiState,
     onBack: () -> Unit,
     onSkip: (PackItem.Drill) -> Unit,
+    onMatch: (() -> Unit)?,
+    modifier: Modifier,
+    thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>,
     onStartDetector: () -> Unit,
     onRetry: () -> Unit,
     onCameraUnavailable: () -> Unit,
+    onDismissLowLight: () -> Unit,
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -116,75 +148,93 @@ private fun LetterDrillScreen(
     }
     val permanentlyDenied = permissionAsked && activity != null &&
         !androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
+    LaunchedEffect(state.feedback, state.drill?.id) {
+        if (state.feedback is SignFeedbackState.Match && state.feedback.target == state.drill?.letter) onMatch?.invoke()
+    }
 
-    Column(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+    if (!state.isLoading && state.drill != null && !permissionGranted) {
+        CameraPermissionState(
+            permanentlyDenied = permanentlyDenied,
+            onRequest = { launcher.launch(Manifest.permission.CAMERA) },
+            onOpenSettings = {
+                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
+            },
+            onBack = onBack,
+            modifier = modifier,
+        )
+        return
+    }
+    Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         DrillHeader(onBack)
         when {
             state.isLoading || state.drill == null -> DrillLoading()
-            !permissionGranted -> CameraPermissionState(
-                permanentlyDenied = permanentlyDenied,
-                onRequest = { launcher.launch(Manifest.permission.CAMERA) },
-                onOpenSettings = {
-                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
-                },
-            )
             else -> {
                 LaunchedEffect(state.drill.id) { onStartDetector() }
-                ActiveDrill(state, onSkip, onRetry, onCameraUnavailable)
+                ActiveDrill(state, thumbnails, onSkip, onRetry, onCameraUnavailable, onDismissLowLight)
             }
         }
     }
 }
 
 @Composable
-private fun DrillHeader(onBack: () -> Unit) = Row(
-    modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.xs, vertical = Spacing.xs),
-    verticalAlignment = Alignment.CenterVertically,
-) {
-    TextButton(onClick = onBack, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) {
-        Text(stringResource(R.string.back))
-    }
-    Text(stringResource(R.string.drill_title), style = MaterialTheme.typography.titleLarge)
-}
+private fun DrillHeader(onBack: () -> Unit) = ScreenHeader(stringResource(R.string.drill_title), onBack, compact = true)
 
 @Composable
 private fun DrillLoading() = Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-    Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge)
+    Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge, color = LocalAslColors.current.labelSecondary)
 }
 
 @Composable
-private fun CameraPermissionState(permanentlyDenied: Boolean, onRequest: () -> Unit, onOpenSettings: () -> Unit) = Column(
-    modifier = Modifier.fillMaxSize().padding(Spacing.md),
-    verticalArrangement = Arrangement.Center,
-    horizontalAlignment = Alignment.CenterHorizontally,
-) {
-    Text(stringResource(R.string.camera_permission_title), style = MaterialTheme.typography.headlineSmall)
-    Text(stringResource(R.string.camera_permission_body), Modifier.padding(top = Spacing.xs), style = MaterialTheme.typography.bodyLarge)
-    Button(
-        onClick = if (permanentlyDenied) onOpenSettings else onRequest,
-        modifier = Modifier.padding(top = Spacing.lg).sizeIn(minHeight = Spacing.touchTarget),
-    ) { Text(stringResource(if (permanentlyDenied) R.string.open_settings else R.string.allow_camera)) }
-}
+private fun CameraPermissionState(
+    permanentlyDenied: Boolean,
+    onRequest: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier,
+) = SetupScreen(
+    illustration = "camera-permission-animation.html",
+    title = stringResource(R.string.camera_permission_title),
+    body = stringResource(R.string.camera_permission_body),
+    actionLabel = stringResource(if (permanentlyDenied) R.string.open_settings else R.string.allow_camera),
+    onAction = if (permanentlyDenied) onOpenSettings else onRequest,
+    onBack = onBack,
+    modifier = modifier,
+)
 
 @Composable
 private fun ActiveDrill(
     state: DrillUiState,
+    thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>,
     onSkip: (PackItem.Drill) -> Unit,
     onRetry: () -> Unit,
     onCameraUnavailable: () -> Unit,
+    onDismissLowLight: () -> Unit,
 ) {
     val drill = state.drill ?: return
     when {
         state.detectorStatus is DetectorStatus.Failed -> DetectorFailure(state.detectorStatus, onRetry)
         state.cameraUnavailable -> CameraUnavailable(onRetry)
-        else -> Column(
-            modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Spacing.md),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md),
-        ) {
+        else -> {
+            // Everything is sized to fit a normal phone without scrolling. The camera frame keeps its fixed
+            // aspect ratio and is never squeezed; only when the screen is too short for the whole column does
+            // it become scrollable (scrolling is switched off while it all fits, so there is no rubber-banding).
+            val scroll = rememberScrollState()
+            var frameSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+            Column(
+                modifier = Modifier.fillMaxSize()
+                    .verticalScroll(scroll, enabled = scroll.maxValue > 0)
+                    .padding(horizontal = Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
             val binding = state.cameraBinding
             if (binding != null) {
                 val cameraDescription = stringResource(R.string.camera_preview_content_description)
-                Box(Modifier.fillMaxWidth().aspectRatio(CAMERA_PREVIEW_ASPECT_RATIO).clip(MaterialTheme.shapes.extraLarge)) {
+                Box(
+                    Modifier.fillMaxWidth().widthIn(max = CAMERA_FRAME_MAX_WIDTH).aspectRatio(CAMERA_PREVIEW_ASPECT_RATIO)
+                        .clip(RoundedCornerShape(FrameGeometry.outerRadius))
+                        .onSizeChanged { frameSize = it },
+                ) {
                     androidx.compose.runtime.key(state.cameraSession) {
                         CameraFrame(
                             analyzer = binding.analyzer,
@@ -197,21 +247,45 @@ private fun ActiveDrill(
                     })
                     dev.handspell.app.ui.components.HandshapeGuide(
                         handshape = state.canonicalHandshape,
-                        modifier = Modifier.align(Alignment.TopStart).padding(Spacing.sm),
+                        thumbnails = thumbnails,
+                        frameSize = frameSize,
+                        modifier = Modifier.align(Alignment.TopStart).padding(FrameGeometry.guideInset),
                     )
                 }
             }
-            Text(drill.prompt, style = MaterialTheme.typography.displaySmall)
-            if (state.classifierModelId == "knn-v1") {
-                Text(stringResource(R.string.classifier_stage1_notice), style = MaterialTheme.typography.bodySmall, color = LocalAslColors.current.labelSecondary)
-            }
-            FeedbackBadge(state.feedback)
-            Text(drill.description, style = MaterialTheme.typography.bodyMedium, color = LocalAslColors.current.labelSecondary)
-            val next = state.drills.nextAfter(drill)
-            if (next != null) {
-                TextButton(onClick = { onSkip(next) }, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) {
-                    Text(stringResource(R.string.skip_letter))
+            Text(
+                drill.prompt, style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.fillMaxWidth().widthIn(max = CAMERA_FRAME_MAX_WIDTH),
+            )
+            if (state.lowLightNotice) Row(
+                Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(stringResource(R.string.low_light_notice), style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f), color = LocalAslColors.current.labelSecondary)
+                TextButton(onClick = onDismissLowLight, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget),
+                    colors = ButtonDefaults.textButtonColors(contentColor = LocalAslColors.current.label)) {
+                    Text(stringResource(R.string.dismiss), fontWeight = FontWeight.SemiBold)
                 }
+            }
+            Column(
+                Modifier.fillMaxWidth().widthIn(max = CAMERA_FRAME_MAX_WIDTH),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                FeedbackBadge(state.feedback)
+                Text(drill.description, style = MaterialTheme.typography.bodyMedium, color = LocalAslColors.current.labelSecondary)
+                if (state.classifierModelId == "knn-v1") {
+                    Text(stringResource(R.string.classifier_stage1_notice), style = MaterialTheme.typography.labelMedium, color = LocalAslColors.current.labelTertiary)
+                }
+                val next = state.drills.nextAfter(drill)
+                if (next != null) {
+                    AslButton(
+                        stringResource(R.string.skip_letter), { onSkip(next) },
+                        Modifier.fillMaxWidth(), style = AslButtonStyle.Secondary,
+                    )
+                }
+            }
+            Spacer(Modifier.height(Spacing.md))
             }
         }
     }
@@ -226,20 +300,17 @@ private fun DetectorFailure(failure: DetectorStatus.Failed, onRetry: () -> Unit)
     verticalArrangement = Arrangement.Center,
 ) {
     Text(stringResource(R.string.drill_unavailable_title), style = MaterialTheme.typography.headlineSmall)
-    Text(detectorMessage(failure.messageId), Modifier.padding(top = Spacing.xs), style = MaterialTheme.typography.bodyLarge)
-    Button(onClick = onRetry, modifier = Modifier.padding(top = Spacing.lg).sizeIn(minHeight = Spacing.touchTarget)) {
-        Text(stringResource(R.string.retry))
-    }
+    Text(detectorMessage(failure.messageId), Modifier.padding(top = Spacing.xs), style = MaterialTheme.typography.bodyLarge,
+        color = LocalAslColors.current.labelSecondary)
+    AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth().padding(top = Spacing.xl))
 }
 
 @Composable
 private fun CameraUnavailable(onRetry: () -> Unit) = Column(Modifier.fillMaxSize().padding(Spacing.md), verticalArrangement = Arrangement.Center) {
-    Surface(shape = MaterialTheme.shapes.medium, color = LocalAslColors.current.backgroundGrouped) {
+    AslCard {
         Text(stringResource(R.string.camera_unavailable), Modifier.padding(Spacing.md), style = MaterialTheme.typography.bodyLarge)
     }
-    Button(onClick = onRetry, modifier = Modifier.padding(top = Spacing.lg).sizeIn(minHeight = Spacing.touchTarget)) {
-        Text(stringResource(R.string.retry))
-    }
+    AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth().padding(top = Spacing.md))
 }
 
 @Composable
@@ -257,14 +328,31 @@ private fun FeedbackBadge(feedback: SignFeedbackState) {
         else -> stringResource(visual.message)
     }
     Row(Modifier.semantics { contentDescription = message; liveRegion = LiveRegionMode.Polite }, horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
-        Surface(
-            modifier = Modifier.size(Spacing.touchTarget), shape = CircleShape,
-            color = if (visual.filled) visual.color else MaterialTheme.colorScheme.background,
-            border = if (visual.filled) null else BorderStroke(Spacing.stroke, visual.color),
+        Box(
+            modifier = Modifier.size(Spacing.touchTarget).drawBehind {
+                val stroke = Spacing.stroke.toPx()
+                val radius = size.minDimension / 2 - stroke / 2
+                if (visual.filled) drawCircle(visual.color, radius = radius)
+                else {
+                    val pattern = when (feedback) {
+                        is SignFeedbackState.NoHand -> floatArrayOf(stroke, stroke * 2)
+                        is SignFeedbackState.NotRecognized -> floatArrayOf(stroke * 3, stroke * 2)
+                        else -> null
+                    }
+                    drawCircle(visual.color, radius = radius,
+                        style = Stroke(stroke, pathEffect = pattern?.let { PathEffect.dashPathEffect(it) }))
+                    visual.holdProgress?.let { progress ->
+                        drawArc(visual.color, startAngle = -90f, sweepAngle = 360f * progress.coerceIn(0f, 1f),
+                            useCenter = false, style = Stroke(stroke * 2))
+                    }
+                }
+            },
+            contentAlignment = Alignment.Center,
         ) {
-            Box(contentAlignment = Alignment.Center) { Text(stringResource(visual.glyph), color = if (visual.filled) MaterialTheme.colorScheme.onPrimary else visual.color, style = MaterialTheme.typography.titleLarge) }
+            Text(stringResource(visual.glyph), color = if (visual.filled) MaterialTheme.colorScheme.onPrimary else visual.color,
+                style = MaterialTheme.typography.titleLarge)
         }
-        Text(message, style = MaterialTheme.typography.bodyLarge, color = visual.color)
+        Text(message, style = MaterialTheme.typography.bodyLarge, color = colors.label)
     }
 }
 

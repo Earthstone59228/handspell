@@ -71,7 +71,7 @@ Every one of these must be a designed screen or inline state, reachable in a bui
 | Every coordinate real | Each Gradle dependency confirmed to exist on Maven Central or Google's Maven (`tasks-vision` is **Google's Maven only**, not Central) by opening the metadata URL — not by trusting a model's memory. |
 | Every PyPI package real | Same, against pypi.org, with a published date and a repo link. |
 | Pinned | All Android versions in `gradle/libs.versions.toml` with exact versions. No `+`, no `latest.release`, no `-SNAPSHOT`, no alpha/beta unless there is no stable alternative and the reason is written down. `requirements.txt` uses `==`. |
-| Locked | Gradle dependency locking enabled and lockfiles committed; `requirements.txt` frozen from a working venv. |
+| Locked | Gradle dependency locking enabled and lockfiles committed; `training/uv.lock` frozen from a working environment. |
 | API shapes verified | Every MediaPipe and RevenueCat call checked against current official docs, not recalled. The research notes in `docs/research/` are the reference. |
 | minSdk consistent | 24 (MediaPipe's floor, above RevenueCat's 23). |
 
@@ -107,7 +107,7 @@ Every one of these must be a designed screen or inline state, reachable in a bui
 | Network allowlist | `network_security_config.xml` restricts cleartext and documents the single domain. |
 | Permissions | `CAMERA` and `INTERNET` only. No `RECORD_AUDIO`, no location, no storage. Each justified in the privacy screen. |
 | Privacy screen | Plain-language, specific to this app, in-app and in the README: what the camera sees, that it stays on the device, what INTERNET is for, what is stored locally, and how to delete it. |
-| Delete path | Settings → delete all data actually removes the DataStore file; verified by re-launching. |
+| Delete path | Settings → Delete practice data clears every stored progress value; verified by re-launching. |
 | Debug surface excluded | The capture screen is in `src/debug`; `./gradlew assembleRelease` then checking the APK shows no `ui.capture` class. |
 | No secrets | Test Store public key read from gitignored `local.properties` into `BuildConfig`; no key literal in git history. `local.properties.example` committed. |
 | Release config | `isDebuggable false`, no `android:debuggable`, R8 on, no verbose logging. |

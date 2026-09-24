@@ -11,6 +11,8 @@ data class ConvertedFrame(
     val image: MPImage,
     val width: Int,
     val height: Int,
+    /** A tiny copy of the same upright, mirrored frame, for the live frosted-glass backdrop in the UI. */
+    val thumbnail: Bitmap,
 )
 
 /**
@@ -43,6 +45,25 @@ class FrameConverter {
             image = BitmapImageBuilder(upright).build(),
             width = upright.width,
             height = upright.height,
+            thumbnail = displayOrientedThumbnail(upright),
         )
+    }
+
+    /**
+     * The analysed frame is the selfie mirror turned 180 degrees (the mirror is applied in sensor space, before the
+     * rotation to upright), while PreviewView shows the plain selfie mirror. Turning the small copy by 180 degrees
+     * gives a thumbnail that lines up with what is on screen, which is what the UI's backdrop blur needs.
+     */
+    private fun displayOrientedThumbnail(upright: Bitmap): Bitmap {
+        val small = Bitmap.createScaledBitmap(
+            upright, THUMBNAIL_WIDTH, (THUMBNAIL_WIDTH * upright.height / upright.width).coerceAtLeast(1), true,
+        )
+        val turned = Bitmap.createBitmap(small, 0, 0, small.width, small.height, Matrix().apply { postRotate(180f) }, true)
+        if (turned !== small) small.recycle()
+        return turned
+    }
+
+    private companion object {
+        const val THUMBNAIL_WIDTH = 96
     }
 }

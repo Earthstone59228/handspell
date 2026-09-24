@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +22,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -37,7 +41,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
+import dev.handspell.app.ui.theme.Spacing
+import dev.handspell.app.ui.theme.LocalAslColors
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import dev.handspell.app.BuildConfig
 import dev.handspell.app.R
 import dev.handspell.app.core.model.HandOverlay
@@ -175,17 +182,19 @@ fun CaptureScreen() {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+    Column(modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().padding(Spacing.sm)) {
         SignerRow(selected = signerId, onSelect = { selection = it to letterName })
         LetterGrid(
             selected = selectedLetter,
             counts = counts,
             onSelect = { selection = signerId to it.name },
         )
-        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+        val previewDescription = stringResource(R.string.camera_preview_content_description)
+        Box(modifier = Modifier.weight(1f).fillMaxWidth().clipToBounds().semantics { contentDescription = previewDescription }) {
             CameraFrame(analyzer = analyzer, analyzerExecutor = analysisExecutor)
             LandmarkOverlay(overlay = overlay, modifier = Modifier.fillMaxSize())
         }
+        ExportRow(context)
         CaptureStatusRow(
             signerId = signerId,
             selectedLetter = selectedLetter,
@@ -201,18 +210,43 @@ fun CaptureScreen() {
     }
 }
 
+/** Shares everything recorded so far: a ZIP that keeps the signer folders, or one combined CSV. */
+@Composable
+private fun ExportRow(context: android.content.Context) {
+    val chooser = stringResource(R.string.capture_export_chooser)
+    val nothing = stringResource(R.string.capture_export_none)
+    val failed = stringResource(R.string.capture_export_failed)
+    fun export(asZip: Boolean) {
+        when (CaptureExport.share(context, asZip, chooser)) {
+            ExportResult.SHARED -> Unit
+            ExportResult.NOTHING_RECORDED -> android.widget.Toast.makeText(context, nothing, android.widget.Toast.LENGTH_SHORT).show()
+            ExportResult.FAILED -> android.widget.Toast.makeText(context, failed, android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+    Row(Modifier.fillMaxWidth().padding(vertical = Spacing.xxs), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        OutlinedButton(onClick = { export(true) }, modifier = Modifier.weight(1f).height(Spacing.touchTarget)) {
+            Text(stringResource(R.string.capture_export_zip))
+        }
+        OutlinedButton(onClick = { export(false) }, modifier = Modifier.weight(1f).height(Spacing.touchTarget)) {
+            Text(stringResource(R.string.capture_export_csv))
+        }
+    }
+}
+
 @Composable
 private fun SignerRow(selected: String?, onSelect: (String) -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(Spacing.letterTile),
+        modifier = Modifier.fillMaxWidth().height(Spacing.captureSignerPicker),
+        contentPadding = PaddingValues(vertical = Spacing.xxs),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
-        for (signer in CAPTURE_SIGNER_IDS) {
+        items(CAPTURE_SIGNER_IDS) { signer ->
             FilterChip(
                 selected = signer == selected,
                 onClick = { onSelect(signer) },
                 label = { Text(signer) },
-                modifier = Modifier.height(48.dp),
+                modifier = Modifier.height(Spacing.touchTarget),
             )
         }
     }
@@ -221,16 +255,17 @@ private fun SignerRow(selected: String?, onSelect: (String) -> Unit) {
 @Composable
 private fun LetterGrid(selected: Letter?, counts: Map<Letter, Int>, onSelect: (Letter) -> Unit) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(6),
-        modifier = Modifier.fillMaxWidth().height(160.dp),
-        contentPadding = PaddingValues(vertical = 4.dp),
+        columns = GridCells.Adaptive(Spacing.letterTile),
+        modifier = Modifier.fillMaxWidth().height(Spacing.captureLetterPicker),
+        contentPadding = PaddingValues(vertical = Spacing.xxs),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
     ) {
         items(Letter.staticLetters) { letter ->
             FilterChip(
                 selected = letter == selected,
                 onClick = { onSelect(letter) },
                 label = { Text("${letter.display} ${counts[letter] ?: 0}") },
-                modifier = Modifier.padding(2.dp).height(48.dp),
+                modifier = Modifier.height(Spacing.touchTarget),
             )
         }
     }
@@ -256,7 +291,7 @@ private fun CaptureStatusRow(
     Text(
         text = message,
         style = MaterialTheme.typography.bodyMedium,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = Spacing.xs),
     )
 }
 
@@ -268,13 +303,13 @@ private fun RecordButton(enabled: Boolean, interactionSource: MutableInteraction
         enabled = enabled,
         interactionSource = interactionSource,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isPressed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+            containerColor = if (isPressed) LocalAslColors.current.accent else MaterialTheme.colorScheme.primary,
         ),
         shape = CircleShape,
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
-            .padding(vertical = 4.dp),
+            .height(Spacing.captureRecordButton)
+            .padding(vertical = Spacing.xxs),
     ) {
         Text(
             text = stringResource(

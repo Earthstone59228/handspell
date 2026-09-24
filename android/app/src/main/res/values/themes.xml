@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark window behind Compose so there is no white flash; #1D1D1F is the app's ground colour (AslPalette.Ink). -->
+    <style name="Theme.Handspell" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF1D1D1F</item>
+        <item name="android:statusBarColor">#FF1D1D1F</item>
+        <item name="android:navigationBarColor">#FF1D1D1F</item>
+    </style>
+</resources>

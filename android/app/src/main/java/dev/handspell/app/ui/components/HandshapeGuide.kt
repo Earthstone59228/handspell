@@ -1,48 +1,82 @@
 package dev.handspell.app.ui.components
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import com.google.mediapipe.tasks.vision.handlandmarker.HandLandmarker
 import dev.handspell.app.R
 import dev.handspell.app.core.model.CanonicalHandshape
+import dev.handspell.app.ui.theme.AslPalette
 import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
+import kotlinx.coroutines.flow.StateFlow
 
 private const val GUIDE_PADDING_FRACTION = 0.16f
 private const val GUIDE_DOT_RADIUS_PX = 3f
 private const val GUIDE_LINE_WIDTH_PX = 2.5f
 
 /**
- * Compact, non-interactive reference for the selected letter. The landmarks are deliberately
- * supplied by the catalog rather than invented by the UI, so a missing reference stays absent.
+ * Corner geometry of the camera frame and the reference card inside it. Concentric rounded corners need
+ * inner radius = outer radius - inset, so the card's radius is derived here and nowhere else.
+ */
+object FrameGeometry {
+    val outerRadius = AslShapes.extraLarge
+    val guideInset = Spacing.sm
+    val guideRadius = outerRadius - guideInset
+}
+
+/**
+ * Compact, non-interactive reference for the selected letter, on a live frosted patch of the camera picture.
+ * [thumbnails] is the detector's per-frame thumbnail; [frameSize] is the camera frame the card sits in, so the
+ * patch behind the card can be cut from the right place. The landmarks are deliberately supplied by the
+ * catalog rather than invented by the UI, so a missing reference stays absent.
  */
 @Composable
-fun HandshapeGuide(handshape: CanonicalHandshape?, modifier: Modifier = Modifier) {
+fun HandshapeGuide(
+    handshape: CanonicalHandshape?,
+    modifier: Modifier = Modifier,
+    thumbnails: StateFlow<Bitmap?>? = null,
+    frameSize: IntSize = IntSize.Zero,
+) {
     if (handshape == null) return
     val colors = LocalAslColors.current
     val label = stringResource(R.string.reference_handshape, handshape.letter.display)
-    Surface(
-        modifier = modifier.semantics { contentDescription = label },
-        shape = MaterialTheme.shapes.medium,
-        color = colors.surface.copy(alpha = 0.94f),
-        border = androidx.compose.foundation.BorderStroke(Spacing.hairline, colors.separator),
-        shadowElevation = Spacing.xxs,
+    var guideSize by remember { mutableStateOf(IntSize.Zero) }
+    Box(
+        modifier.clip(RoundedCornerShape(FrameGeometry.guideRadius)).onSizeChanged { guideSize = it }
+            .semantics { contentDescription = label },
     ) {
+        LiveBackdrop(thumbnails, frameSize, guideSize, Modifier.matchParentSize())
         Column(
             modifier = Modifier.padding(Spacing.xs),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -90,3 +124,39 @@ fun HandshapeGuide(handshape: CanonicalHandshape?, modifier: Modifier = Modifier
         }
     }
 }
+
+/**
+ * Frosted glass over the live camera picture. Each analysed frame arrives as a small thumbnail; the part of it
+ * that lies behind the card is drawn stretched to the card and blurred, then given a dark tint so the white text
+ * and blue skeleton stay legible. Reading the frame inside the draw block means a new frame redraws only this
+ * layer. Before the first frame the card is plain grey.
+ */
+@Composable
+private fun LiveBackdrop(thumbnails: StateFlow<Bitmap?>?, frameSize: IntSize, guideSize: IntSize, modifier: Modifier) {
+    val thumbnail = thumbnails?.collectAsState()
+    val insetPx = with(androidx.compose.ui.platform.LocalDensity.current) { FrameGeometry.guideInset.toPx() }
+    Box(modifier.background(LocalAslColors.current.surface)) {
+        Canvas(Modifier.matchParentSize().blur(BACKDROP_BLUR)) {
+            val frame = thumbnail?.value ?: return@Canvas
+            if (frameSize == IntSize.Zero || guideSize == IntSize.Zero) return@Canvas
+            // The preview fills the frame with a centre crop; undo that to find the card's rectangle in the thumbnail.
+            val scale = maxOf(frameSize.width / frame.width.toFloat(), frameSize.height / frame.height.toFloat())
+            val originX = (frameSize.width - frame.width * scale) / 2f
+            val originY = (frameSize.height - frame.height * scale) / 2f
+            val srcX = ((insetPx - originX) / scale).toInt().coerceIn(0, frame.width - 1)
+            val srcY = ((insetPx - originY) / scale).toInt().coerceIn(0, frame.height - 1)
+            val srcW = (guideSize.width / scale).toInt().coerceIn(1, frame.width - srcX)
+            val srcH = (guideSize.height / scale).toInt().coerceIn(1, frame.height - srcY)
+            drawImage(
+                frame.asImageBitmap(),
+                srcOffset = IntOffset(srcX, srcY), srcSize = IntSize(srcW, srcH),
+                dstSize = IntSize(size.width.toInt(), size.height.toInt()),
+                filterQuality = FilterQuality.High,
+            )
+        }
+        Box(Modifier.matchParentSize().background(AslPalette.Ink.copy(alpha = BACKDROP_SCRIM)))
+    }
+}
+
+private val BACKDROP_BLUR = 8.dp
+private const val BACKDROP_SCRIM = 0.5f

@@ -46,4 +46,17 @@ data class FeedbackThresholds(
     val matchLatchMs: Long = 800L,
     /** Consecutive hand-free frames before reporting NoHand. */
     val noHandFrames: Int = 3,
+    // --- Hysteresis (Schmitt-trigger style): it takes more to start a match than to keep one. ---
+    // Each band is how much looser the "keep going" condition is than the matching "start" condition, so
+    // sweeping the start thresholds keeps the band intact.
+    /** An established hold only needs `matchProbability - probabilityBand`. */
+    val probabilityBand: Float = 0.13f,
+    /** An established hold only needs `matchMargin - marginBand` over the runner-up. */
+    val marginBand: Float = 0.10f,
+    /** Stage-1 only: an established hold may drift out to `matchDistance + distanceBand`. */
+    val distanceBand: Float = 0.06f,
+    /** A hold survives up to this long without meeting even the exit conditions (one noisy frame), frozen. */
+    val holdGraceMs: Long = 150L,
+    /** Once "close, keep adjusting" is showing it stays at least this long before dropping to "not recognised". */
+    val adjustDropDelayMs: Long = 300L,
 )

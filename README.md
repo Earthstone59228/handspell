@@ -1,7 +1,7 @@
 # Handspell
 
-Handspell is an Android app that teaches the ASL manual alphabet: hold a letter in front of your
-front camera and get live, on-device feedback on whether your handshape matches. It was built for
+Handspell is an Android app for practising ASL fingerspelling. Its bundled Ionic alphabet opens
+native camera drills for letters supported by the on-device classifier. It was built for
 the RevenueCat Shipaton 2026, Next Gen track.
 
 ## Privacy
@@ -10,8 +10,13 @@ All hand landmarking, normalisation and classification runs on the phone, in-pro
 exist only as a `Bitmap` on the analysis thread and are never written to disk, encoded, uploaded or
 logged. The only data leaving the device is the RevenueCat SDK's entitlement check, which talks to
 `api.revenuecat.com` and nothing else — there is no backend, no account, no analytics SDK and no
-crash reporter. Progress (letter counters, streaks, completed lessons) is a local file you can
-delete at any time from Settings. See `docs/ARCHITECTURE.md` §10 for the full accounting.
+crash reporter. Camera and lesson progress is stored in DataStore; self-reported Alphabet
+checkmarks are stored separately in WebView local storage. Settings deletes both. See
+`docs/ARCHITECTURE.md` §10 for the full accounting.
+
+The paper icon on Alphabet opens the bundled privacy notice and license documents. Settings holds
+preferences, subscription controls and data deletion.
+Owner details needed to finish the privacy notice and Terms are tracked in `docs/LEGAL_OPEN_ITEMS.md`.
 
 ## Build and run
 
@@ -25,6 +30,13 @@ cd android
 
 Install on a connected device with `./gradlew :app:installDebug`, or open `android/` in Android
 Studio.
+
+The bundled Alphabet build is copied from the unchanged Ionic frontend. To refresh it, run
+`npm run build -- --base=./` in that frontend checkout, then run
+`scripts/sync-ionic-frontend.sh /path/to/ionic-app/dist` here. The browser preview at
+`http://localhost:5173` shows the frontend only; camera drills and native Settings/Progress
+require an Android build. Live classifier data currently covers A–D. Other letters show an
+availability message instead of simulated recognition.
 
 ### RevenueCat Test Store key
 
@@ -45,12 +57,13 @@ entitlement gate just reports `Unavailable`.
 
 ```
 android/    Gradle project, single :app module (dev.handspell.app)
+scripts/    Copies the built Ionic frontend into bundled Android assets
 docs/       Architecture, contracts, quality bar, and research notes this build follows
 preview-windows/
             Desktop camera preview: skeleton overlay plus the app's stage-1 pipeline, so
             recognition can be measured on a laptop (docs/WINDOWS_PREVIEW.md)
-recorder/   Desktop tool that records the stage-1 reference set; stands in for the debug-only
-            capture screen that is not written yet (docs/RECORDER.md)
+recorder/   Desktop tool that records the stage-1 reference set; the Android app also has a
+            debug-only landmark capture screen (docs/RECORDER.md)
 training/   Python pipeline that records landmark data and trains the offline classifier
 ```
 

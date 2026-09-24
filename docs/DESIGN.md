@@ -109,7 +109,8 @@ has one.
 | Speed challenge | Timed round: spell as many prompts as possible, score, best score. Pro. |
 | Progress | Per-letter attempts/matches, streak, recent speed runs, and a clear "delete all my data" action. |
 | Paywall | Our own Compose screen (not a RevenueCat template): what Pro adds, the two packages with price and period, purchase, restore, an equal-weight "Not now", and the Test Store disclosure. Rules in §5. |
-| Settings & privacy | Theme, haptics, the privacy statement, model id and letter-coverage disclosure, licenses, delete all data. |
+| Settings | Theme, subscription status, model status, and the delete-data control. |
+| Documents | Privacy notice, project license, third-party notices and hand-model license, opened from the Alphabet paper icon. |
 | Dev capture (debug only) | Pick signer id and letter, record landmark CSV, live overlay, frame counter. Never in a release build. |
 
 ## 3. Three-state feedback — never color-only

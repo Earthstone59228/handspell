@@ -15,6 +15,12 @@
     <string name="capture_recording">Recording — %1$d frames captured for this letter.</string>
     <string name="capture_engine_error">Hand tracking hit a problem. Close and reopen this screen.</string>
 
+    <string name="capture_export_zip">Export ZIP</string>
+    <string name="capture_export_csv">Export CSV</string>
+    <string name="capture_export_none">Nothing recorded yet. Hold to record a letter first.</string>
+    <string name="capture_export_failed">Could not prepare the export.</string>
+    <string name="capture_export_chooser">Export captures</string>
+
     <string name="capture_hold_to_record">Hold to record</string>
     <string name="capture_hold_recording">Recording…</string>
 </resources>

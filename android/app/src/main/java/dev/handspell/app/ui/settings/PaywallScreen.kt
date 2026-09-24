@@ -1,0 +1,191 @@
+package dev.handspell.app.ui.settings
+
+import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import dev.handspell.app.R
+import dev.handspell.app.billing.EntitlementGate
+import dev.handspell.app.billing.BillingPeriod
+import dev.handspell.app.billing.PaywallPackage
+import dev.handspell.app.billing.PurchaseResult
+import dev.handspell.app.billing.RestoreResult
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
+import dev.handspell.app.ui.components.AslButton
+import dev.handspell.app.ui.components.AslButtonStyle
+import dev.handspell.app.ui.theme.AslShapes
+import dev.handspell.app.ui.theme.LocalAslColors
+import dev.handspell.app.ui.theme.Spacing
+import kotlinx.coroutines.launch
+
+@Composable
+fun PaywallRoute(gate: EntitlementGate, onBack: () -> Unit) {
+    val activity = LocalActivity.current
+    val scope = rememberCoroutineScope()
+    var packages by remember { mutableStateOf<List<PaywallPackage>?>(null) }
+    var selectedId by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf(false) }
+    var working by remember { mutableStateOf(false) }
+    var result by remember { mutableStateOf<PurchaseResult?>(null) }
+    var restore by remember { mutableStateOf<RestoreResult?>(null) }
+    LaunchedEffect(gate) {
+        runCatching { gate.loadPackages() }.onSuccess {
+            packages = it
+            selectedId = it.firstOrNull()?.id
+        }.onFailure { error = true }
+    }
+    PaywallScreen(
+        packages = packages,
+        selectedId = selectedId,
+        error = error,
+        working = working,
+        result = result,
+        restore = restore,
+        onSelect = { selectedId = it },
+        onRetry = {
+            error = false
+            packages = null
+            scope.launch {
+                runCatching { gate.loadPackages() }.onSuccess {
+                    packages = it
+                    selectedId = it.firstOrNull()?.id
+                }.onFailure { error = true }
+            }
+        },
+        onPurchase = {
+            val id = selectedId
+            if (id != null && activity != null) {
+                working = true
+                scope.launch {
+                    result = runCatching { gate.purchase(id, activity) }.getOrDefault(PurchaseResult.FAILED)
+                    working = false
+                    if (result == PurchaseResult.PURCHASED) onBack()
+                }
+            }
+        },
+        onRestore = {
+            working = true
+            scope.launch {
+                restore = runCatching { gate.restorePurchases() }.getOrDefault(RestoreResult.FAILED)
+                working = false
+                if (restore == RestoreResult.RESTORED) onBack()
+            }
+        },
+        onBack = onBack,
+    )
+}
+
+@Composable
+private fun PaywallScreen(
+    packages: List<PaywallPackage>?,
+    selectedId: String?,
+    error: Boolean,
+    working: Boolean,
+    result: PurchaseResult?,
+    restore: RestoreResult?,
+    onSelect: (String) -> Unit,
+    onRetry: () -> Unit,
+    onPurchase: () -> Unit,
+    onRestore: () -> Unit,
+    onBack: () -> Unit,
+) {
+    val colors = LocalAslColors.current
+    Column(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
+      Column(
+          Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
+          verticalArrangement = Arrangement.spacedBy(Spacing.md),
+      ) {
+        Text(stringResource(R.string.paywall_title), style = MaterialTheme.typography.displaySmall)
+        Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
+        Text(stringResource(R.string.paywall_value), style = MaterialTheme.typography.bodyLarge)
+        Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
+        when {
+            error -> {
+                Text(stringResource(R.string.paywall_load_failed), style = MaterialTheme.typography.bodyLarge)
+                SettingsActionRow(stringResource(R.string.retry), onClick = onRetry)
+            }
+            packages == null -> Text(stringResource(R.string.paywall_loading), style = MaterialTheme.typography.bodyLarge)
+            packages.isEmpty() -> Text(stringResource(R.string.paywall_empty), style = MaterialTheme.typography.bodyLarge)
+            else -> {
+                val monthly = packages.firstOrNull { it.period == BillingPeriod.MONTH }
+                SettingsGroup {
+                    Column(Modifier.selectableGroup()) {
+                        packages.forEachIndexed { index, item ->
+                            if (index > 0) SettingsDivider()
+                            Column(
+                                Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
+                                    .selectable(selected = selectedId == item.id, role = Role.RadioButton) { onSelect(item.id) }
+                                    .then(if (selectedId == item.id) Modifier.border(Spacing.stroke, colors.accent, RoundedCornerShape(AslShapes.large)) else Modifier)
+                                    .padding(Spacing.md),
+                                verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
+                            ) {
+                                Text(
+                                    stringResource(if (selectedId == item.id) R.string.paywall_selected else R.string.paywall_option,
+                                        item.title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                                Text(stringResource(
+                                    R.string.paywall_price, item.price,
+                                    stringResource(if (item.period == BillingPeriod.YEAR) R.string.paywall_year else R.string.paywall_month),
+                                ), style = MaterialTheme.typography.bodyLarge)
+                                Text(stringResource(R.string.paywall_renewal), style = MaterialTheme.typography.bodyMedium,
+                                    color = colors.onSurfaceSecondary)
+                                val saving = annualSavingPercent(monthly, item)
+                                if (saving != null) Text(stringResource(R.string.paywall_annual_saving, saving),
+                                    style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceSecondary)
+                            }
+                        }
+                    }
+                }
+                AslButton(
+                    stringResource(R.string.paywall_continue), onPurchase,
+                    Modifier.fillMaxWidth(), enabled = !working && selectedId != null,
+                )
+            }
+        }
+        AslButton(stringResource(R.string.settings_restore), onRestore, Modifier.fillMaxWidth(),
+            style = AslButtonStyle.Secondary, enabled = !working)
+        Text(stringResource(R.string.settings_cancel_subscription), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
+        if (result == PurchaseResult.FAILED) Text(stringResource(R.string.paywall_purchase_failed), style = MaterialTheme.typography.bodyLarge)
+        if (restore == RestoreResult.FAILED) Text(stringResource(R.string.settings_restore_failed), style = MaterialTheme.typography.bodyLarge)
+        if (restore == RestoreResult.NOTHING_TO_RESTORE) Text(stringResource(R.string.settings_nothing_to_restore), style = MaterialTheme.typography.bodyLarge)
+      }
+      TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(Spacing.md).sizeIn(minHeight = Spacing.touchTarget),
+          colors = ButtonDefaults.textButtonColors(contentColor = colors.label)) {
+          Text(stringResource(R.string.paywall_not_now), fontWeight = FontWeight.SemiBold)
+      }
+    }
+}
+
+internal fun annualSavingPercent(monthly: PaywallPackage?, annual: PaywallPackage): Int? {
+    if (monthly == null || annual.period != BillingPeriod.YEAR || monthly.amountMicros <= 0 ||
+        annual.amountMicros <= 0 || monthly.currencyCode != annual.currencyCode) return null
+    val yearlyMonthly = monthly.amountMicros * 12
+    if (annual.amountMicros >= yearlyMonthly) return null
+    return ((yearlyMonthly - annual.amountMicros) * 100.0 / yearlyMonthly).toInt()
+}

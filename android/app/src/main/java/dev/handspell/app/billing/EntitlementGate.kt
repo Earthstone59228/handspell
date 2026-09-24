@@ -1,10 +1,23 @@
 package dev.handspell.app.billing
 
+import android.app.Activity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /** Where a paywall was triggered from. Logged to RevenueCat as the presentation source. */
 enum class PaywallSource { STORY_LESSON, SPEED_CHALLENGE, SETTINGS, PROGRESS_DETAIL }
+
+enum class RestoreResult { RESTORED, NOTHING_TO_RESTORE, FAILED }
+enum class PurchaseResult { PURCHASED, CANCELLED, FAILED }
+enum class BillingPeriod { MONTH, YEAR }
+data class PaywallPackage(
+    val id: String,
+    val title: String,
+    val price: String,
+    val period: BillingPeriod,
+    val amountMicros: Long = 0,
+    val currencyCode: String = "",
+)
 
 /** Entitlement fetch lifecycle, so the UI can distinguish "not Pro" from "don't know yet". */
 sealed interface EntitlementStatus {
@@ -39,4 +52,11 @@ interface EntitlementGate {
 
     /** Re-reads customer info; called on app foreground and after a purchase or restore completes. */
     suspend fun refresh()
+
+    /** Restores through the store and reports an outcome the UI can explain. */
+    suspend fun restorePurchases(): RestoreResult
+
+    suspend fun loadPackages(): List<PaywallPackage>
+
+    suspend fun purchase(packageId: String, activity: Activity): PurchaseResult
 }

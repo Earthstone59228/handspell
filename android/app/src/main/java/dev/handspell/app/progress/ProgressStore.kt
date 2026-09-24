@@ -42,7 +42,7 @@ data class ProgressSnapshot(
  * Local-only persistence. Backed by DataStore; all writes are suspending and off the main thread.
  *
  * [clearAll] is a real feature, not a debug hook: it is the app's data-deletion path, reachable from
- * Settings, and it must leave no file behind.
+ * Settings, and it must leave no stored practice data behind.
  */
 interface ProgressStore {
     val snapshot: Flow<ProgressSnapshot>

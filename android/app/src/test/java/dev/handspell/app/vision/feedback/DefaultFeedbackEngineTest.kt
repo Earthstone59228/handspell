@@ -366,6 +366,8 @@ class DefaultFeedbackEngineTest {
             FeedbackThresholds(emaAlpha = 1.5f),
             FeedbackThresholds(holdToConfirmMs = 0L),
             FeedbackThresholds(noHandFrames = 0),
+            FeedbackThresholds(probabilityBand = -0.1f),
+            FeedbackThresholds(holdGraceMs = -1L),
         )
         for (thresholds in bad) {
             try {
@@ -375,6 +377,70 @@ class DefaultFeedbackEngineTest {
                 assertTrue(expected.message!!.isNotEmpty())
             }
         }
+    }
+
+    // --- Hysteresis -----------------------------------------------------------------------------------
+
+    /** Feeds [engine] frames of [probability] for [durationMs], returning the last state. */
+    private fun feed(
+        engine: DefaultFeedbackEngine, probability: Float, from: Long, durationMs: Long, distance: Float = 0.1f,
+    ): SignFeedbackState {
+        var state: SignFeedbackState = SignFeedbackState.NoHand(Letter.A)
+        var t = from
+        while (t < from + durationMs) {
+            state = engine.onFrame(frame(Letter.A, probability, t, distance = distance))
+            t += FRAME_INTERVAL_MS
+        }
+        return state
+    }
+
+    @Test
+    fun `a probability between the exit and enter thresholds cannot start a hold`() {
+        val engine = engine()
+        // 0.78 is above the exit floor (0.85 - 0.13 = 0.72) but below the enter threshold: never matches from cold.
+        val state = feed(engine, 0.78f, 0L, 2_000L)
+        assertFalse(state is SignFeedbackState.Match)
+    }
+
+    @Test
+    fun `an established hold survives a dip into the hysteresis band`() {
+        val engine = engine()
+        val start = 0L
+        // Start strongly, then hover at 0.78 (between exit and enter). The hold must keep counting and confirm.
+        feed(engine, 0.97f, start, 200L)
+        val state = feed(engine, 0.78f, start + 200L, 600L)
+        assertTrue("hold was dropped in the band: $state", state is SignFeedbackState.Match)
+    }
+
+    @Test
+    fun `one bad frame within the grace period freezes the hold instead of resetting it`() {
+        val engine = engine()
+        val before = feed(engine, 0.97f, 0L, 200L) as SignFeedbackState.Adjust
+        val glitch = engine.onFrame(frame(Letter.A, 0.05f, 200L, competitor = Letter.S))
+        assertTrue(glitch is SignFeedbackState.Adjust)
+        assertEquals(before.holdProgress, (glitch as SignFeedbackState.Adjust).holdProgress, 0.06f)
+        val after = engine.onFrame(frame(Letter.A, 0.97f, 233L))
+        assertTrue((after as SignFeedbackState.Adjust).holdProgress >= before.holdProgress)
+    }
+
+    @Test
+    fun `a sustained loss beyond the grace period resets the hold`() {
+        val engine = engine()
+        feed(engine, 0.97f, 0L, 200L)
+        val lost = feed(engine, 0.05f, 200L, 1_500L)
+        assertFalse(lost is SignFeedbackState.Match)
+        val restart = engine.onFrame(frame(Letter.A, 0.97f, 1_700L)) as SignFeedbackState.Adjust
+        assertEquals(0f, restart.holdProgress, 0.01f)
+    }
+
+    @Test
+    fun `adjust does not strobe to not-recognised on a single weak frame`() {
+        val engine = engine()
+        feed(engine, 0.6f, 0L, 200L)
+        val weak = engine.onFrame(frame(Letter.A, 0.1f, 200L, competitor = Letter.S, distance = 0.5f))
+        assertTrue("dropped to $weak", weak is SignFeedbackState.Adjust)
+        val settled = feed(engine, 0.1f, 233L, 700L, distance = 0.5f)
+        assertTrue("never dropped: $settled", settled is SignFeedbackState.NotRecognized)
     }
 
     /** Drives [engine] to a confirmed match at exactly `holdToConfirmMs`, so latch maths is exact. */

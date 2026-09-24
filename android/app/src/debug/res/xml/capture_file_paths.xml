@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug-only: the capture screen shares its export (zip or combined CSV) from the app cache. -->
+<paths>
+    <cache-path name="capture_exports" path="exports/" />
+</paths>

@@ -16,6 +16,7 @@ exemplar, so don't: re-run the script and commit its output.
 
 ```
 adb pull /sdcard/Android/data/dev.handspell.app/files/captures ./captures
+# or, in the debug build's capture screen, tap "Export ZIP" and share it; unzip it into ./captures
 cd training
 uv run python scripts/build_references.py --captures ../captures
 ```

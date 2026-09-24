@@ -66,9 +66,9 @@ fun CameraFrame(
 
     val previewView = remember(context) {
         PreviewView(context).apply {
-            // CameraX front-camera output is unmirrored. Keep this transform in step with the
-            // selfie-mirrored frame supplied to MediaPipe; LandmarkOverlay applies the same map.
-            scaleX = -1f
+            // No scaleX flip here: PreviewView already renders the front camera as a selfie mirror. An earlier version
+            // flipped it again, which un-mirrored the picture so left and right looked inverted. LandmarkOverlay maps
+            // the analysed frame onto this same picture (see its documentation).
             scaleType = PreviewView.ScaleType.FILL_CENTER
         }
     }

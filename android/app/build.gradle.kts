@@ -7,6 +7,10 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
+dependencyLocking {
+    lockAllConfigurations()
+}
+
 // Test Store key lives in local.properties (gitignored), never as a literal in source. See
 // docs/research/revenuecat.md §6 and android/local.properties.example for the key name.
 val localProperties = Properties().apply {
@@ -78,6 +82,7 @@ android {
 
 dependencies {
     implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.webkit)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)

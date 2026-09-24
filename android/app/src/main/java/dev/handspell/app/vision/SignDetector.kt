@@ -38,6 +38,18 @@ interface SignDetector {
     /** Image-space landmarks for the live camera overlay; null while no hand is in frame. */
     val overlay: StateFlow<HandOverlay?>
 
+    /**
+     * A small copy of the latest analysed camera frame (upright, selfie-mirrored, i.e. the same picture the preview
+     * shows), updated every frame. Used only to draw a live blurred backdrop; null when there is no camera.
+     */
+    val previewThumbnail: StateFlow<android.graphics.Bitmap?>
+
+    /** True once a dark preview has shown no hand for the low-light interval. */
+    val lowLightNotice: StateFlow<Boolean>
+
+    /** Hide the notice for the remainder of this camera session. */
+    fun dismissLowLightNotice()
+
     /** CameraX analyzer. Implementations must close every `ImageProxy` they receive. */
     val analyzer: ImageAnalysis.Analyzer
 
