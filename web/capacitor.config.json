@@ -1,0 +1,10 @@
+{
+  "appId": "com.example.ionicapp",
+  "appName": "IonicApp",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
+}

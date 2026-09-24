@@ -1,5 +1,6 @@
 # --- Android Studio / Gradle ---
 .gradle/
+.kotlin/
 build/
 *.iml
 .idea/
@@ -30,3 +31,10 @@ dist/
 
 # --- OS cruft ---
 .DS_Store
+
+# --- Local-only notes ---
+# Terminal transcripts can contain the RevenueCat key; the agent chat log is scratch.
+docs/logs/*.txt
+docs/handoffs/claude-chatgpt-chat.md
+web/node_modules/
+web/dist/
