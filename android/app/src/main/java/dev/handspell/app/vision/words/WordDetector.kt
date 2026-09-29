@@ -77,6 +77,7 @@ class CameraWordDetector(
     @Volatile private var latestPose: FloatArray? = null
     @Volatile private var recognizer: WordRecognizer? = null
     private var target: String? = null
+    private val slotTracker = HandSlotTracker()
     private var frameIndex = 0L
 
     override val analyzer: ImageAnalysis.Analyzer = ImageAnalysis.Analyzer { imageProxy ->
@@ -116,6 +117,7 @@ class CameraWordDetector(
             val generation = sessions.claim(owner)
             latestPose = null
             frameIndex = 0
+            slotTracker.reset()
             recognizer?.reset()
             progressState.value = WordProgress.NoHand
             overlayState.value = null
@@ -177,12 +179,13 @@ class CameraWordDetector(
             overlayState.value = hands.firstOrNull()?.let {
                 HandOverlay(it.image, it.imageWidth, it.imageHeight, it.timestampMs)
             }
-            val slots = List(2) { i ->
-                hands.getOrNull(i)?.let { hand ->
-                    FloatArray(42) { k -> if (k % 2 == 0) hand.image[k / 2].x else hand.image[k / 2].y }
-                }
-            }
             val timestamp = hands.firstOrNull()?.timestampMs ?: SystemClock.uptimeMillis()
+            val slots = slotTracker.assign(
+                hands.take(2).map { hand ->
+                    FloatArray(42) { k -> if (k % 2 == 0) hand.image[k / 2].x else hand.image[k / 2].y }
+                },
+                timestamp,
+            )
             progressState.value = active.onFrame(WordFrame(slots, latestPose), timestamp)
         }
     }
