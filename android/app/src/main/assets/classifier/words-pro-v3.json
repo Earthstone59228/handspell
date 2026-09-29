@@ -1,0 +1,41 @@
+{
+  "file": "words-pro-v3.bin",
+  "spec": 30,
+  "labels": [
+    "aunt",
+    "bird",
+    "black",
+    "boy",
+    "brother",
+    "cat",
+    "cow",
+    "cry",
+    "girl",
+    "grandpa",
+    "green",
+    "horse",
+    "mad",
+    "morning",
+    "now",
+    "read",
+    "red",
+    "sick",
+    "talk",
+    "think",
+    "tomorrow",
+    "uncle",
+    "wake",
+    "yellow",
+    "other"
+  ],
+  "gate": 0.5,
+  "cv": {
+    "folds": 3,
+    "top1": 0.8300878744698265,
+    "accept": 0.7972092482938483,
+    "false": 0.0029810696350114235,
+    "worst_false": 0.008717999140720321
+  },
+  "signers": 21,
+  "samples": 10763
+}

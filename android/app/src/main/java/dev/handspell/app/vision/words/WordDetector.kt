@@ -44,10 +44,14 @@ class CameraWordDetector(
     private val context: Context,
     private val classifier: WordClassifier?,
     private val frameConverter: FrameConverter = FrameConverter(),
+    /** Further models (the Pro words); a target is scored by whichever model knows its gloss. */
+    extraClassifiers: List<WordClassifier> = emptyList(),
 ) : WordDetector {
 
+    private val classifiers: List<WordClassifier> = listOfNotNull(classifier) + extraClassifiers
+
     private val statusState = MutableStateFlow<DetectorStatus>(
-        if (classifier == null) DetectorStatus.Failed("error_words_unavailable", null) else DetectorStatus.Idle,
+        if (classifiers.isEmpty()) DetectorStatus.Failed("error_words_unavailable", null) else DetectorStatus.Idle,
     )
     private val progressState = MutableStateFlow<WordProgress>(WordProgress.NoHand)
     private val overlayState = MutableStateFlow<HandOverlay?>(null)
@@ -95,10 +99,10 @@ class CameraWordDetector(
     }
 
     override fun setTarget(gloss: String) {
-        val scorer = classifier ?: return
         synchronized(lock) {
             target = gloss
-            recognizer = WordRecognizer(scorer::probabilityOf, gloss)
+            val scorer = classifiers.firstOrNull { gloss in it.labels }
+            recognizer = scorer?.let { WordRecognizer(it::probabilityOf, gloss) }
             progressState.value = WordProgress.NoHand
         }
     }
@@ -106,7 +110,7 @@ class CameraWordDetector(
     override fun start(owner: Any) {
         val (token, previous) = synchronized(lock) {
             if (sessions.owns(owner) && statusState.value == DetectorStatus.Running) return
-            if (classifier == null) return
+            if (classifiers.isEmpty()) return
             val old = helpers
             helpers = null
             val generation = sessions.claim(owner)
@@ -160,7 +164,7 @@ class CameraWordDetector(
             overlayState.value = null
             thumbnailState.value = null
             latestPose = null
-            statusState.value = if (classifier == null) statusState.value else DetectorStatus.Idle
+            statusState.value = if (classifiers.isEmpty()) statusState.value else DetectorStatus.Idle
             old
         }
         previous?.close()

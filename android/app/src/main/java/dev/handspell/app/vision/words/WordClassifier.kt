@@ -31,6 +31,9 @@ class WordClassifier(val net: WordNet) : WordScorer {
         const val OTHER = "other"
         const val ASSET_NAME = WordNet.ASSET_NAME
 
+        /** The Pro-tier words have their own model, so the free words keep their accuracy. */
+        const val PRO_ASSET_NAME = "classifier/words-pro-v3.bin"
+
         fun load(source: () -> InputStream, assetName: String = ASSET_NAME): WordClassifier =
             WordClassifier(WordNet.parse(source, assetName))
     }

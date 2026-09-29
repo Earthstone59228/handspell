@@ -9,15 +9,20 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The shipped `classifier/words-v3.bin` gives the numpy reference's probabilities on real feature vectors. */
+/** The shipped word models (`classifier/words-v3.bin`, `words-pro-v3.bin`) give the numpy reference's probabilities on real feature vectors. */
 class WordNetAssetTest {
 
     private fun resource(name: String) = checkNotNull(javaClass.classLoader.getResourceAsStream(name)) { "missing $name" }
 
     @Test
-    fun `the shipped model matches the numpy reference`() {
-        val classifier = WordClassifier.load({ resource("words-v3.bin") })
-        val document = Json.parseToJsonElement(resource("words_v3_parity.json").use { it.readBytes().decodeToString() }).jsonObject
+    fun `the shipped free model matches the numpy reference`() = check("words-v3.bin", "words_v3_parity.json")
+
+    @Test
+    fun `the shipped pro model matches the numpy reference`() = check("words-pro-v3.bin", "words_pro_v3_parity.json")
+
+    private fun check(asset: String, parity: String) {
+        val classifier = WordClassifier.load({ resource(asset) })
+        val document = Json.parseToJsonElement(resource(parity).use { it.readBytes().decodeToString() }).jsonObject
         assertEquals(document.getValue("labels").jsonArray.map { it.jsonPrimitive.content }, classifier.labels)
         assertTrue(WordClassifier.OTHER in classifier.labels)
         val cases = document.getValue("cases").jsonArray
