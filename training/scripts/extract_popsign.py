@@ -121,7 +121,10 @@ def main() -> None:
     args = parser.parse_args()
     Path(args.out_dir).mkdir(parents=True, exist_ok=True)
     shards = sorted(str(p) for p in Path(args.shards_dir).glob(args.pattern))
-    with ProcessPoolExecutor(args.workers) as pool:
+    import multiprocessing
+
+    # spawn, not fork: forked workers deadlocked at start once MediaPipe/XNNPACK threads existed in the pool.
+    with ProcessPoolExecutor(args.workers, mp_context=multiprocessing.get_context("spawn")) as pool:
         for message in pool.map(extract_shard, [(s, args.out_dir, args.only) for s in shards]):
             print(message, flush=True)
 

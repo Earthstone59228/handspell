@@ -36,7 +36,7 @@ These are small features that make the demo and the judges' first run better, pl
 
 | # | Item | Notes |
 | --- | --- | --- |
-| 2.1 | **Word signs**, added next to the letters in the menu | Word signs move, but today's pipeline classifies single frames. This needs a sequence model over landmark windows. Candidate data: PopSign ASL (250 signs, smartphone selfie camera, MediaPipe landmarks) and ASL Citizen. **Check each licence before use**, because some are research-only. |
+| 2.1 | **Word signs**, added next to the letters in the menu. A spike on 2026-09-30 failed on low-fps data; see `docs/research/words-v1-2026-09-30.md`. The plan is 12 free words and the rest bundled but Pro-locked (not downloaded, because the model is tiny). | Word signs move, but today's pipeline classifies single frames. This needs a sequence model over landmark windows. Candidate data: PopSign ASL (250 signs, smartphone selfie camera, MediaPipe landmarks) and ASL Citizen. **Check each licence before use**, because some are research-only. |
 | 2.2 | **J and Z** | These are the same motion problem as 2.1, so they come from the same model. |
 | 2.3 | **Free mode (words)** | Depends on 2.1. |
 
