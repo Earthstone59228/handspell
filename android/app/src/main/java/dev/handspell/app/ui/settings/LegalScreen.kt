@@ -19,11 +19,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import dev.handspell.app.R
 import dev.handspell.app.ui.components.AslCard
@@ -159,15 +161,20 @@ private fun parseDocument(source: String): List<DocBlock> {
 
 /** `**bold**`, `` `code` `` and `[label](url)` become styled text; nothing is left as raw Markdown. */
 private fun inline(source: String): AnnotatedString = buildAnnotatedString {
-    val token = Regex("\\*\\*(.+?)\\*\\*|`(.+?)`|\\[(.+?)]\\((.+?)\\)")
+    val token = Regex("\\*\\*(.+?)\\*\\*|`(.+?)`|\\[(.+?)]\\((https?://[^\\s)]+)\\)|https?://[^\\s<>]+")
     var index = 0
     for (match in token.findAll(source)) {
         append(source.substring(index, match.range.first))
-        val (bold, code, label) = match.destructured
+        val (bold, code, label, url) = match.destructured
         when {
             bold.isNotEmpty() -> withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(bold) }
             code.isNotEmpty() -> withStyle(SpanStyle(fontFamily = FontFamily.Monospace)) { append(code) }
-            else -> append(label)
+            label.isNotEmpty() -> withLink(LinkAnnotation.Url(url)) { append(label) }
+            else -> {
+                val address = match.value.trimEnd('.', ',', ';', ')')
+                withLink(LinkAnnotation.Url(address)) { append(address) }
+                append(match.value.substring(address.length))
+            }
         }
         index = match.range.last + 1
     }

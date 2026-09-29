@@ -87,7 +87,9 @@ class DataStoreProgressStore(context: Context) : ProgressStore {
     }
 
     override suspend fun recordSpeedRun(result: SpeedRunResult) = update {
-        it.copy(speedRuns = (listOf(result.toStored()) + it.speedRuns).take(ProgressSnapshot.MAX_SPEED_RUNS))
+        it.copy(speedRuns = (listOf(result.toStored()) + it.speedRuns.filterNot { saved ->
+            saved.roundId == result.roundId && saved.completedAt == result.completedAt
+        }).take(ProgressSnapshot.MAX_SPEED_RUNS))
     }
 
     override suspend fun setOnboardingCompleted(completed: Boolean) = update {

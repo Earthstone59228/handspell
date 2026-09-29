@@ -1,24 +1,27 @@
 # Training data — provenance and consent
 
-All training data for the letter classifier is self-recorded by members of the Handspell team.
-Nothing is scraped, licensed, or sourced from a third party.
+The static-letter reference set combines the team's original A–D recordings with derivatives
+of **ASLYset**, an original public image dataset released by Miguel Rivera under CC BY 4.0.
+The ASLYset input is licensed from its original release, not scraped from an unverified mirror.
+Its derived vectors and reference illustrations retain attribution and CC BY 4.0 terms; application
+code remains MIT-licensed. See `NOTICE` and `training/data/aslyset/LICENSE.txt`.
 
-The intended capture path is the app's debug-only capture screen (`docs/CLASSIFIER.md` §7), which
-writes the full 141-column capture CSVs described below. **That screen is not written yet.** The
-reference set currently in the repository was recorded with the desktop tool in
-[`recorder/`](../recorder/README.md) (`docs/RECORDER.md`), which normalises through the same
-`handspell/normalize.py` and writes `assets/classifier/references-v1.csv` directly.
+The debug-only capture screen (`docs/CLASSIFIER.md` §7) is available and writes the full
+141-column capture CSVs described below. The original 98 A–D examples were recorded earlier with
+the desktop tool in [`recorder/`](../recorder/README.md). That tool normalizes through the same
+`handspell/normalize.py` and writes reference vectors directly. The public expansion instead uses
+`training/scripts/import_aslyset.py`, documented at the end of this file.
 
-Two consequences of that detour, stated because they are easy to forget:
+The original desktop-recorded A–D input has two historical limitations:
 
-- **No signer attribution.** `references-v1.csv` is a fixed 67-column format that
-  `KnnLetterClassifier` parses strictly, so a `signer_id` cannot ride along inside it. Until the
-  capture screen lands, signer attribution for that file has to live outside it, and the
-  leave-one-signer-out protocol in `docs/CLASSIFIER.md` §8 cannot be run on it — which makes any
-  accuracy number measured from it a same-signer number, and therefore an optimistic one.
-- **No raw rows.** Image landmarks, timestamps and device metadata are never written, so the
-  xy-image-space ablation in `docs/CLASSIFIER.md` §8 cannot be evaluated from what the recorder
-  leaves behind; it needs the capture CSVs.
+- **No signer IDs in its reference rows.** The strict 67-column `references-v1.csv` format contains
+  only letter and vector fields. Those original team rows have no accompanying signer attribution,
+  so they cannot support leave-one-signer-out evaluation on their own. ASLYset's derived NPZ retains
+  original User1–User4 IDs separately and supports the dated held-out-signer evaluation.
+- **No raw capture rows from that desktop session.** Its image landmarks, timestamps and device
+  metadata were not retained. New debug CSVs can retain these fields. The ASLYset source archive
+  contains original images outside the repository, while the committed NPZ retains normalized
+  vectors and source-file references rather than raw world/image landmark arrays.
 
 ## What a capture row contains
 
@@ -52,7 +55,7 @@ Consent record (rows to be filled by the team before submission):
 
 ## Rejected third-party datasets
 
-No third-party dataset was used, per `docs/research/data-and-asl-reference.md` §1:
+The following alternatives were rejected in the earlier review in `docs/research/data-and-asl-reference.md` §1:
 
 - **Kaggle ASL Alphabet (grassknoted)** — rejected. Effectively one signer under one lighting setup,
   and the dataset page does not display a clear, machine-verifiable license.
@@ -80,8 +83,7 @@ It is still not used for training, and the reason is about the problem rather th
   a handful of teammates. It is also the set we can extend the same afternoon a confusable pair
   turns out to be hard, which a 1.38 TB download is not.
 
-FSBoard is a candidate **evaluation** set — it is the only source of the cross-signer numbers this
-project would like but cannot produce from three people — and the legitimate starting point if a
+FSBoard is a candidate **continuous-fingerspelling evaluation** set, and a starting point if a
 later version takes on continuous fingerspelling recognition. If it is used, CC BY 4.0 requires
 attribution, and the release additionally asks that signers' faces be blurred when publicising
 examples, that signers not be re-identified, and that the Deaf community be involved in applications
@@ -90,9 +92,10 @@ built for them.
 One rule for anything else that turns up: **a licence tag on a re-upload is not a licence.**
 `granthgaurav/asl-mediapipe-converted-dataset` (MIT), `psewmuthu/how2sign-holistic` (MIT) and
 `nguyenchitinh/asl-citizen` (MIT) all claim permissive licences over features derived from datasets
-their uploaders do not own. Derivative sets also inherit share-alike terms: the CC BY-SA landmark
-sets on Kaggle would pull this repo's derived classifier and data under CC BY-SA, and the CC BY-NC
-fingerspelling sets would forbid the paid tier entirely. Full detail in
+their uploaders do not own. Derived dataset assets can retain source-license obligations. CC BY-SA and CC BY-NC inputs
+require an asset-specific analysis of adaptation, redistribution and intended commercial use;
+this review does not establish that they would relicense all independent application code or
+prohibit every unrelated paid feature. They were not selected for this integration. Full detail in
 `docs/research/data-and-asl-reference.md` §1.1 and §1.2.
 
 ## Lifeprint rule
@@ -102,3 +105,24 @@ handshape description, image, or closely-paraphrased text from Lifeprint appears
 repo, the training data, or the app. Where the app references authoritative handshape descriptions,
 it uses original wording per `docs/research/data-and-asl-reference.md` §2, and Lifeprint is linked
 only as an outbound "learn more" reference in documentation, never embedded.
+
+## ASLYset integration — 2026-09-28
+
+Original release: Miguel Rivera (2019), [ASLYset, V1](https://data.mendeley.com/datasets/xs6mvhx6rh/1),
+DOI 10.17632/xs6mvhx6rh.1, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+It describes 5,200 416×416 images from four volunteers: 24 static letters plus SP/FN.
+The importer excludes SP/FN and does not create J/Z examples. It verifies the original archive
+SHA256, mirrors images to the upright selfie frame, runs the bundled Hand Landmarker model, and
+normalizes using MediaPipe's reported handedness exactly as Android does. It rejects missing or
+multiple hands and degenerate geometry. No source photo is shipped or committed.
+
+`training/data/aslyset/landmarks-v1.npz` retains normalized vectors, source filenames,
+reported handedness and original opaque User1–User4 IDs for reproducible signer-held-out
+evaluation. `provenance.json` records source/license/model/archive hashes and extraction counts.
+`references-v1.csv` preserves the team's original A–D data and supplements all 24 static letters
+with up to 64 total exemplars per letter. The selection interleaves source users; its first public
+reference is a real medoid for the illustration, never an averaged or invented handshape.
+
+The license release is evidence of permission to use the data. It is not evidence that these
+four volunteers represent all ASL signers or that the app passes its live-device accuracy criteria.
+Evaluation results and remaining limitations are recorded in `docs/research/aslyset-evaluation-2026-09-28.json`.

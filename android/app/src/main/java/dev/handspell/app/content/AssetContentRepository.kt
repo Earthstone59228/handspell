@@ -10,8 +10,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -65,7 +63,8 @@ class AssetContentRepository(
                     val packId = ref.string("packId")
                     try {
                         val pack = parsePack(readObject(ref.string("path")))
-                        if (pack.packId != packId) error("pack id does not match index entry")
+                        if (pack.packId != packId || !pack.kind.name.equals(ref.string("kind"), true) ||
+                            !pack.tier.name.equals(ref.string("tier"), true)) error("pack does not match index entry")
                         parsedPacks += pack
                     } catch (failure: UnsupportedSchemaException) {
                         errors += ContentError.UnsupportedSchema(
@@ -94,46 +93,8 @@ class AssetContentRepository(
         if (schemaVersion != SCHEMA_VERSION) {
             throw UnsupportedSchemaException(packId, schemaVersion)
         }
-        val kind = enumValue<PackKind>(root.string("kind"))
-        val tier = enumValue<Tier>(root.string("tier"))
-        return ContentPack(
-            schemaVersion = schemaVersion,
-            packId = packId,
-            packVersion = root.int("packVersion"),
-            kind = kind,
-            tier = tier,
-            title = root.string("title"),
-            summary = root.string("summary"),
-            releasedOn = root.string("releasedOn"),
-            items = root.array("items").map { parseItem(it.jsonObject, kind) },
-        )
+        return ContentPackParser.parse(root)
     }
-
-    private fun parseItem(item: JsonObject, kind: PackKind): PackItem = when (kind) {
-        PackKind.DRILL -> PackItem.Drill(
-            id = item.string("id"),
-            letter = Letter.fromNameOrNull(item.string("letter")) ?: error("unknown drill letter"),
-            prompt = item.string("prompt"),
-            description = item.string("description"),
-            hintId = item["hintId"]?.jsonPrimitive?.content,
-        )
-        PackKind.STORY -> PackItem.StoryStep(
-            id = item.string("id"),
-            narration = item["narration"]?.jsonPrimitive?.contentOrNull,
-            spellWord = item["spellWord"]?.jsonPrimitive?.contentOrNull,
-            letters = item.array("letters").map { letter(it.jsonPrimitive) },
-        )
-        PackKind.SPEED -> PackItem.SpeedRound(
-            id = item.string("id"),
-            title = item.string("title"),
-            durationSeconds = item.int("durationSeconds"),
-            letters = item.array("letters").map { letter(it.jsonPrimitive) },
-            targetCorrect = item.int("targetCorrect"),
-        )
-    }
-
-    private fun letter(value: JsonPrimitive): Letter =
-        Letter.fromNameOrNull(value.content) ?: error("unknown letter ${value.content}")
 
     private fun readObject(path: String): JsonObject =
         assets.open(path).bufferedReader().use { Json.parseToJsonElement(it.readText()).jsonObject }
@@ -141,10 +102,6 @@ class AssetContentRepository(
     private fun JsonObject.string(name: String): String = getValue(name).jsonPrimitive.content
     private fun JsonObject.int(name: String): Int = getValue(name).jsonPrimitive.int
     private fun JsonObject.array(name: String) = getValue(name).jsonArray
-
-    private inline fun <reified T : Enum<T>> enumValue(value: String): T =
-        enumValues<T>().firstOrNull { it.name.equals(value, ignoreCase = true) }
-            ?: error("unknown ${T::class.simpleName} $value")
 
     private class UnsupportedSchemaException(val packId: String, val found: Int) :
         IllegalArgumentException("unsupported schema $found for $packId")

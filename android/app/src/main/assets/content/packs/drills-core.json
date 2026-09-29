@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "packId": "drills-core",
-  "packVersion": 1,
+  "packVersion": 2,
   "kind": "drill",
   "tier": "free",
   "title": "The alphabet, one letter at a time",
@@ -13,7 +13,7 @@
       "type": "drill",
       "letter": "A",
       "prompt": "Show the letter A",
-      "description": "Make a fist and rest your thumb flat against the side of your curled fingers.",
+      "description": "Make a fist. Keep your thumb straight up against the side of your pointer finger. Palm faces the camera.",
       "hintId": "hint_thumb_to_side"
     },
     {
@@ -21,7 +21,7 @@
       "type": "drill",
       "letter": "B",
       "prompt": "Show the letter B",
-      "description": "Hold your hand flat with your fingers together and pointing up, thumb folded across your palm.",
+      "description": "Hold your hand flat, fingers together and pointing up. Fold your thumb across your palm. Palm faces the camera.",
       "hintId": "hint_fingers_together"
     },
     {
@@ -29,7 +29,7 @@
       "type": "drill",
       "letter": "C",
       "prompt": "Show the letter C",
-      "description": "Curve your hand into a C shape, letting your thumb and fingers both bend to match the curve.",
+      "description": "Curve your fingers and thumb as if holding a can, leaving a gap between them. Turn your hand so the C faces the side.",
       "hintId": "hint_generic"
     },
     {
@@ -37,7 +37,7 @@
       "type": "drill",
       "letter": "D",
       "prompt": "Show the letter D",
-      "description": "Point your index finger straight up, touch your thumb to your middle finger, and curl the rest in.",
+      "description": "Point your pointer finger straight up. Curl your other fingers down to touch your thumb tip, making a small circle. Palm faces the camera.",
       "hintId": "hint_index_up_curled"
     },
     {
@@ -45,7 +45,7 @@
       "type": "drill",
       "letter": "E",
       "prompt": "Show the letter E",
-      "description": "Curl your fingertips down to meet your thumb, making a tight claw-like shape.",
+      "description": "Bend all four fingers down so their tips rest on your thumb. Tuck your thumb across your palm under them. Palm faces the camera.",
       "hintId": "hint_generic"
     },
     {
@@ -53,7 +53,7 @@
       "type": "drill",
       "letter": "F",
       "prompt": "Show the letter F",
-      "description": "Touch your thumb to your index fingertip and hold your other three fingers straight and spread.",
+      "description": "Touch your pointer fingertip to your thumb tip to make a circle. Keep your other three fingers up and slightly apart. Palm faces the camera.",
       "hintId": "hint_three_straight"
     },
     {
@@ -61,7 +61,7 @@
       "type": "drill",
       "letter": "G",
       "prompt": "Show the letter G",
-      "description": "Point your index finger and thumb straight out, side by side, with your hand turned sideways.",
+      "description": "Point your pointer finger to the side, with your thumb above it and parallel. Curl your other fingers in. Palm faces you.",
       "hintId": "hint_point_forward"
     },
     {
@@ -69,7 +69,7 @@
       "type": "drill",
       "letter": "H",
       "prompt": "Show the letter H",
-      "description": "Hold your index and middle fingers straight out together, turned sideways.",
+      "description": "Point your pointer and middle fingers to the side, together. Curl your other fingers in. Palm faces you.",
       "hintId": "hint_fingers_together"
     },
     {
@@ -77,7 +77,7 @@
       "type": "drill",
       "letter": "I",
       "prompt": "Show the letter I",
-      "description": "Make a fist and let only your pinky finger point straight up.",
+      "description": "Make a fist with your thumb across the front. Raise only your pinky straight up. Palm faces the camera.",
       "hintId": "hint_generic"
     },
     {
@@ -85,7 +85,7 @@
       "type": "drill",
       "letter": "K",
       "prompt": "Show the letter K",
-      "description": "Form a V with your index and middle fingers and press your thumb between them at the base.",
+      "description": "Raise your pointer finger and middle finger in a V. Press your thumb tip against the middle of your middle finger. Palm faces the camera.",
       "hintId": "hint_point_forward"
     },
     {
@@ -93,7 +93,7 @@
       "type": "drill",
       "letter": "L",
       "prompt": "Show the letter L",
-      "description": "Point your index finger up and your thumb out to the side, making an L shape.",
+      "description": "Point your pointer finger up and your thumb out to the side to make an L. Curl your other fingers in. Palm faces the camera.",
       "hintId": "hint_generic"
     },
     {
@@ -101,7 +101,7 @@
       "type": "drill",
       "letter": "M",
       "prompt": "Show the letter M",
-      "description": "Tuck your thumb under your index, middle, and ring fingers, with your pinky resting on top.",
+      "description": "Make a fist. Tuck your thumb under your pointer, middle and ring fingers so three fingers cover it. Palm faces the camera.",
       "hintId": "hint_thumb_under_three"
     },
     {
@@ -109,7 +109,7 @@
       "type": "drill",
       "letter": "N",
       "prompt": "Show the letter N",
-      "description": "Tuck your thumb under your index and middle fingers, with your ring and pinky curled on top.",
+      "description": "Make a fist. Tuck your thumb under your pointer and middle fingers so two fingers cover it. Palm faces the camera.",
       "hintId": "hint_thumb_under_two"
     },
     {
@@ -117,7 +117,7 @@
       "type": "drill",
       "letter": "O",
       "prompt": "Show the letter O",
-      "description": "Curve your fingers and thumb together into a rounded O shape.",
+      "description": "Curve all your fingers so their tips touch your thumb tip, making a round O. Turn your hand so the O faces the side.",
       "hintId": "hint_generic"
     },
     {
@@ -125,7 +125,7 @@
       "type": "drill",
       "letter": "P",
       "prompt": "Show the letter P",
-      "description": "Form the same shape as K, but turn your hand to point down toward the floor.",
+      "description": "Make the K shape, then tip your hand so your fingers point down toward the floor.",
       "hintId": "hint_point_down"
     },
     {
@@ -133,7 +133,7 @@
       "type": "drill",
       "letter": "Q",
       "prompt": "Show the letter Q",
-      "description": "Form the same shape as G, but turn your hand to point down toward the floor.",
+      "description": "Make the G shape, then tip your hand so your pointer finger and thumb point down toward the floor.",
       "hintId": "hint_point_down"
     },
     {
@@ -141,7 +141,7 @@
       "type": "drill",
       "letter": "R",
       "prompt": "Show the letter R",
-      "description": "Cross your index finger over your middle finger, resting your thumb against your other knuckles.",
+      "description": "Raise your pointer and middle fingers and cross them, like fingers crossed for luck. Curl your other fingers in. Palm faces the camera.",
       "hintId": "hint_cross_fingers"
     },
     {
@@ -149,7 +149,7 @@
       "type": "drill",
       "letter": "S",
       "prompt": "Show the letter S",
-      "description": "Make a fist and cross your thumb flat over the front of your curled fingers.",
+      "description": "Make a fist and wrap your thumb across the front of your fingers. Palm faces the camera.",
       "hintId": "hint_thumb_across_front"
     },
     {
@@ -157,7 +157,7 @@
       "type": "drill",
       "letter": "T",
       "prompt": "Show the letter T",
-      "description": "Make a fist and tuck your thumb between your index and middle fingers so it pokes out slightly.",
+      "description": "Make a fist and tuck your thumb between your pointer and middle fingers, tip just showing. Palm faces the camera.",
       "hintId": "hint_thumb_between_index_middle"
     },
     {
@@ -165,7 +165,7 @@
       "type": "drill",
       "letter": "U",
       "prompt": "Show the letter U",
-      "description": "Hold your index and middle fingers straight up together, touching, palm facing out.",
+      "description": "Raise your pointer and middle fingers straight up, pressed together. Hold your other fingers down with your thumb. Palm faces the camera.",
       "hintId": "hint_fingers_together"
     },
     {
@@ -173,7 +173,7 @@
       "type": "drill",
       "letter": "V",
       "prompt": "Show the letter V",
-      "description": "Hold your index and middle fingers straight up and spread apart, palm facing out.",
+      "description": "Raise your pointer and middle fingers straight up, spread apart. Hold your other fingers down with your thumb. Palm faces the camera.",
       "hintId": "hint_spread_fingers"
     },
     {
@@ -181,7 +181,7 @@
       "type": "drill",
       "letter": "W",
       "prompt": "Show the letter W",
-      "description": "Hold your index, middle, and ring fingers up and spread apart, with your thumb pinning your pinky down.",
+      "description": "Raise your pointer, middle and ring fingers, spread apart. Hold your pinky down with your thumb. Palm faces the camera.",
       "hintId": "hint_spread_fingers"
     },
     {
@@ -189,7 +189,7 @@
       "type": "drill",
       "letter": "X",
       "prompt": "Show the letter X",
-      "description": "Curl your index finger into a hook and rest your thumb against your curled middle finger.",
+      "description": "Make a fist, then raise your pointer finger and bend it into a hook. Turn your hand so your palm faces the side.",
       "hintId": "hint_hook_index"
     },
     {
@@ -197,7 +197,7 @@
       "type": "drill",
       "letter": "Y",
       "prompt": "Show the letter Y",
-      "description": "Stick your thumb and pinky out to the sides and curl your other three fingers into your palm.",
+      "description": "Stretch your thumb and pinky out. Curl your middle three fingers into your palm. Palm faces the camera.",
       "hintId": "hint_generic"
     }
   ]

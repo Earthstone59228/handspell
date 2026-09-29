@@ -30,6 +30,8 @@ class FakeSignDetector(
 
     private val statusState = MutableStateFlow<DetectorStatus>(DetectorStatus.Idle)
     private val feedbackState = MutableStateFlow<SignFeedbackState>(SignFeedbackState.NoHand(null))
+    internal val thumbnailState = MutableStateFlow<android.graphics.Bitmap?>(null)
+    private val sessions = DetectorSessionGuard()
     private var target: Letter? = null
     private var job: Job? = null
 
@@ -40,7 +42,7 @@ class FakeSignDetector(
     override val feedback: Flow<SignFeedbackState> = feedbackState.asStateFlow()
 
     override val overlay: StateFlow<HandOverlay?> = MutableStateFlow(null).asStateFlow()
-    override val previewThumbnail: StateFlow<android.graphics.Bitmap?> = MutableStateFlow<android.graphics.Bitmap?>(null).asStateFlow()
+    override val previewThumbnail: StateFlow<android.graphics.Bitmap?> = thumbnailState.asStateFlow()
     override val lowLightNotice: StateFlow<Boolean> = MutableStateFlow(false).asStateFlow()
     override fun dismissLowLightNotice() = Unit
 
@@ -54,8 +56,10 @@ class FakeSignDetector(
         feedbackState.value = SignFeedbackState.NoHand(target)
     }
 
-    override fun start() {
-        if (job != null) return
+    override fun start(owner: Any) {
+        if (sessions.owns(owner) && job != null) return
+        sessions.claim(owner)
+        job?.cancel()
         statusState.value = DetectorStatus.Starting
         job = scope.launch {
             statusState.value = DetectorStatus.Running
@@ -68,11 +72,13 @@ class FakeSignDetector(
         }
     }
 
-    override fun stop() {
+    override fun stop(owner: Any) {
+        if (!sessions.release(owner)) return
         job?.cancel()
         job = null
         statusState.value = DetectorStatus.Idle
         feedbackState.value = SignFeedbackState.NoHand(target)
+        thumbnailState.value = null
     }
 
     private fun stateFor(step: Int, letter: Letter?): SignFeedbackState = when {

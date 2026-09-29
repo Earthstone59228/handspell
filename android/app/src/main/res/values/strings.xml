@@ -153,7 +153,8 @@
     <string name="low_light_notice">It’s a bit dark — more light will help.</string>
     <string name="dismiss">Dismiss</string>
     <string name="drill_unavailable_title">This letter cannot be scored right now</string>
-    <string name="skip_letter">Skip this letter</string>
+    <string name="skip_letter">Skip</string>
+    <string name="continue_letter">Continue</string>
     <string name="feedback_no_hand_glyph">○</string>
     <string name="feedback_not_recognized_glyph">?</string>
     <string name="feedback_adjust_glyph">↻</string>

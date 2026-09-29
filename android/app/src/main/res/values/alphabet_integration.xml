@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="recognition_experimental_letter">Recognition for %1$s is experimental. A correct handshape may need several adjustments. You can skip it and continue practising.</string>
+</resources>

@@ -32,6 +32,7 @@ import os
 import subprocess
 import sys
 import time
+from contextlib import contextmanager
 from pathlib import Path
 
 # mediapipe imports matplotlib somewhere in its package init chain. Keep the
@@ -416,6 +417,22 @@ def run_selftest(training: dict, out: Path) -> int:
     return 0
 
 
+@contextmanager
+def without_desktop_env():
+    """Hide session variables while MediaPipe loads; restore them for OpenCV's window."""
+    prefixes = ("XDG_", "WAYLAND_", "DBUS_", "HYPRLAND_", "HYPRCURSOR_", "KITTY_", "UWSM_")
+    names = {"DISPLAY", "TERM", "SYSTEMD_EXEC_PID", "JOURNAL_STREAM", "INVOCATION_ID", "NOTIFY_SOCKET"}
+    removed = {
+        key: os.environ.pop(key)
+        for key in list(os.environ)
+        if key.startswith(prefixes) or key in names
+    }
+    try:
+        yield
+    finally:
+        os.environ.update(removed)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     training = import_training(args.repo)
@@ -425,11 +442,6 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.selftest:
         return run_selftest(training, out)
-
-    import cv2
-    import mediapipe as mp
-    from mediapipe.tasks import python as mp_python
-    from mediapipe.tasks.python import vision
 
     model_path = find_model(args.repo, args.model)
     if args.fresh and out.is_file():
@@ -442,16 +454,29 @@ def main(argv: list[str] | None = None) -> int:
         clipboard=not args.no_clipboard,
     )
 
-    options = vision.HandLandmarkerOptions(
-        base_options=mp_python.BaseOptions(model_asset_path=str(model_path)),
-        running_mode=vision.RunningMode.VIDEO,
-        num_hands=1,
-        min_hand_detection_confidence=args.min_detection,
-        min_hand_presence_confidence=0.5,
-        min_tracking_confidence=0.5,
-    )
+    import cv2
+    # This Linux desktop kills MediaPipe during import or TFLite initialization
+    # when session variables are set. OpenCV needs those variables for its window.
+    with without_desktop_env():
+        import mediapipe as mp
+        from mediapipe.tasks import python as mp_python
+        from mediapipe.tasks.python import vision
 
-    cap = open_camera(args.camera)
+        options = vision.HandLandmarkerOptions(
+            base_options=mp_python.BaseOptions(model_asset_path=str(model_path)),
+            running_mode=vision.RunningMode.VIDEO,
+            num_hands=1,
+            min_hand_detection_confidence=args.min_detection,
+            min_hand_presence_confidence=0.5,
+            min_tracking_confidence=0.5,
+        )
+        landmarker = vision.HandLandmarker.create_from_options(options)
+
+    try:
+        cap = open_camera(args.camera)
+    except Exception:
+        landmarker.close()
+        raise
     try:
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, args.width)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, args.height)
@@ -479,7 +504,7 @@ def main(argv: list[str] | None = None) -> int:
         fps_timer = time.monotonic()
         start = time.monotonic()
 
-        with vision.HandLandmarker.create_from_options(options) as landmarker:
+        with landmarker:
             while True:
                 good, frame = cap.read()
                 if not good:

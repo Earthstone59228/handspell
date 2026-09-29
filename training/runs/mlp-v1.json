@@ -1,0 +1,28 @@
+{
+  "trainer": "scripts/train_mlp.py",
+  "git_sha": "4bcca5d",
+  "photo_rows": 4786,
+  "photo_signers": [
+    "User1",
+    "User2",
+    "User3",
+    "User4"
+  ],
+  "live_rows": 98,
+  "live_letters": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "hidden": [
+    64
+  ],
+  "augmentation": {
+    "copies": 4,
+    "shape_noise": 0.07,
+    "orientation_noise": 0.15,
+    "scale_jitter": 0.1
+  },
+  "validation": "docs/research/mlp-v1-2026-09-29.md"
+}

@@ -31,12 +31,14 @@ cd android
 Install on a connected device with `./gradlew :app:installDebug`, or open `android/` in Android
 Studio.
 
-The bundled Alphabet build is copied from the unchanged Ionic frontend. To refresh it, run
+The bundled Alphabet build is generated from the Ionic frontend in `web/`. To refresh it, run
 `npm run build -- --base=./` in that frontend checkout, then run
 `scripts/sync-ionic-frontend.sh /path/to/ionic-app/dist` here. The browser preview at
 `http://localhost:5173` shows the frontend only; camera drills and native Settings/Progress
-require an Android build. Live classifier data currently covers A–D. Other letters show an
-availability message instead of simulated recognition.
+require an Android build. The expanded prototype includes reference data and illustrations for all 24 static letters
+(J/Z excluded), derived from the original A–D recordings and CC BY 4.0 ASLYset. Recognition remains
+experimental, especially R/T/U; live-device validation is pending. See
+[the integration and evaluation note](docs/research/static-alphabet-integration-2026-09-28.md).
 
 ### RevenueCat Test Store key
 

@@ -56,7 +56,7 @@ fun PaywallRoute(gate: EntitlementGate, onBack: () -> Unit) {
     LaunchedEffect(gate) {
         runCatching { gate.loadPackages() }.onSuccess {
             packages = it
-            selectedId = it.firstOrNull()?.id
+            selectedId = null
         }.onFailure { error = true }
     }
     PaywallScreen(
@@ -73,7 +73,7 @@ fun PaywallRoute(gate: EntitlementGate, onBack: () -> Unit) {
             scope.launch {
                 runCatching { gate.loadPackages() }.onSuccess {
                     packages = it
-                    selectedId = it.firstOrNull()?.id
+                    selectedId = null
                 }.onFailure { error = true }
             }
         },
@@ -122,15 +122,19 @@ private fun PaywallScreen(
       ) {
         Text(stringResource(R.string.paywall_title), style = MaterialTheme.typography.displaySmall)
         Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
-        Text(stringResource(R.string.paywall_value), style = MaterialTheme.typography.bodyLarge)
+        Text(stringResource(R.string.pro_features_detail), style = MaterialTheme.typography.bodyLarge)
         Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
+        Text(stringResource(R.string.pro_features_offline), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
         when {
             error -> {
                 Text(stringResource(R.string.paywall_load_failed), style = MaterialTheme.typography.bodyLarge)
                 SettingsActionRow(stringResource(R.string.retry), onClick = onRetry)
             }
             packages == null -> Text(stringResource(R.string.paywall_loading), style = MaterialTheme.typography.bodyLarge)
-            packages.isEmpty() -> Text(stringResource(R.string.paywall_empty), style = MaterialTheme.typography.bodyLarge)
+            packages.isEmpty() -> {
+                Text(stringResource(R.string.paywall_empty), style = MaterialTheme.typography.bodyLarge)
+                SettingsActionRow(stringResource(R.string.retry), onClick = onRetry)
+            }
             else -> {
                 val monthly = packages.firstOrNull { it.period == BillingPeriod.MONTH }
                 SettingsGroup {
@@ -168,6 +172,7 @@ private fun PaywallScreen(
                 )
             }
         }
+        if (working) Text(stringResource(R.string.pro_billing_working), style = MaterialTheme.typography.bodyLarge)
         AslButton(stringResource(R.string.settings_restore), onRestore, Modifier.fillMaxWidth(),
             style = AslButtonStyle.Secondary, enabled = !working)
         Text(stringResource(R.string.settings_cancel_subscription), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)

@@ -3,6 +3,10 @@ package dev.handspell.app.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,13 +24,21 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -39,6 +51,7 @@ import dev.handspell.app.R
 import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
+import kotlin.math.tanh
 
 internal val BackChevronStart = 12.dp
 internal val BackChevronTop = 16.dp
@@ -86,12 +99,30 @@ fun ScreenHeader(
 fun BackChevron(onBack: () -> Unit, modifier: Modifier = Modifier) {
     val color = LocalAslColors.current.label
     val description = stringResource(R.string.back)
+    val density = LocalDensity.current
+    val limit = with(density) { 8.dp.toPx() }
+    var drag by remember { mutableStateOf(Offset.Zero) }
+    var target by remember { mutableStateOf(Offset.Zero) }
+    val position by animateOffsetAsState(target, spring(dampingRatio = 0.8f, stiffness = 350f), label = "back drag")
+    val interactions = remember { MutableInteractionSource() }
     Box(
-        modifier.size(Spacing.touchTarget).clickable(role = Role.Button, onClick = onBack)
+        modifier.size(Spacing.touchTarget)
+            .pointerInput(limit) {
+                detectDragGestures(
+                    onDragStart = { drag = Offset.Zero },
+                    onDragEnd = { drag = Offset.Zero; target = Offset.Zero },
+                    onDragCancel = { drag = Offset.Zero; target = Offset.Zero },
+                ) { change, amount ->
+                    change.consume()
+                    drag += amount
+                    target = Offset(limit * tanh(drag.x / (limit * 4)), limit * tanh(drag.y / (limit * 4)))
+                }
+            }
+            .clickable(interactionSource = interactions, indication = null, role = Role.Button, onClick = onBack)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Canvas(Modifier.size(30.dp)) {
+        Canvas(Modifier.size(30.dp).graphicsLayer { translationX = position.x; translationY = position.y }) {
             // The alphabet's #icon-back symbol (32-unit viewBox, "M19.5 6.5 10 16l9.5 9.5", stroke 2.3) at 30dp.
             val unit = size.width / 32f
             val path = Path().apply {

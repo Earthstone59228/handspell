@@ -64,8 +64,8 @@ import dev.handspell.app.R
 import dev.handspell.app.content.PackItem
 import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.core.model.SignFeedbackState
+import dev.handspell.app.core.model.Letter
 import dev.handspell.app.ui.components.AslButton
-import dev.handspell.app.ui.components.AslButtonStyle
 import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.components.CameraFrame
 import dev.handspell.app.ui.components.FrameGeometry
@@ -95,6 +95,7 @@ fun LetterDrillRoute(
     onMatch: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     sessionKey: String = drill.id,
+    showHeader: Boolean = true,
 ) {
     val viewModel: DrillViewModel = viewModel(
         key = "drill",
@@ -107,6 +108,7 @@ fun LetterDrillRoute(
         state = if (state.sessionKey == sessionKey) state else DrillUiState(),
         onBack = onBack,
         onSkip = { next -> scope.launch { viewModel.recordSkip(); onSkip(next) } },
+        onContinue = { next -> if (onMatch != null) onMatch() else onSkip(next) },
         onMatch = onMatch,
         modifier = modifier,
         thumbnails = viewModel.previewThumbnail,
@@ -114,6 +116,7 @@ fun LetterDrillRoute(
         onRetry = viewModel::retryDetector,
         onCameraUnavailable = viewModel::onCameraUnavailable,
         onDismissLowLight = viewModel::dismissLowLightNotice,
+        showHeader = showHeader,
     )
 }
 
@@ -122,6 +125,7 @@ private fun LetterDrillScreen(
     state: DrillUiState,
     onBack: () -> Unit,
     onSkip: (PackItem.Drill) -> Unit,
+    onContinue: (PackItem.Drill) -> Unit,
     onMatch: (() -> Unit)?,
     modifier: Modifier,
     thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>,
@@ -129,6 +133,7 @@ private fun LetterDrillScreen(
     onRetry: () -> Unit,
     onCameraUnavailable: () -> Unit,
     onDismissLowLight: () -> Unit,
+    showHeader: Boolean,
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -165,12 +170,12 @@ private fun LetterDrillScreen(
         return
     }
     Column(modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        DrillHeader(onBack)
+        if (showHeader) DrillHeader(onBack)
         when {
             state.isLoading || state.drill == null -> DrillLoading()
             else -> {
                 LaunchedEffect(state.drill.id) { onStartDetector() }
-                ActiveDrill(state, thumbnails, onSkip, onRetry, onCameraUnavailable, onDismissLowLight)
+                ActiveDrill(state, thumbnails, onSkip, onContinue, onRetry, onCameraUnavailable, onDismissLowLight)
             }
         }
     }
@@ -206,6 +211,7 @@ private fun ActiveDrill(
     state: DrillUiState,
     thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>,
     onSkip: (PackItem.Drill) -> Unit,
+    onContinue: (PackItem.Drill) -> Unit,
     onRetry: () -> Unit,
     onCameraUnavailable: () -> Unit,
     onDismissLowLight: () -> Unit,
@@ -274,15 +280,23 @@ private fun ActiveDrill(
             ) {
                 FeedbackBadge(state.feedback)
                 Text(drill.description, style = MaterialTheme.typography.bodyMedium, color = LocalAslColors.current.labelSecondary)
+                if (drill.letter in setOf(Letter.R, Letter.T, Letter.U)) {
+                    Text(stringResource(R.string.recognition_experimental_letter, drill.letter.display),
+                        style = MaterialTheme.typography.bodySmall, color = LocalAslColors.current.labelSecondary)
+                }
                 if (state.classifierModelId == "knn-v1") {
                     Text(stringResource(R.string.classifier_stage1_notice), style = MaterialTheme.typography.labelMedium, color = LocalAslColors.current.labelTertiary)
                 }
                 val next = state.drills.nextAfter(drill)
                 if (next != null) {
-                    AslButton(
-                        stringResource(R.string.skip_letter), { onSkip(next) },
-                        Modifier.fillMaxWidth(), style = AslButtonStyle.Secondary,
-                    )
+                    if (state.matched) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                            AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.weight(1f))
+                            AslButton(stringResource(R.string.continue_letter), { onContinue(next) }, Modifier.weight(1f))
+                        }
+                    } else {
+                        AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.fillMaxWidth())
+                    }
                 }
             }
             Spacer(Modifier.height(Spacing.md))

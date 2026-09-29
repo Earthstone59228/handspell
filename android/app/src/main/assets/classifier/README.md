@@ -4,7 +4,7 @@ Two files live here, and **neither is ever written by hand**:
 
 | File | Produced by | Read by |
 |---|---|---|
-| `references-v1.csv` | `training/scripts/build_references.py` | `vision/classify/KnnLetterClassifier.kt` |
+| `references-v1.csv` | `training/scripts/build_references.py` or `training/scripts/import_aslyset.py` | `vision/classify/KnnLetterClassifier.kt` |
 | `mlp-v1.bin` (+ `mlp-v1.json`) | `training/scripts/export_weights.py` | `vision/classify/MlpWeights.kt` |
 
 Both encode the normalisation spec version in their own bytes (`# spec_version=1` in the CSV, an
@@ -35,8 +35,7 @@ uv run python scripts/export_weights.py --npz runs/mlp-v1.npz
 
 ## When `references-v1.csv` is absent
 
-It is absent right now: no capture session has happened yet, and an empty or invented reference set
-would be worse than none. The required container behaviour, in order:
+The file is bundled in this build. If it is absent or damaged in another build, the required container behavior is:
 
 1. `KnnLetterClassifier.load` throws `ClassifierAssetException.Missing` when `AssetManager.open`
    cannot find the file. It never returns an empty classifier — a classifier with no exemplars would
@@ -59,3 +58,10 @@ would be worse than none. The required container behaviour, in order:
 The same rule applies to `mlp-v1.bin` with one addition: if stage 1 loaded successfully and stage 2
 fails for any reason, the container uses the stage-1 classifier and shows a visible notice
 (docs/CLASSIFIER.md §4), rather than failing the detector outright.
+
+## Public-data expansion
+
+The expanded prototype includes real ASLYset-derived static-letter data (CC BY 4.0), retains
+original team A–D examples, and excludes J/Z. See `NOTICE`, `training/DATA.md`, and the
+reproducible import/evaluation commands in `docs/research/static-alphabet-integration-2026-09-28.md`.
+All data and illustrations retain their original attribution/license.

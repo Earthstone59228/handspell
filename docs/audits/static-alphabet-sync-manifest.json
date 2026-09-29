@@ -1,0 +1,304 @@
+{
+  "source_head": "4bcca5de21f61870fb1cab09a4bec3b7db622d00",
+  "changed_files": [
+    {
+      "path": "README.md",
+      "old_sha256": "5ae5966211af6ea7573f1918ea00a4087b48fce779c5140c3846cbadbd2237e7",
+      "new_sha256": "cf8ad67b57bea23a5388558e68d9665bb42bb08bae630f5a173c1d942d5db901"
+    },
+    {
+      "path": "NOTICE",
+      "old_sha256": "8046a03018e552d78c086c5b0bdfd418515a9189b25e47f4ae914639dabecd39",
+      "new_sha256": "c1cad3c33a7f0aa8b15e9dd3984f00224ac5ae80056b3474710b9ef33049a680"
+    },
+    {
+      "path": "scripts/gen-web-wireframes.py",
+      "old_sha256": "ae43658b18622d0ba61d8a7c4a4a372c1c41b91cee8db8cc66b13d988726082c",
+      "new_sha256": "c3481943c21cf4db67f511bfd9faa53f40974e524a4f659af33f9792f7a69746"
+    },
+    {
+      "path": "training/DATA.md",
+      "old_sha256": "2d8cb2492521cbb49ced8eed40139d0fe804115cadb1a5cc0b48ce714c58284f",
+      "new_sha256": "c50c0ab3c273c47330c7c616849fa983ecb2c5a0781ac28c262d745972bc8cd7"
+    },
+    {
+      "path": "docs/CLASSIFIER.md",
+      "old_sha256": "4a99fd6d7eb195523802472ddb1224d681816799aca9a3004c80d198910dd369",
+      "new_sha256": "2edbeaa0cd15248d5eefd106d1df9a3a9900fcfe17317ec94e20a9064fa6e171"
+    },
+    {
+      "path": "docs/logs/pro-features-2026-09-28.md",
+      "old_sha256": null,
+      "new_sha256": "4c8d5bc47d069de51e10c721c4ad651fd8a7200df53ed5719f580fb3d160c5f3"
+    },
+    {
+      "path": "docs/logs/static-alphabet-2026-09-28.md",
+      "old_sha256": null,
+      "new_sha256": "94e9d673298b236a94e2c672de4ae949bbc467ae65ab2859dd418d158f596350"
+    },
+    {
+      "path": "docs/research/data-and-asl-reference.md",
+      "old_sha256": "7a1a30f4e3f01c1a7810038102bb3568b32c41a4a33215a5de261ca65a2f43bd",
+      "new_sha256": "184f1dcc9874f8a00e33b0b25e64d12390d757b23398b01b10bc338485537668"
+    },
+    {
+      "path": "docs/research/aslyset-evaluation-2026-09-28.json",
+      "old_sha256": null,
+      "new_sha256": "c7954ef9e3a6c8f700fd9e13fd585b5acf3d1678dec19a2d3385edb935c45b59"
+    },
+    {
+      "path": "docs/research/static-alphabet-integration-2026-09-28.md",
+      "old_sha256": null,
+      "new_sha256": "8b9bcad7d288d05fdf79193ca659fb13e09bfb100c3e21c5743e55de1bc9db2c"
+    },
+    {
+      "path": "docs/audits/alphabet-static-letters-2026-09-28.png",
+      "old_sha256": null,
+      "new_sha256": "a98abc80ec0d89730a42c92a35817f90bb8f443e54d832497ffc9bb73a788e34"
+    },
+    {
+      "path": "docs/audits/legal-rubric-audit-2026-09-28.md",
+      "old_sha256": null,
+      "new_sha256": "0dbae9bcd1ec105c8901345a7b1197acecd4b4037d866e86d4d057b76de6e1f8"
+    },
+    {
+      "path": "android/app/build.gradle.kts",
+      "old_sha256": "093431a8c8127943474e5bc646f3160408318264dc75250d6d6327ddaa399da5",
+      "new_sha256": "a7fd65f77c24bf920e2c9641011d9cf1cee5e7cd3bea8ea4a28b6331d852b452"
+    },
+    {
+      "path": "android/app/src/main/res/values/pro_features.xml",
+      "old_sha256": null,
+      "new_sha256": "e6c22c87cc36adf8eac57f135b67b1b4782d79af5d5e93d71d315aee8221923b"
+    },
+    {
+      "path": "android/app/src/main/res/values/alphabet_integration.xml",
+      "old_sha256": null,
+      "new_sha256": "06c24e31512b6fb0236e3995cb1ba5e90fd79ddf1d9c415a77211f0e7793929c"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/HandspellApp.kt",
+      "old_sha256": "4e181c3037175605917762be04f41f16958ac40cef2a182099b03170c40db9b5",
+      "new_sha256": "be5bcedbb9bd4123015c0133c324227bc9294fa6c45ff525d9666adc600de185"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/progress/DataStoreProgressStore.kt",
+      "old_sha256": "729bbbaf54d402c4963107ed28484023223ab5dac57ebf6db219fc9eaa04ddd0",
+      "new_sha256": "448fafe2ae4d787c1ea741a432de05fe9b1388e6a54210ab7956fd91542ec141"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/content/AssetContentRepository.kt",
+      "old_sha256": "c71654b1ede3f3547c4fb8cffe4cfbf07f7b6ea49971e8302caee7fefa970deb",
+      "new_sha256": "1fc3775cbfdc5331778e627bf4046f574173fe147dbd2cf343900ba506027d94"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/content/ContentPackParser.kt",
+      "old_sha256": null,
+      "new_sha256": "4c515f889d2eb47b275d29fa0767e9e3635f04b5fae7792c7f9f381dc13dcffb"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/vision/camera/FrameConverter.kt",
+      "old_sha256": "c5400417218320d11d21cf7fd8c421895d5f8800a9907cbcc1893031116ef8e5",
+      "new_sha256": "7222b03037de0c75674f96d032a36be4c50f8674ae71d83c55d6486728bd2046"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/vision/classify/ReferenceHandshapeProjection.kt",
+      "old_sha256": null,
+      "new_sha256": "a54dcf7c02f178629f7a67fd4d54c72bd1d8deef7256a62eea002aad8a946f81"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/vision/classify/CanonicalHandshapeCatalog.kt",
+      "old_sha256": "3d1123760cc6ca27cf04f678fd7d1037d43e87d7c08fd8c469b62d9cb3915101",
+      "new_sha256": "df8795676522a464738e66b12ab35df406864cec319e676a57efa8785199401f"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/home/ProPackScreens.kt",
+      "old_sha256": "33481cd8f0f5de8edc092acbaa154fd9882325c6941c1a826c81b6813695d979",
+      "new_sha256": "116e951eab75066659ba75eecf0e7dd61cefe2fca49fb57b14f73ed8292cb557"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/home/ProSessionViewModels.kt",
+      "old_sha256": null,
+      "new_sha256": "f1f07f8a13c76758cb9c2e4c9bc76840f0ed7572f3d0f59cd3a24e326dd0a5c5"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/components/LandmarkOverlay.kt",
+      "old_sha256": "f8a23a30f247485f780a5fe956bdeec8eeacfd5e69633fbc8a232dcee3a3a692",
+      "new_sha256": "68bf9fd3bd5184544afe3e8f87793b8d86d873048cfbe8b16a1e54e5a0bc67b3"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/components/HandshapeGuide.kt",
+      "old_sha256": "191d83d3d78149cb87121b18bbf70c925fbc16eb5fd020ce4b7152d9ad1498f2",
+      "new_sha256": "bd41161d0df7aebe8f872c949f4e0f23f8aa2a2294534522b741f283082859d4"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/components/AslComponents.kt",
+      "old_sha256": "e87508ebcf07fec701ba3aa85ee84e258d45a583bc305e7bdabe9b45b37324c8",
+      "new_sha256": "9c6d3dc908cd7b72152e2ced5df9175df162816c30a656d1e6594c2a4aa1ede7"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/settings/LegalScreen.kt",
+      "old_sha256": "087ca2f2bc9d7eaa601c98979c29eb3549e3c2870a5dfd5e6e6f5be3564e40d6",
+      "new_sha256": "c1b64e28d5a17640ddad1281c5a3ef3e21cfd4c8d344b476920cedd75dc010b7"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/settings/FrostedSettingsHero.kt",
+      "old_sha256": null,
+      "new_sha256": "785bef15c3b37fcd7ab942f8dfbfcc10d142cedabf0c6246691e99a21f311707"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/settings/SettingsScreen.kt",
+      "old_sha256": "1a47f452222e752e672cefa6b2f94452d6cbf2e80a72db4fef9b1456d698ea80",
+      "new_sha256": "3f384939af3f6b8e1a0d37f0dde716efe5bd593291ff9219aa4a94254dc99c8d"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/settings/PaywallScreen.kt",
+      "old_sha256": "9965bcbb7170124257a19bf4c2529f16b02a3c8ea5d2c33b730399bdf1c552bb",
+      "new_sha256": "8b950f45df53bc7cdf18de09e3b5c5c0c13e04147fa054902319465c01d698d8"
+    },
+    {
+      "path": "android/app/src/main/java/dev/handspell/app/ui/drill/LetterDrillScreen.kt",
+      "old_sha256": "9965ce5e82a25af512323c3ffb3d80ab48d80177db54ab9357e873b46cd8d1f9",
+      "new_sha256": "9c50176b347eef6a35c06e4d309d961af2230055d2f1c7d25d1206768ef12881"
+    },
+    {
+      "path": "android/app/src/main/assets/web/index.html",
+      "old_sha256": "d87afd3322a357b61d0a2a2e95bda5accfe44fceeb760d736a62554f02b6c16d",
+      "new_sha256": "5fd215a26db4df4440875c5dc669d0adb129c170dd3af75d116f553fd04259e2"
+    },
+    {
+      "path": "android/app/src/main/assets/legal/NOTICE.txt",
+      "old_sha256": "8046a03018e552d78c086c5b0bdfd418515a9189b25e47f4ae914639dabecd39",
+      "new_sha256": "c1cad3c33a7f0aa8b15e9dd3984f00224ac5ae80056b3474710b9ef33049a680"
+    },
+    {
+      "path": "android/app/src/main/assets/classifier/aslyset-provenance.json",
+      "old_sha256": null,
+      "new_sha256": "b8a19f5216fd9094f1ca077fdfc456a776d60bdab5aded59c2915ee20a8181fe"
+    },
+    {
+      "path": "android/app/src/main/assets/classifier/references-v1.csv",
+      "old_sha256": "4f5a568e4522d5f9b327fd8bd838e5e366a07d8de6a46f94fedd8bb8c3787383",
+      "new_sha256": "bf7c217a1e7ee728efe3a592d7d44a5c2ab84b788cc9c6fb8c97083f4b891cbf"
+    },
+    {
+      "path": "android/app/src/main/assets/classifier/README.md",
+      "old_sha256": "904fc15d34a4a21a9b5b35273eadccdbc682b91e996f836b8606dc85ebdb5b09",
+      "new_sha256": "a46de49abe9e466349bbc54eef4883ad275dad2616202f0e963ff9fec05ac2df"
+    },
+    {
+      "path": "android/app/src/main/assets/web/assets/index-B9Lm8J0F.js",
+      "old_sha256": null,
+      "new_sha256": "53736475bb61c643255889db7913350a2b74a57e0d14c23fcb773717486f1107"
+    },
+    {
+      "path": "android/app/src/main/assets/web/assets/web-8atL9WTF.js",
+      "old_sha256": null,
+      "new_sha256": "7a077715aa9da96f77391e1e14b2ac5083d801a7f5e910a398ef68dad53b2605"
+    },
+    {
+      "path": "android/app/src/main/assets/web/assets/index-DCfBn75h.css",
+      "old_sha256": null,
+      "new_sha256": "1f23517edb7508d7ed09ff228f0d30a17866a8f5b1c299181a46085df45bbbe6"
+    },
+    {
+      "path": "android/app/src/test/java/dev/handspell/app/content/ContentPackParserTest.kt",
+      "old_sha256": null,
+      "new_sha256": "6adccc98e122c151f7f1297866b987a256602795fd5c2f42da5efebe2fa6d1dd"
+    },
+    {
+      "path": "android/app/src/test/java/dev/handspell/app/vision/classify/BundledStaticAlphabetTest.kt",
+      "old_sha256": null,
+      "new_sha256": "5b19ce5545f8d51fe2a88bc0bb6ba733282ee02efe79f6b9669b4d28f6642b7b"
+    },
+    {
+      "path": "android/app/src/test/java/dev/handspell/app/vision/classify/ReferenceHandshapeProjectionTest.kt",
+      "old_sha256": null,
+      "new_sha256": "8feee174c3399d8f631158d28e873efd09ea16de2a02999b8a44fca51aa34157"
+    },
+    {
+      "path": "android/app/src/test/java/dev/handspell/app/ui/home/ProSessionViewModelsTest.kt",
+      "old_sha256": null,
+      "new_sha256": "89c1ac6f93fba8923fee2aa263dbd26306a7e338cea7a61d65a749fd7a037ee0"
+    },
+    {
+      "path": "web/src/js/app.js",
+      "old_sha256": "ec58545fe5e3277a42101dfde2b55146d4dc508756c339d4d5d5f7bdd1e5f69a",
+      "new_sha256": "273b906ba80705b4f1e7b438e86cdfe6d76b455daca87f46f5948e93b1af02e3"
+    },
+    {
+      "path": "web/src/js/back-drag.js",
+      "old_sha256": null,
+      "new_sha256": "555c1962d23140328ff383bc0c8742b69ea36a8a4083ac44e9cd85e915acc7c0"
+    },
+    {
+      "path": "web/src/js/handshapes.js",
+      "old_sha256": "7fb0b995b67bb7c88815a6d8c37e355a3fe4f0c8c8e34a2cb0e4504ac4fa902c",
+      "new_sha256": "1c500c654757217a762dd9d637579c5494decc5d86715a944663cd24e8c1361b"
+    },
+    {
+      "path": "web/src/css/style.css",
+      "old_sha256": "f8c289be3c91f9f2571df31a1abd71f20ceac897f119931ad5e73bd520f4f0eb",
+      "new_sha256": "8606701a00e998d1eb3a9fef5134be373b738f4a49db304b5d112c9d944be954"
+    },
+    {
+      "path": "training/scripts/evaluate_aslyset.py",
+      "old_sha256": null,
+      "new_sha256": "391dfd4717064fe495ded4b3d44bc994cc8443994e5bbe00d46c58bf610ca01b"
+    },
+    {
+      "path": "training/scripts/import_aslyset.py",
+      "old_sha256": null,
+      "new_sha256": "a06521aaf712960669bb295a6b050ec1ab80fa00627666e0469b1e56f3c8ef63"
+    },
+    {
+      "path": "training/data/team-references-v1.csv",
+      "old_sha256": null,
+      "new_sha256": "4f5a568e4522d5f9b327fd8bd838e5e366a07d8de6a46f94fedd8bb8c3787383"
+    },
+    {
+      "path": "training/data/aslyset/references-v1.csv",
+      "old_sha256": null,
+      "new_sha256": "bf7c217a1e7ee728efe3a592d7d44a5c2ab84b788cc9c6fb8c97083f4b891cbf"
+    },
+    {
+      "path": "training/data/aslyset/LICENSE.txt",
+      "old_sha256": null,
+      "new_sha256": "10223e9fbaa758802f0cc4bd5dc542624b04ba5445ade64a57c71e7184477931"
+    },
+    {
+      "path": "training/data/aslyset/provenance.json",
+      "old_sha256": null,
+      "new_sha256": "b8a19f5216fd9094f1ca077fdfc456a776d60bdab5aded59c2915ee20a8181fe"
+    },
+    {
+      "path": "training/data/aslyset/landmarks-v1.npz",
+      "old_sha256": null,
+      "new_sha256": "2f6c481797cb4efdfe0b22ae4ed3a33a17a6aa3ef98f9b47b9110a19930dcd89"
+    }
+  ],
+  "removed_generated_web_files": [
+    {
+      "path": "android/app/src/main/assets/web/assets/index-CrcFT2-X.js",
+      "old_sha256": "47e3c6753527df67430b4b4289c155090e46b25f6332dde4027539aeb65d7452"
+    },
+    {
+      "path": "android/app/src/main/assets/web/assets/index-qTbpw_eH.css",
+      "old_sha256": "8504a9bb924752b4a32179976b0fc3e3177e0df4a63585967f98c9e68e7752dd"
+    },
+    {
+      "path": "android/app/src/main/assets/web/assets/web-BNKWk_68.js",
+      "old_sha256": "72fed1b060d9149da6023643304fc55d3b34d6ded9311ab52b10065030f1681e"
+    }
+  ],
+  "backup": "/home/earthstone/projects/shipaton-before-static-alphabet-20260928.zip",
+  "accepted_optimization": {
+    "path": "android/app/src/main/java/dev/handspell/app/vision/classify/KnnLetterClassifier.kt",
+    "original_sha256": "ba5f0d5c4df5c2e4b0904aed96043cbe34f907cb2b91dddfd945a3f9215a1643",
+    "optimized_sha256": "99d7374ee81d3759d8ae2309caaf2e114060675eb85c325b87d3468140686338",
+    "baseline_backup": "/home/earthstone/projects/shipaton-optimization-baseline-20260928",
+    "report": "docs/audits/optimization-validation-2026-09-28.md",
+    "apk": "/mnt/drive/Work/Project/Shipaton/artifacts/handspell-optimized-debug-20260928.apk",
+    "apk_sha256": "3c5e4416584b22a62f44ef68e7f0d938e26a4051d7c0207cb2ab7cbbfe83cdea"
+  }
+}

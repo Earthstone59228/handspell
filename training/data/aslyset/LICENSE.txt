@@ -1,0 +1,8 @@
+ASLYset-derived data: Creative Commons Attribution 4.0 International (CC BY 4.0).
+Miguel Rivera (2019), “ASLYset”, Mendeley Data, V1, DOI: 10.17632/xs6mvhx6rh.1.
+Source: https://data.mendeley.com/datasets/xs6mvhx6rh/1
+License terms: https://creativecommons.org/licenses/by/4.0/
+Modifications: mirrored input images, MediaPipe world-landmark extraction, Handspell
+normalization spec v1, and signer-balanced exemplar selection. Existing team A–D reference
+examples are included in references-v1.csv; landmarks-v1.npz contains ASLYset examples only.
+No endorsement is implied. See provenance.json for checksums and extraction metadata.

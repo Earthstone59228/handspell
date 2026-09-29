@@ -1,0 +1,97 @@
+{
+  "real": {
+    "baseline": {
+      "median_us": 71.2713916015625,
+      "min_us": 69.49223486328125,
+      "max_us": 73.26568863932292,
+      "stdev_us": 0.9717841184550683,
+      "bytes_per_call": 1296.0078125,
+      "intervals": 18,
+      "operations": 110592
+    },
+    "candidate": {
+      "median_us": 44.36384651692708,
+      "min_us": 43.24204947916667,
+      "max_us": 46.28242578125,
+      "stdev_us": 0.7733891516252507,
+      "bytes_per_call": 1248.0078125,
+      "intervals": 18,
+      "operations": 110592
+    },
+    "time_reduction_percent": 37.753640668418655,
+    "speedup": 1.6065196595243112
+  },
+  "jitter": {
+    "baseline": {
+      "median_us": 70.14674487304688,
+      "min_us": 69.00989469401043,
+      "max_us": 71.93153922526042,
+      "stdev_us": 0.9345145654556443,
+      "bytes_per_call": 1296.0078125,
+      "intervals": 18,
+      "operations": 110592
+    },
+    "candidate": {
+      "median_us": 45.107224283854165,
+      "min_us": 44.39468798828125,
+      "max_us": 47.455412923177086,
+      "stdev_us": 0.952363977806033,
+      "bytes_per_call": 1248.0078125,
+      "intervals": 18,
+      "operations": 110592
+    },
+    "time_reduction_percent": 35.69591238269116,
+    "speedup": 1.5551110933278032
+  },
+  "mixed": {
+    "baseline": {
+      "median_us": 70.90143277994791,
+      "min_us": 69.23487776692708,
+      "max_us": 72.26592545572917,
+      "stdev_us": 0.9723323406115351,
+      "bytes_per_call": 1296.0078125,
+      "intervals": 18,
+      "operations": 110592
+    },
+    "candidate": {
+      "median_us": 52.85719230143229,
+      "min_us": 51.789325358072915,
+      "max_us": 55.185369140625,
+      "stdev_us": 0.9498594083846152,
+      "bytes_per_call": 1248.0078125,
+      "intervals": 18,
+      "operations": 110592
+    },
+    "time_reduction_percent": 25.449754357599986,
+    "speedup": 1.3413772032311801
+  },
+  "far": {
+    "baseline": {
+      "median_us": 70.10761254882813,
+      "min_us": 68.02007633463542,
+      "max_us": 71.5433984375,
+      "stdev_us": 1.1898834123231867,
+      "bytes_per_call": 1296.0078125,
+      "intervals": 18,
+      "operations": 110592
+    },
+    "candidate": {
+      "median_us": 64.24969482421875,
+      "min_us": 63.58490283203125,
+      "max_us": 65.39539339192709,
+      "stdev_us": 0.6087899712980118,
+      "bytes_per_call": 1248.0078125,
+      "intervals": 18,
+      "operations": 110592
+    },
+    "time_reduction_percent": 8.355608630274624,
+    "speedup": 1.0911742497864947
+  },
+  "signature_sha256": "72dd9027a366777dc944caf190192fc6ab2a38e61c1bda30306e59ea32b0099d",
+  "comparison_run_order": [
+    "baseline-standalone-2",
+    "candidate-final-1",
+    "baseline-standalone-3",
+    "candidate-final-2"
+  ]
+}

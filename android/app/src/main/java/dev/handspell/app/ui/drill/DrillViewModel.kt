@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import dev.handspell.app.content.PackItem
+import dev.handspell.app.core.model.Letter
 import dev.handspell.app.core.model.HandOverlay
 import dev.handspell.app.core.model.CanonicalHandshape
 import dev.handspell.app.core.model.SignFeedbackState
@@ -35,6 +36,7 @@ data class DrillUiState(
     val drills: List<PackItem.Drill> = emptyList(),
     val detectorStatus: DetectorStatus = DetectorStatus.Idle,
     val feedback: SignFeedbackState = SignFeedbackState.NoHand(null),
+    val matched: Boolean = false,
     val overlay: HandOverlay? = null,
     val canonicalHandshape: CanonicalHandshape? = null,
     val classifierModelId: String? = null,
@@ -46,8 +48,9 @@ data class DrillUiState(
 
 class DrillViewModel(
     private val signDetector: SignDetector,
-    private val canonicalHandshapeCatalog: CanonicalHandshapeCatalog,
+    private val loadCanonicalHandshape: suspend (Letter) -> CanonicalHandshape?,
     private val progressStore: ProgressStore,
+    private val monotonicTime: () -> Long = SystemClock::elapsedRealtime,
 ) : ViewModel() {
     private var startedAtMs = 0L
     private var attemptRecorded = false
@@ -76,7 +79,8 @@ class DrillViewModel(
                     feedback.target == mutableUiState.value.drill?.letter && !attemptRecorded
                 ) {
                     attemptRecorded = true
-                    val elapsed = (SystemClock.elapsedRealtime() - startedAtMs).coerceAtLeast(0L)
+                    mutableUiState.value = mutableUiState.value.copy(matched = true)
+                    val elapsed = (monotonicTime() - startedAtMs).coerceAtLeast(0L)
                     viewModelScope.launch {
                         withContext(NonCancellable) { progressStore.recordAttempt(feedback.target, true, elapsed) }
                     }
@@ -99,8 +103,8 @@ class DrillViewModel(
         if (activeSessionKey == sessionKey) return
         activeSessionKey = sessionKey
         attemptRecorded = false
-        startedAtMs = SystemClock.elapsedRealtime()
-        signDetector.stop()
+        startedAtMs = monotonicTime()
+        signDetector.stop(this)
         signDetector.setTarget(drill.letter)
         mutableUiState.value = mutableUiState.value.copy(
             isLoading = false,
@@ -108,13 +112,14 @@ class DrillViewModel(
             drill = drill,
             drills = drills,
             feedback = SignFeedbackState.NoHand(drill.letter),
+            matched = false,
             overlay = null,
             canonicalHandshape = null,
             cameraUnavailable = false,
             lowLightNotice = false,
         )
         viewModelScope.launch {
-            val canonicalHandshape = canonicalHandshapeCatalog.handshapeFor(drill.letter)
+            val canonicalHandshape = loadCanonicalHandshape(drill.letter)
             if (mutableUiState.value.drill?.id == drill.id) {
                 mutableUiState.value = mutableUiState.value.copy(canonicalHandshape = canonicalHandshape)
             }
@@ -122,7 +127,7 @@ class DrillViewModel(
     }
 
     fun startDetector() {
-        if (mutableUiState.value.drill != null) signDetector.start()
+        if (mutableUiState.value.drill != null) signDetector.start(this)
     }
 
     fun onCameraUnavailable() {
@@ -133,13 +138,13 @@ class DrillViewModel(
 
     fun retryDetector() {
         val drill = mutableUiState.value.drill ?: return
-        signDetector.stop()
+        signDetector.stop(this)
         signDetector.setTarget(drill.letter)
         mutableUiState.value = mutableUiState.value.copy(
             cameraUnavailable = false,
             cameraSession = mutableUiState.value.cameraSession + 1,
         )
-        signDetector.start()
+        signDetector.start(this)
     }
 
     suspend fun recordSkip() {
@@ -151,7 +156,7 @@ class DrillViewModel(
     }
 
     override fun onCleared() {
-        signDetector.stop()
+        signDetector.stop(this)
         super.onCleared()
     }
 
@@ -164,7 +169,7 @@ class DrillViewModel(
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    DrillViewModel(signDetector, canonicalHandshapeCatalog, progressStore) as T
+                    DrillViewModel(signDetector, canonicalHandshapeCatalog::handshapeFor, progressStore) as T
             }
     }
 }

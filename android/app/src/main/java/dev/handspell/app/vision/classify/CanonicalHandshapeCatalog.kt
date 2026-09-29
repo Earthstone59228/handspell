@@ -2,16 +2,13 @@ package dev.handspell.app.vision.classify
 
 import android.content.res.AssetManager
 import dev.handspell.app.core.model.CanonicalHandshape
-import dev.handspell.app.core.model.HandLandmarks
-import dev.handspell.app.core.model.Landmark3
 import dev.handspell.app.core.model.Letter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Reconstructs a compact teaching skeleton from the first validated stage-1 exemplar per letter.
- * The first 60 fields are the normalised shape block (landmarks 1..20); the wrist is the canonical
- * origin. These poses are visual guidance only, never fed back into classification.
+ * Reconstructs a compact guide from the first stage-1 exemplar per letter, using its shape and
+ * orientation blocks. These poses are visual guidance only, never fed back into classification.
  */
 class CanonicalHandshapeCatalog(private val assets: AssetManager) {
     private var cached: Map<Letter, CanonicalHandshape>? = null
@@ -35,18 +32,12 @@ class CanonicalHandshapeCatalog(private val assets: AssetManager) {
         if (fields.size != VECTOR_COLUMNS) return null
         val letter = Letter.fromNameOrNull(fields.first()) ?: return null
         if (letter.requiresMotion) return null
-        val values = fields.drop(1).take(SHAPE_DIM).mapOrNull { it.toFloatOrNull() } ?: return null
-        val landmarks = buildList(HandLandmarks.LANDMARK_COUNT) {
-            add(Landmark3(0f, 0f, 0f))
-            for (index in 0 until HandLandmarks.LANDMARK_COUNT - 1) {
-                add(Landmark3(values[index * 3], values[index * 3 + 1], values[index * 3 + 2]))
-            }
-        }
+        val values = fields.drop(1).mapOrNull { it.toFloatOrNull()?.takeIf(Float::isFinite) } ?: return null
+        val landmarks = ReferenceHandshapeProjection.landmarks(values)
         return CanonicalHandshape(letter, landmarks)
     }
 
     private companion object {
-        const val SHAPE_DIM = 60
         const val VECTOR_COLUMNS = 67 // Letter plus the 66-float classifier vector.
     }
 }

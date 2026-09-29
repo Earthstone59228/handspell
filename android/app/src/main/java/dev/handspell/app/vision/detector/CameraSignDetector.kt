@@ -9,6 +9,7 @@ import dev.handspell.app.core.model.HandOverlay
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.core.model.SignFeedbackState
 import dev.handspell.app.vision.DetectorStatus
+import dev.handspell.app.vision.DetectorSessionGuard
 import dev.handspell.app.vision.FeedbackEngine
 import dev.handspell.app.vision.HandNormalizer
 import dev.handspell.app.vision.LetterClassifier
@@ -53,6 +54,7 @@ class CameraSignDetector(
     private val lowLightState = MutableStateFlow(false)
     private val thumbnailState = MutableStateFlow<android.graphics.Bitmap?>(null)
     private val lock = Any()
+    private val sessions = DetectorSessionGuard()
     private val analysisExecutor: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
         Thread(runnable, "handspell-analysis")
     }
@@ -78,10 +80,19 @@ class CameraSignDetector(
             if (helper != null) {
                 val now = SystemClock.uptimeMillis()
                 if (!lowLightDismissed && now - lastHandSeenMs >= LOW_LIGHT_WAIT_MS &&
-                    isLowLight(imageProxy)) lowLightState.value = true
+                    isLowLight(imageProxy)) synchronized(lock) {
+                    if (landmarkerHelper === helper) lowLightState.value = true
+                }
                 val frame = frameConverter.convert(imageProxy)
-                thumbnailState.value = frame.thumbnail
-                helper.detect(frame.image, SystemClock.uptimeMillis(), frame.width, frame.height)
+                synchronized(lock) {
+                    if (landmarkerHelper === helper) thumbnailState.value = frame.thumbnail
+                }
+                try {
+                    helper.detect(frame.image, SystemClock.uptimeMillis(), frame.width, frame.height)
+                } catch (error: RuntimeException) {
+                    // A screen change can close this helper after the analyzer captured it.
+                    if (landmarkerHelper === helper) throw error
+                }
             }
         } finally {
             // CameraX owns the image buffer; it must be released even if conversion or inference
@@ -98,35 +109,60 @@ class CameraSignDetector(
         }
     }
 
-    override fun start() {
-        if (statusState.value == DetectorStatus.Running) return
-        if (statusState.value is DetectorStatus.Failed) return
-        statusState.value = DetectorStatus.Starting
-        lastHandSeenMs = SystemClock.uptimeMillis()
-        lowLightState.value = false
-        try {
-            landmarkerHelper = HandLandmarkerHelper(
-                context = context,
-                onResults = ::onHandLandmarks,
-                onError = ::onLandmarkerError,
-            )
-            statusState.value = DetectorStatus.Running
-        } catch (error: Throwable) {
-            statusState.value = DetectorStatus.Failed(ERROR_LANDMARKER_FAILED, error)
-        }
-    }
-
-    override fun stop() {
-        landmarkerHelper?.close()
-        landmarkerHelper = null
-        synchronized(lock) {
+    override fun start(owner: Any) {
+        val (token, previous) = synchronized(lock) {
+            if (sessions.owns(owner) && statusState.value == DetectorStatus.Running) return
+            if (initialFailureStatus != null) return
+            val old = landmarkerHelper
+            landmarkerHelper = null
+            val generation = sessions.claim(owner)
             feedbackEngine.reset()
             feedbackState.value = SignFeedbackState.NoHand(target)
             overlayState.value = null
             thumbnailState.value = null
+            statusState.value = DetectorStatus.Starting
+            lastHandSeenMs = SystemClock.uptimeMillis()
+            lowLightState.value = false
+            generation to old
         }
-        statusState.value = initialFailureStatus ?: DetectorStatus.Idle
-        lowLightState.value = false
+        try {
+            previous?.close()
+            val helper = HandLandmarkerHelper(
+                context = context,
+                onResults = { hands -> onHandLandmarks(token, hands) },
+                onError = { error -> onLandmarkerError(token, error) },
+            )
+            val accepted = synchronized(lock) {
+                var current = false
+                sessions.ifCurrent(token) {
+                    landmarkerHelper = helper
+                    statusState.value = DetectorStatus.Running
+                    current = true
+                }
+                current
+            }
+            if (!accepted) helper.close()
+        } catch (error: Throwable) {
+            synchronized(lock) {
+                sessions.ifCurrent(token) { statusState.value = DetectorStatus.Failed(ERROR_LANDMARKER_FAILED, error) }
+            }
+        }
+    }
+
+    override fun stop(owner: Any) {
+        val previous = synchronized(lock) {
+            if (!sessions.release(owner)) return
+            val old = landmarkerHelper
+            landmarkerHelper = null
+            feedbackEngine.reset()
+            feedbackState.value = SignFeedbackState.NoHand(target)
+            overlayState.value = null
+            thumbnailState.value = null
+            statusState.value = initialFailureStatus ?: DetectorStatus.Idle
+            lowLightState.value = false
+            old
+        }
+        previous?.close()
     }
 
     override fun dismissLowLightNotice() {
@@ -134,8 +170,9 @@ class CameraSignDetector(
         lowLightState.value = false
     }
 
-    private fun onHandLandmarks(hands: List<HandLandmarks>) {
+    private fun onHandLandmarks(token: Long, hands: List<HandLandmarks>) {
         synchronized(lock) {
+            if (!sessions.isCurrent(token) || landmarkerHelper == null) return
             if (hands.isEmpty()) {
                 overlayState.value = null
                 feedbackState.value = feedbackEngine.onNoHand(SystemClock.uptimeMillis())
@@ -163,9 +200,15 @@ class CameraSignDetector(
         }
     }
 
-    private fun onLandmarkerError(error: RuntimeException) {
-        overlayState.value = null
-        statusState.value = DetectorStatus.Failed(ERROR_LANDMARKER_FAILED, error)
+    private fun onLandmarkerError(token: Long, error: RuntimeException) {
+        synchronized(lock) {
+            sessions.ifCurrent(token) {
+                if (landmarkerHelper != null) {
+                    overlayState.value = null
+                    statusState.value = DetectorStatus.Failed(ERROR_LANDMARKER_FAILED, error)
+                }
+            }
+        }
     }
 
     companion object {

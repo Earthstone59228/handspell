@@ -84,11 +84,9 @@ fun HandshapeGuide(
         ) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = colors.label)
             Canvas(Modifier.size(Spacing.referenceGuide)) {
-                // The normalizer's x-axis points wrist → middle MCP and y-axis spans the palm.
-                // Rotate that palm-local basis into the conventional guide view: wrist at the
-                // bottom and fingers at the top, rather than wrist-to-finger pointing right.
+                // Catalog restores the recorded display orientation, including down-pointing P/Q.
                 val points = handshape.landmarks.map { landmark ->
-                    Offset(x = landmark.y, y = -landmark.x)
+                    Offset(x = landmark.x, y = landmark.y)
                 }
                 val minX = points.minOf { it.x }
                 val maxX = points.maxOf { it.x }

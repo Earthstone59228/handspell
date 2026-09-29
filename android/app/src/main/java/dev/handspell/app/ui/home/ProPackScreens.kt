@@ -1,7 +1,15 @@
 package dev.handspell.app.ui.home
 
-import android.os.SystemClock
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.Settings
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,35 +19,50 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.handspell.app.R
+import dev.handspell.app.billing.EntitlementStatus
 import dev.handspell.app.content.ContentPack
 import dev.handspell.app.content.ContentRepository
 import dev.handspell.app.content.PackItem
-import dev.handspell.app.core.model.Letter
+import dev.handspell.app.content.PackKind
 import dev.handspell.app.progress.ProgressStore
-import dev.handspell.app.progress.SpeedRunResult
+import dev.handspell.app.ui.components.AslButton
+import dev.handspell.app.ui.components.AslButtonStyle
+import dev.handspell.app.ui.components.AslCard
+import dev.handspell.app.ui.components.ScreenHeader
 import dev.handspell.app.ui.drill.LetterDrillRoute
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
-import dev.handspell.app.ui.theme.AslMotion
 import dev.handspell.app.vision.SignDetector
 import dev.handspell.app.vision.classify.CanonicalHandshapeCatalog
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 
 @Composable
 fun ProPackRoute(
@@ -50,28 +73,87 @@ fun ProPackRoute(
     catalog: CanonicalHandshapeCatalog,
     progress: ProgressStore,
     onBack: () -> Unit,
+    contentLoading: Boolean = false,
+    onRetryContent: () -> Unit = {},
 ) {
     var pack by remember(packId) { mutableStateOf<ContentPack?>(null) }
     var failed by remember(packId) { mutableStateOf(false) }
-    LaunchedEffect(packId) {
-        pack = runCatching { repository.pack(packId) }.getOrNull()
-        failed = pack == null
+    var attempt by remember(packId) { mutableStateOf(0) }
+    LaunchedEffect(packId, attempt) {
+        failed = false
+        pack = null
+        try {
+            pack = repository.pack(packId)
+            failed = pack == null
+        } catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { failed = true }
     }
+    val retry = { onRetryContent(); attempt++; Unit }
+    val loadedPack = pack
     when {
-        failed -> PackMessage(stringResource(R.string.pro_pack_unavailable), onBack)
-        pack == null -> PackMessage(stringResource(R.string.content_loading), onBack)
-        drills.isEmpty() -> PackMessage(stringResource(R.string.content_unavailable_body), onBack)
-        pack!!.items.firstOrNull() is PackItem.StoryStep -> StoryPack(pack!!, drills, detector, catalog, progress, onBack)
-        pack!!.items.firstOrNull() is PackItem.SpeedRound -> SpeedPack(pack!!, drills, detector, catalog, progress, onBack)
+        failed -> PackMessage(stringResource(R.string.pro_pack_unavailable), onBack, retry)
+        loadedPack == null || contentLoading -> PackMessage(stringResource(R.string.content_loading), onBack, loading = true)
+        loadedPack.items.isEmpty() -> PackMessage(stringResource(R.string.pro_empty_pack), onBack)
+        drills.isEmpty() -> PackMessage(stringResource(R.string.content_unavailable_body), onBack, retry)
+        loadedPack.kind == PackKind.STORY -> {
+            val required = loadedPack.items.filterIsInstance<PackItem.StoryStep>().flatMap { it.letters }
+            if (required.any { letter -> drills.none { it.letter == letter } })
+                PackMessage(stringResource(R.string.pro_missing_letters), onBack)
+            else StoryPack(loadedPack, drills, detector, catalog, progress, onBack)
+        }
+        loadedPack.kind == PackKind.SPEED -> SpeedPack(loadedPack, drills, detector, catalog, progress, onBack)
         else -> PackMessage(stringResource(R.string.pro_pack_unavailable), onBack)
     }
 }
 
+/** Unknown/offline access is visible and retryable; it never silently dismisses a pack. */
 @Composable
-private fun PackMessage(message: String, onBack: () -> Unit) {
-    Column(Modifier.fillMaxSize().padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-        TextButton(onClick = onBack, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) { Text(stringResource(R.string.back)) }
-        Text(message, style = MaterialTheme.typography.bodyLarge)
+fun ProPackAccess(
+    status: EntitlementStatus,
+    billingConfigured: Boolean,
+    onBack: () -> Unit,
+    onPaywall: () -> Unit,
+    onRetry: () -> Unit,
+) {
+    val loading = status == EntitlementStatus.Loading || status == EntitlementStatus.Unknown
+    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
+        ScreenHeader(stringResource(R.string.settings_pro), onBack)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+            Text(stringResource(R.string.pro_features_detail), style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium,
+                color = LocalAslColors.current.labelSecondary)
+            if (billingConfigured) Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge)
+            when {
+                !billingConfigured -> Text(stringResource(R.string.settings_pro_not_configured), style = MaterialTheme.typography.bodyLarge)
+                loading -> {
+                    CircularProgressIndicator(color = LocalAslColors.current.label)
+                    Text(stringResource(R.string.pro_access_loading), style = MaterialTheme.typography.bodyLarge)
+                }
+                status is EntitlementStatus.Unavailable -> {
+                    Text(stringResource(R.string.settings_pro_unavailable), style = MaterialTheme.typography.bodyLarge)
+                    AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth())
+                }
+                else -> {
+                    Text(stringResource(R.string.pro_access_required), style = MaterialTheme.typography.bodyLarge)
+                    AslButton(stringResource(R.string.settings_see_pro), onPaywall, Modifier.fillMaxWidth())
+                }
+            }
+        }
+        AslButton(stringResource(R.string.pro_return_packs), onBack, Modifier.fillMaxWidth().padding(Spacing.md),
+            style = AslButtonStyle.Secondary)
+    }
+}
+
+@Composable
+private fun PackMessage(message: String, onBack: () -> Unit, onRetry: (() -> Unit)? = null, loading: Boolean = false) {
+    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
+        ScreenHeader(stringResource(R.string.home_pro_packs), onBack)
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+            if (loading) CircularProgressIndicator(color = LocalAslColors.current.label)
+            Text(message, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            if (onRetry != null) AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth())
+        }
     }
 }
 
@@ -79,62 +161,55 @@ private fun PackMessage(message: String, onBack: () -> Unit) {
 private fun StoryPack(pack: ContentPack, drills: List<PackItem.Drill>, detector: SignDetector,
                       catalog: CanonicalHandshapeCatalog, progress: ProgressStore, onBack: () -> Unit) {
     val steps = remember(pack) { pack.items.filterIsInstance<PackItem.StoryStep>() }
-    val scope = rememberCoroutineScope()
-    var stepIndex by rememberSaveable(pack.packId) { mutableStateOf(0) }
-    var letterIndex by rememberSaveable(pack.packId) { mutableStateOf(0) }
-    var skipped by rememberSaveable(pack.packId) { mutableStateOf(false) }
-    fun advanceStep(step: PackItem.StoryStep, completed: Boolean) {
-        if (completed) scope.launch { progress.recordStoryStep(step.id) }
-        stepIndex++
-        letterIndex = 0
-        skipped = false
+    val model: StorySessionViewModel = viewModel(key = "story-${pack.packId}", factory = StorySessionViewModel.factory(progress))
+    val state by model.state.collectAsStateWithLifecycle()
+    var loadAttempt by remember { mutableStateOf(0) }
+    LaunchedEffect(pack.packId, loadAttempt) { model.initialize(steps) }
+    when {
+        state.loading -> { PackMessage(stringResource(R.string.content_loading), onBack, loading = true); return }
+        state.loadFailed -> { PackMessage(stringResource(R.string.pro_progress_load_failed), onBack, { loadAttempt++ }); return }
     }
-    val step = steps.getOrNull(stepIndex)
-    if (step == null) {
-        Column(Modifier.fillMaxSize().padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-            Text(pack.title, style = MaterialTheme.typography.headlineMedium)
-            Text(stringResource(R.string.story_complete), style = MaterialTheme.typography.bodyLarge)
-            Button(onClick = { stepIndex = 0 }, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) {
-                Text(stringResource(R.string.story_again))
-            }
-            TextButton(onClick = onBack, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) { Text(stringResource(R.string.back)) }
-        }
-        return
-    }
-    val currentLetter = step.letters.getOrNull(letterIndex)
-    val drill = drills.firstOrNull { it.letter == currentLetter }
+    val step = steps.getOrNull(state.stepIndex)
     Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = Spacing.md), horizontalArrangement = Arrangement.SpaceBetween) {
-            TextButton(onClick = onBack, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) { Text(stringResource(R.string.back)) }
-            Text(stringResource(R.string.story_step_count, stepIndex + 1, steps.size), style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(top = Spacing.md))
-        }
-        Text(pack.title, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(horizontal = Spacing.md))
-        if (currentLetter == null) {
+        ScreenHeader(pack.title, onBack, compact = step?.letters?.isNotEmpty() == true)
+        if (step == null) {
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
                 verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
-                Text(step.narration.orEmpty(), style = MaterialTheme.typography.bodyLarge)
-                Button(onClick = { advanceStep(step, true) }, modifier = Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)) {
-                    Text(stringResource(R.string.story_next))
-                }
+                Text(stringResource(R.string.story_complete), style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(R.string.story_summary), style = MaterialTheme.typography.bodyLarge)
+                if (state.skippedWords > 0) Text(stringResource(R.string.story_skipped_words, state.skippedWords),
+                    style = MaterialTheme.typography.bodyLarge)
+                SaveStatus(state.save, model::retrySave)
+                AslButton(stringResource(R.string.story_again), model::replay, Modifier.fillMaxWidth(),
+                    enabled = state.save != SessionSave.SAVING && state.save != SessionSave.FAILED)
+                AslButton(stringResource(R.string.pro_return_packs), onBack, Modifier.fillMaxWidth(), style = AslButtonStyle.Secondary)
             }
-        } else if (drill == null) {
-            PackMessage(stringResource(R.string.pro_pack_unavailable), onBack)
+            return@Column
+        }
+        Column(Modifier.fillMaxWidth().padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            Text(stringResource(R.string.story_step_count, state.stepIndex + 1, steps.size),
+                style = MaterialTheme.typography.bodyMedium, color = LocalAslColors.current.labelSecondary)
+            LinearProgressIndicator(progress = { state.stepIndex.toFloat() / steps.size }, Modifier.fillMaxWidth(),
+                color = LocalAslColors.current.label, trackColor = LocalAslColors.current.surface)
+            if (step.letters.isNotEmpty()) Text(stringResource(R.string.story_spell_progress, step.spellWord.orEmpty(),
+                state.letterIndex + 1, step.letters.size), style = MaterialTheme.typography.titleLarge)
+            if (state.save == SessionSave.FAILED) SaveStatus(state.save, model::retrySave)
+        }
+        if (step.letters.isEmpty()) {
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+                AslCard { Text(step.narration.orEmpty(), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(Spacing.xl)) }
+                AslButton(stringResource(R.string.story_next), { model.continueNarration(state.stepIndex) }, Modifier.fillMaxWidth())
+            }
         } else {
-            Text(stringResource(R.string.story_spell_progress, step.spellWord.orEmpty(), letterIndex + 1, step.letters.size),
-                style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(horizontal = Spacing.md))
-            LetterDrillRoute(
-                drill = drill, drills = drills, signDetector = detector, canonicalHandshapeCatalog = catalog,
-                progressStore = progress, onBack = onBack,
-                onSkip = {
-                    skipped = true
-                    if (letterIndex + 1 == step.letters.size) advanceStep(step, false) else letterIndex++
-                },
-                onMatch = {
-                    if (letterIndex + 1 == step.letters.size) advanceStep(step, !skipped) else letterIndex++
-                },
-                modifier = Modifier.weight(1f),
-                sessionKey = "story-${stepIndex}-${letterIndex}",
+            val currentLetter = step.letters.getOrNull(state.letterIndex)
+            val drill = drills.firstOrNull { it.letter == currentLetter }
+            if (drill != null) LetterDrillRoute(
+                drill, drills, detector, catalog, progress, onBack,
+                onSkip = { model.letterResult(state.stepIndex, state.letterIndex, false) },
+                onMatch = { model.letterResult(state.stepIndex, state.letterIndex, true) },
+                modifier = Modifier.weight(1f), sessionKey = "story-${pack.packId}-${state.generation}-${state.stepIndex}-${state.letterIndex}",
+                showHeader = false,
             )
         }
     }
@@ -144,65 +219,128 @@ private fun StoryPack(pack: ContentPack, drills: List<PackItem.Drill>, detector:
 private fun SpeedPack(pack: ContentPack, drills: List<PackItem.Drill>, detector: SignDetector,
                       catalog: CanonicalHandshapeCatalog, progress: ProgressStore, onBack: () -> Unit) {
     val rounds = remember(pack) { pack.items.filterIsInstance<PackItem.SpeedRound>() }
-    val scope = rememberCoroutineScope()
-    var selected by rememberSaveable(pack.packId) { mutableStateOf<String?>(null) }
-    var startedAt by remember { mutableStateOf<Long?>(null) }
-    var remaining by remember { mutableStateOf(0) }
-    var score by remember { mutableStateOf(0) }
-    var promptIndex by remember { mutableStateOf(0) }
-    var finished by remember { mutableStateOf(false) }
-    val round = rounds.firstOrNull { it.id == selected }
-    LaunchedEffect(startedAt, round?.id) {
-        val start = startedAt ?: return@LaunchedEffect
-        val activeRound = round ?: return@LaunchedEffect
-        while (true) {
-            remaining = (activeRound.durationSeconds - ((SystemClock.elapsedRealtime() - start) / 1000).toInt()).coerceAtLeast(0)
-            if (remaining == 0) { finished = true; startedAt = null; break }
-            delay(AslMotion.quickMillis.toLong())
+    val model: SpeedSessionViewModel = viewModel(key = "speed-${pack.packId}", factory = SpeedSessionViewModel.factory(progress))
+    val state by model.state.collectAsStateWithLifecycle()
+    val history by progress.snapshot.collectAsStateWithLifecycle(initialValue = null)
+    val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    var exitDialog by remember { mutableStateOf(false) }
+    var cameraDenied by remember { mutableStateOf(false) }
+    fun cameraGranted() = ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+    fun leave() { model.pause(); exitDialog = true }
+    val back: () -> Unit = {
+        if (state.started && !state.finished) leave() else onBack()
+    }
+    BackHandler(state.started && !state.finished, onBack = ::leave)
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        cameraDenied = !granted
+        if (granted) { if (state.started) model.resume() else model.start() }
+    }
+    LaunchedEffect(pack.packId) { model.initialize(rounds) }
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE) model.pause()
         }
+        lifecycle.addObserver(observer)
+        onDispose { model.pause(); lifecycle.removeObserver(observer) }
     }
-    LaunchedEffect(finished) {
-        if (finished && round != null) progress.recordSpeedRun(SpeedRunResult(round.id, System.currentTimeMillis(), score, round.durationSeconds))
-    }
+    val round = rounds.firstOrNull { it.id == state.roundId }
+    val unavailable = round != null && round.letters.any { letter -> drills.none { it.letter == letter } }
+    if (exitDialog) AlertDialog(
+        onDismissRequest = { exitDialog = false },
+        title = { Text(stringResource(R.string.speed_exit_title)) },
+        text = { Text(stringResource(R.string.speed_exit_body), style = MaterialTheme.typography.bodyLarge) },
+        confirmButton = { TextButton(onClick = { exitDialog = false; onBack() }) { Text(stringResource(R.string.speed_end_round)) } },
+        dismissButton = { TextButton(onClick = { exitDialog = false }) { Text(stringResource(R.string.speed_keep_playing)) } },
+    )
     Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
-        TextButton(onClick = onBack, modifier = Modifier.padding(horizontal = Spacing.md).sizeIn(minHeight = Spacing.touchTarget)) {
-            Text(stringResource(R.string.back))
-        }
-        Text(pack.title, style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(horizontal = Spacing.md))
+        ScreenHeader(round?.title ?: pack.title, back, compact = state.started && !state.finished)
         when {
-            round == null -> Column(Modifier.verticalScroll(rememberScrollState()).padding(Spacing.md),
+            round == null -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                Text(stringResource(R.string.speed_rounds_description), style = MaterialTheme.typography.bodyLarge)
                 rounds.forEach { option ->
-                    Button(onClick = { selected = option.id; remaining = option.durationSeconds },
-                        modifier = Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)) {
-                        Text(stringResource(R.string.speed_round_option, option.title, option.durationSeconds))
+                    val best = history?.speedRuns?.filter { it.roundId == option.id }?.maxOfOrNull { it.correct }
+                    AslCard(Modifier.sizeIn(minHeight = Spacing.touchTarget).clickable(role = Role.Button) { model.choose(option) }) {
+                        Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                            Text(stringResource(R.string.speed_round_option, option.title, option.durationSeconds), style = MaterialTheme.typography.titleLarge)
+                            Text(stringResource(R.string.speed_target, option.targetCorrect), style = MaterialTheme.typography.bodyMedium,
+                                color = LocalAslColors.current.onSurfaceSecondary)
+                            Text(if (best == null) stringResource(R.string.speed_no_best) else stringResource(R.string.speed_best, best),
+                                style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
             }
-            finished -> Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                Text(stringResource(R.string.speed_result, score), style = MaterialTheme.typography.titleLarge)
-                Button(onClick = { score = 0; promptIndex = 0; finished = false; remaining = round.durationSeconds;
-                    startedAt = SystemClock.elapsedRealtime() }, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) {
-                    Text(stringResource(R.string.speed_again))
-                }
+            unavailable -> Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+                Text(stringResource(R.string.pro_missing_letters), style = MaterialTheme.typography.bodyLarge)
+                AslButton(stringResource(R.string.speed_choose_round), { model.choose(null) }, Modifier.fillMaxWidth())
             }
-            startedAt == null -> Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
-                Text(stringResource(R.string.speed_intro, round.durationSeconds), style = MaterialTheme.typography.bodyLarge)
-                Button(onClick = { score = 0; promptIndex = 0; remaining = round.durationSeconds;
-                    startedAt = SystemClock.elapsedRealtime() }, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) {
-                    Text(stringResource(R.string.speed_start))
+            state.finished -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+                Text(stringResource(R.string.speed_result, state.score), style = MaterialTheme.typography.headlineMedium)
+                Text(stringResource(R.string.speed_result_detail, round.durationSeconds, round.targetCorrect), style = MaterialTheme.typography.bodyLarge)
+                val best = history?.speedRuns?.filter { it.roundId == round.id }?.maxOfOrNull { it.correct }
+                if (best != null) Text(stringResource(R.string.speed_best, best), style = MaterialTheme.typography.bodyLarge)
+                SaveStatus(state.save, model::retrySave)
+                AslButton(stringResource(R.string.speed_again), { model.choose(round) }, Modifier.fillMaxWidth(),
+                    enabled = state.save == SessionSave.SAVED)
+                AslButton(stringResource(R.string.speed_choose_round), { model.choose(null) }, Modifier.fillMaxWidth(),
+                    style = AslButtonStyle.Secondary, enabled = state.save == SessionSave.SAVED)
+            }
+            !state.started || state.paused -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+                Text(stringResource(if (state.paused) R.string.speed_paused else R.string.speed_intro,
+                    if (state.paused) state.remainingSeconds else round.durationSeconds), style = MaterialTheme.typography.bodyLarge)
+                if (state.paused) Text(stringResource(R.string.speed_paused_body, state.remainingSeconds), style = MaterialTheme.typography.bodyLarge)
+                else {
+                    Text(stringResource(R.string.speed_target, round.targetCorrect), style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.speed_letters, round.letters.joinToString(" · ") { it.display }),
+                        style = MaterialTheme.typography.bodyMedium, color = LocalAslColors.current.labelSecondary)
                 }
+                if (cameraDenied || !cameraGranted()) Text(stringResource(R.string.speed_camera_required), style = MaterialTheme.typography.bodyLarge)
+                if (cameraDenied) AslButton(stringResource(R.string.open_settings), {
+                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.fromParts("package", context.packageName, null)))
+                }, Modifier.fillMaxWidth(), style = AslButtonStyle.Secondary)
+                AslButton(stringResource(if (state.paused) R.string.speed_resume else R.string.speed_start), {
+                    if (!cameraGranted()) permission.launch(Manifest.permission.CAMERA)
+                    else if (state.paused) model.resume() else model.start()
+                }, Modifier.fillMaxWidth())
+                if (!state.started) AslButton(stringResource(R.string.speed_choose_round), { model.choose(null) },
+                    Modifier.fillMaxWidth(), style = AslButtonStyle.Secondary)
             }
             else -> {
-                Text(stringResource(R.string.speed_live, remaining, score), style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = Spacing.md))
-                val letter = round.letters.takeIf { it.isNotEmpty() }?.get(promptIndex % round.letters.size)
-                val drill = drills.firstOrNull { it.letter == letter }
-                if (drill == null) PackMessage(stringResource(R.string.pro_pack_unavailable), onBack)
-                else LetterDrillRoute(drill, drills, detector, catalog, progress, onBack,
-                    onSkip = { promptIndex++ }, onMatch = { score++; promptIndex++ }, modifier = Modifier.weight(1f),
-                    sessionKey = "speed-${round.id}-$promptIndex")
+                Row(Modifier.fillMaxWidth().padding(horizontal = Spacing.md), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.speed_live, state.remainingSeconds, state.score), style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f))
+                    TextButton(onClick = model::pause, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) {
+                        Text(stringResource(R.string.speed_pause), color = LocalAslColors.current.label)
+                    }
+                }
+                val letter = round.letters[state.promptIndex % round.letters.size]
+                val drill = drills.first { it.letter == letter }
+                LetterDrillRoute(drill, drills, detector, catalog, progress, back,
+                    onSkip = { model.letterResult(state.promptIndex, false) },
+                    onMatch = { model.letterResult(state.promptIndex, true) }, modifier = Modifier.weight(1f),
+                    sessionKey = "speed-${round.id}-${state.generation}-${state.promptIndex}", showHeader = false)
             }
         }
+    }
+}
+
+@Composable
+private fun SaveStatus(status: SessionSave, onRetry: () -> Unit) {
+    val text = when (status) {
+        SessionSave.IDLE -> return
+        SessionSave.SAVING -> R.string.pro_progress_saving
+        SessionSave.SAVED -> R.string.pro_progress_saved
+        SessionSave.FAILED -> R.string.pro_progress_save_failed
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Text(stringResource(text), style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        if (status == SessionSave.FAILED) AslButton(stringResource(R.string.pro_retry_save), onRetry, Modifier.fillMaxWidth(),
+            style = AslButtonStyle.Secondary)
     }
 }

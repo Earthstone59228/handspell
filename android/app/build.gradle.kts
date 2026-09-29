@@ -72,6 +72,7 @@ android {
     }
 
     sourceSets.getByName("test").resources.srcDir("../../training/testdata")
+    sourceSets.getByName("test").resources.srcDir("src/main/assets/classifier")
 
     testOptions {
         unitTests {

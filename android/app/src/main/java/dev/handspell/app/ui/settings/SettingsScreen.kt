@@ -1,33 +1,31 @@
 package dev.handspell.app.ui.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.handspell.app.R
 import dev.handspell.app.billing.EntitlementGate
 import dev.handspell.app.prefs.AppPreferencesStore
 import dev.handspell.app.progress.ProgressStore
-import androidx.compose.ui.text.font.FontWeight
-import dev.handspell.app.ui.components.ScreenHeader
+import dev.handspell.app.ui.components.AslButton
+import dev.handspell.app.ui.components.AslButtonStyle
 import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
@@ -68,38 +66,50 @@ fun SettingsScreen(
     onOpenCapture: (() -> Unit)? = null,
 ) {
     val colors = LocalAslColors.current
-    Column(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
-        ScreenHeader(stringResource(R.string.settings), onBack)
-        Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .padding(start = Spacing.md, end = Spacing.md, bottom = Spacing.xl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.xl),
-        ) {
-            PracticeGroup(state, onAskClear)
-            SubscriptionGroup(state, onOpenPaywall, onRestore, onRetryEntitlement)
-            PrivacyGroup(state.classifierModelId)
-            AboutGroup(state)
-            if (onOpenCapture != null) DebugGroup(onOpenCapture)
-        }
+    FrostedSettingsHero(onBack) {
+        PracticeGroup(state, onAskClear)
+        SubscriptionGroup(state, onOpenPaywall, onRestore, onRetryEntitlement)
+        PrivacyGroup(state.classifierModelId)
+        AboutGroup(state)
+        if (onOpenCapture != null) DebugGroup(onOpenCapture)
     }
     if (state.confirmClearProgress) {
-        AlertDialog(
-            onDismissRequest = onDismissClear,
-            shape = RoundedCornerShape(AslShapes.extraLarge),
-            containerColor = colors.surface,
-            titleContentColor = colors.onSurface,
-            textContentColor = colors.onSurface,
-            title = { Text(stringResource(R.string.settings_delete_confirm_title)) },
-            text = { Text(stringResource(R.string.settings_delete_confirm_body), style = MaterialTheme.typography.bodyLarge) },
-            confirmButton = {
-                TextButton(onClick = onConfirmClear) {
-                    Text(stringResource(R.string.settings_delete_confirm), color = colors.onSurface, fontWeight = FontWeight.Bold)
+        Dialog(onDismissRequest = onDismissClear) {
+            Surface(
+                shape = RoundedCornerShape(AslShapes.extraLarge),
+                color = colors.surface,
+                contentColor = colors.onSurface,
+            ) {
+                Column(
+                    Modifier.fillMaxWidth().padding(Spacing.xl),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md),
+                ) {
+                    Text(
+                        stringResource(R.string.settings_delete_confirm_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                    Text(
+                        stringResource(R.string.settings_delete_confirm_body),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = colors.onSurfaceSecondary,
+                    )
+                    Column(
+                        Modifier.fillMaxWidth().padding(top = Spacing.xs),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    ) {
+                        AslButton(stringResource(R.string.settings_cancel), onDismissClear, Modifier.fillMaxWidth())
+                        AslButton(
+                            stringResource(R.string.settings_delete_data), onConfirmClear,
+                            Modifier.fillMaxWidth().border(
+                                Spacing.hairline, colors.separator, RoundedCornerShape(AslShapes.button),
+                            ),
+                            style = AslButtonStyle.Secondary,
+                        )
+                    }
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissClear) { Text(stringResource(R.string.settings_cancel), color = colors.onSurface) }
-            },
-        )
+            }
+        }
     }
 }
 
@@ -151,6 +161,8 @@ private fun SubscriptionGroup(state: SettingsUiState, onPaywall: () -> Unit, onR
         SettingsGroupHeader(stringResource(R.string.settings_pro))
         SettingsGroup {
             Column {
+                SettingsInfoRow(stringResource(R.string.home_pro_packs), stringResource(R.string.pro_features_detail))
+                SettingsDivider()
                 val status = when (state.subscription) {
                     SubscriptionUi.CHECKING -> stringResource(R.string.settings_pro_checking)
                     SubscriptionUi.FREE -> stringResource(R.string.settings_pro_free)

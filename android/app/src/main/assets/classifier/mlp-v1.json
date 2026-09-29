@@ -1,0 +1,73 @@
+{
+  "file": "mlp-v1.bin",
+  "formatVersion": 1,
+  "specVersion": 1,
+  "inputDim": 66,
+  "layers": [
+    {
+      "inDim": 66,
+      "outDim": 64,
+      "activation": "relu"
+    },
+    {
+      "inDim": 64,
+      "outDim": 24,
+      "activation": "identity"
+    }
+  ],
+  "labels": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y"
+  ],
+  "bytes": 23556,
+  "sha256": "9ed85e6239ca188b2201e6de8a766e62e7d47e45bbb83081e70f7ce3a1301897",
+  "exportedAt": "2026-09-29T12:21:38+00:00",
+  "trainer": "scripts/train_mlp.py",
+  "git_sha": "4bcca5d",
+  "photo_rows": 4786,
+  "photo_signers": [
+    "User1",
+    "User2",
+    "User3",
+    "User4"
+  ],
+  "live_rows": 98,
+  "live_letters": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "hidden": [
+    64
+  ],
+  "augmentation": {
+    "copies": 4,
+    "shape_noise": 0.07,
+    "orientation_noise": 0.15,
+    "scale_jitter": 0.1
+  },
+  "validation": "docs/research/mlp-v1-2026-09-29.md"
+}

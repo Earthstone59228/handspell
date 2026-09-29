@@ -1,5 +1,8 @@
 import { SplashScreen } from '@capacitor/splash-screen';
 import { wireframes } from './handshapes.js';
+import { installBackDrag } from './back-drag.js';
+
+document.querySelectorAll('.screen-back').forEach(installBackDrag);
 
 const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
 // One place to say which letters can be practised. J and Z need motion, which the classifier cannot judge yet;

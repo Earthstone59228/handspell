@@ -107,6 +107,18 @@ Left-handed signing is a fully accepted mirror image of right-handed signing in 
 - General ASL-app research finds self-study apps are a reasonable starting point but real fluency and knowing whether a sign "looks natural" requires feedback from a live tutor or Deaf community members — apps should be framed as a **practice aid**, not a fluency authority or certification. [Preply ASL app roundup](https://preply.com/en/blog/apps-to-learn-sign-language/)
 - Implication for this project: ship in-app copy that says "practice tool for fingerspelling drills," link out to Deaf-led instructional resources for real instruction, and avoid any claim of teaching "correct"/certified ASL — the confusable-pair analysis above exists specifically to reduce silent misteaching, not to claim authority.
 
-## Recommendation
+## Historical recommendation (2026-09-14)
 
 Self-record only for training data; no dataset found here is confirmed both permissively licensed and fit for MediaPipe landmark extraction at usable resolution/diversity. Do not reference or embed Lifeprint content in-app (explicitly prohibited); use Wikipedia/Commons and the plain-fact table above (original wording) instead, with citations. Build the classifier's hardest per-pair discrimination logic around thumb-tuck depth (M/N/T, A/S/T), finger spread (H/U/V), and wrist rotation (K/P, G/Q) as detailed above. Frame the app explicitly as a fingerspelling practice aid, not an ASL fluency or correctness authority, citing the Deaf-led AI-research critique and the SignAloud precedent in any public-facing "About" copy.
+
+## Updated integration decision — 2026-09-28
+
+The user requested a public-data route instead of recording more poses. The earlier self-record-only
+recommendation is superseded for the static-letter expansion by [ASLYset V1](https://data.mendeley.com/datasets/xs6mvhx6rh/1).
+Its original release identifies the contributor (Miguel Rivera), four volunteers, all 24 static letters,
+416×416 images, and CC BY 4.0 licensing. This is an original image release with letter labels, so it
+can be processed by the existing Hand Landmarker and spec-v1 normalizer without a sequence model.
+The verified archive, extraction and signer-held-out evaluation are documented in `training/DATA.md`
+and `training/data/aslyset/provenance.json`. The previous rejected-dataset analysis remains historical evidence,
+not a statement that no suitable public static-letter data exists. No Lifeprint content or synthetic teaching
+poses are used in this integration.

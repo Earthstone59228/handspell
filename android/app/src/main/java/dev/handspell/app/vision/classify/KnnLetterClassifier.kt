@@ -12,7 +12,7 @@ import java.io.InputStream
 import kotlin.math.sqrt
 
 /**
- * Stage 1 of docs/CLASSIFIER.md §3: k-nearest-neighbour over the self-recorded exemplars in
+ * Stage 1 of docs/CLASSIFIER.md §3: k-nearest-neighbour over the recorded reference exemplars in
  * `assets/classifier/references-v1.csv`.
  *
  * Distance is Euclidean in the 66-d normalised space with the orientation block's squared
@@ -28,8 +28,8 @@ import kotlin.math.sqrt
  * have genuinely multi-modal exemplar clouds across signers, and averaging two valid poses produces
  * an invalid one.
  *
- * Instances are immutable and [classify] allocates only its result, so a single instance can be
- * shared across the analyser thread and the UI.
+ * Instances are immutable and [classify] keeps its scratch arrays local to the call, so a single
+ * instance can be shared across the analyser thread and the UI.
  */
 class KnnLetterClassifier private constructor(
     private val assetName: String,
@@ -101,26 +101,54 @@ class KnnLetterClassifier private constructor(
 
     override fun classify(hand: NormalizedHand, timestampMs: Long): Classification {
         val neighbourDistances = DoubleArray(k) { Double.MAX_VALUE }
-        val neighbourShapeDistances = DoubleArray(k) { Double.MAX_VALUE }
         val neighbourLetters = IntArray(k) { -1 }
+        var nearestShapeDistance = Double.MAX_VALUE
         var filled = 0
+        var worstSquaredUpperBound = Double.POSITIVE_INFINITY
 
         val vector = hand.vector
-        for (exemplar in exemplarLetters.indices) {
-            val distance = distanceTo(vector, exemplar)
+        exemplars@ for (exemplar in exemplarLetters.indices) {
+            val base = exemplar * NormalizedHand.VECTOR_DIM
+            var shapeSum = 0.0
+            // Fixed ranges retain the original accumulation order and allow loop optimization.
+            for (i in 0 until NormalizedHand.SHAPE_DIM / 2) {
+                val delta = vector[i].toDouble() - exemplars[base + i]
+                shapeSum += delta * delta
+            }
+            // Remaining squared differences are nonnegative. This reference cannot enter
+            // the neighbour list once even its partial sum exceeds the conservative bound.
+            if (shapeSum > worstSquaredUpperBound) continue@exemplars
+            for (i in NormalizedHand.SHAPE_DIM / 2 until NormalizedHand.SHAPE_DIM) {
+                val delta = vector[i].toDouble() - exemplars[base + i]
+                shapeSum += delta * delta
+            }
+            if (shapeSum > worstSquaredUpperBound) continue
+            var orientationSum = 0.0
+            for (i in NormalizedHand.SHAPE_DIM until NormalizedHand.VECTOR_DIM) {
+                val delta = vector[i].toDouble() - exemplars[base + i]
+                orientationSum += delta * delta
+            }
+            val squaredDistance = shapeSum + ORIENTATION_WEIGHT * orientationSum
+            if (squaredDistance > worstSquaredUpperBound) continue
+            val distance = sqrt(squaredDistance)
             // Insertion into a k-long ascending list: k is 5, so this beats sorting every exemplar.
             if (filled < k || distance < neighbourDistances[k - 1]) {
                 var slot = if (filled < k) filled else k - 1
                 while (slot > 0 && neighbourDistances[slot - 1] > distance) {
                     neighbourDistances[slot] = neighbourDistances[slot - 1]
-                    neighbourShapeDistances[slot] = neighbourShapeDistances[slot - 1]
                     neighbourLetters[slot] = neighbourLetters[slot - 1]
                     slot--
                 }
                 neighbourDistances[slot] = distance
-                neighbourShapeDistances[slot] = shapeDistanceTo(vector, exemplar)
+                if (slot == 0) nearestShapeDistance = sqrt(shapeSum)
                 neighbourLetters[slot] = exemplarLetters[exemplar]
                 if (filled < k) filled++
+                if (filled == k) {
+                    // A square-root can round distinct sums to the same distance. Round upward
+                    // before and after squaring so pruning never changes the original tie rule.
+                    val upperDistance = Math.nextUp(neighbourDistances[k - 1])
+                    worstSquaredUpperBound = Math.nextUp(upperDistance * upperDistance)
+                }
             }
         }
 
@@ -141,34 +169,9 @@ class KnnLetterClassifier private constructor(
         return Classification(
             ranked = ranked,
             nearestDistance = neighbourDistances[0].toFloat(),
-            nearestShapeDistance = neighbourShapeDistances[0].toFloat(),
+            nearestShapeDistance = nearestShapeDistance.toFloat(),
             timestampMs = timestampMs,
         )
-    }
-
-    private fun distanceTo(vector: FloatArray, exemplar: Int): Double {
-        val base = exemplar * NormalizedHand.VECTOR_DIM
-        var sum = 0.0
-        for (i in 0 until NormalizedHand.SHAPE_DIM) {
-            val delta = vector[i].toDouble() - exemplars[base + i]
-            sum += delta * delta
-        }
-        var orientationSum = 0.0
-        for (i in NormalizedHand.SHAPE_DIM until NormalizedHand.VECTOR_DIM) {
-            val delta = vector[i].toDouble() - exemplars[base + i]
-            orientationSum += delta * delta
-        }
-        return sqrt(sum + ORIENTATION_WEIGHT * orientationSum)
-    }
-
-    private fun shapeDistanceTo(vector: FloatArray, exemplar: Int): Double {
-        val base = exemplar * NormalizedHand.VECTOR_DIM
-        var sum = 0.0
-        for (i in 0 until NormalizedHand.SHAPE_DIM) {
-            val delta = vector[i].toDouble() - exemplars[base + i]
-            sum += delta * delta
-        }
-        return sqrt(sum)
     }
 
     companion object {

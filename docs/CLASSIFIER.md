@@ -6,11 +6,13 @@ spec below is implemented twice — `vision/normalize/DefaultHandNormalizer.kt` 
 
 ## 1. Frame convention (get this wrong and everything downstream is mirrored)
 
-The pipeline feeds MediaPipe a **selfie-mirrored, display-upright** image, matching the official
-Android sample: copy `ImageProxy` plane 0 into a Bitmap, apply `Matrix().apply { postScale(-1f, 1f,
-w/2f, h/2f); postRotate(imageProxy.imageInfo.rotationDegrees.toFloat()) }`, then `BitmapImageBuilder`.
+The pipeline feeds MediaPipe a **selfie-mirrored, display-upright** image, by copying `ImageProxy` plane 0 into a Bitmap, rotating by the CameraX display rotation,
+then mirroring the rotated bitmap in display space before `BitmapImageBuilder`. Applying the
+mirror in sensor space first turns a portrait analysis frame 180 degrees relative to PreviewView;
+that former behavior was corrected during the static-letter expansion on 2026-09-28.
 MediaPipe's handedness head assumes a mirrored selfie image, so with this convention the reported
-`Handedness` is the user's **actual physical hand** and needs no correction.
+`Handedness` is the label consumed consistently by both Android and the Python importer. The importer must
+not override it with the source release's physical-hand description, since source camera mirroring can differ.
 
 Consequences, all of which are load-bearing:
 
@@ -97,7 +99,7 @@ significant digits. Both `DefaultHandNormalizerTest.kt` and `tests/test_normaliz
 file and assert **1e-6 absolute** agreement. `android/app/build.gradle.kts` points the test source
 set's resources at `../../training/testdata` so the JVM test can read it.
 
-## 3. Stage 1 — k-nearest-neighbour over self-recorded exemplars
+## 3. Stage 1 — k-nearest-neighbour over recorded reference exemplars
 
 - **Reference set**: `assets/classifier/references-v1.csv`, one row per exemplar: `letter` followed
   by 66 floats. Built by `training/scripts/build_references.py` from capture CSVs.
@@ -256,3 +258,15 @@ its confusable group ≤ 0.05**, and **≤ 1 false match in the 10 live trials**
 - If fewer than 18 letters pass, we ship the ones that pass and say the number out loud in the demo
   video. A 16-letter app that is honest beats a 24-letter app that teaches wrong signs.
 - If stage 2 is not beating stage 1 on LOSO macro-F1 by Sep 24, stage 1 ships and stage 2 is dropped.
+
+## Public static-letter expansion — 2026-09-28
+
+The reference build may also use `training/scripts/import_aslyset.py`, which verifies the original
+CC BY 4.0 ASLYset archive, extracts real-image landmarks with the bundled model, and retains
+signer IDs for offline validation. This supplements the original A–D recordings. See
+`training/DATA.md`, the importer provenance, and the dated evaluation. Reference illustrations
+restore the orientation block with `e2 = e3 × e1` and `p = q.x*e1 + q.y*e2 + q.z*e3`,
+so G/Q and K/P do not collapse into the same upright guide.
+
+Data coverage does not establish the §9 release criteria. The expanded build is a prototype;
+held-out-phone live trials remain required before declaring the added letters release-validated.

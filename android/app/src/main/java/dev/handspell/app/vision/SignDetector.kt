@@ -59,7 +59,35 @@ interface SignDetector {
     /** Null means "classify freely and report the top letter", used by the dev capture screen. */
     fun setTarget(target: Letter?)
 
-    fun start()
+    /** Claim the shared detector for one drill screen. A later owner replaces the earlier session. */
+    fun start(owner: Any)
 
-    fun stop()
+    /** Release only the caller's session; an exiting screen cannot stop its successor. */
+    fun stop(owner: Any)
+}
+
+/** Identity-based lease for a shared detector and its asynchronous helper callbacks. */
+internal class DetectorSessionGuard {
+    private var owner: Any? = null
+    private var generation = 0L
+
+    fun owns(candidate: Any): Boolean = owner === candidate
+
+    fun claim(candidate: Any): Long {
+        owner = candidate
+        return ++generation
+    }
+
+    fun release(candidate: Any): Boolean {
+        if (owner !== candidate) return false
+        owner = null
+        generation++
+        return true
+    }
+
+    fun isCurrent(token: Long): Boolean = owner != null && generation == token
+
+    fun ifCurrent(token: Long, action: () -> Unit) {
+        if (isCurrent(token)) action()
+    }
 }

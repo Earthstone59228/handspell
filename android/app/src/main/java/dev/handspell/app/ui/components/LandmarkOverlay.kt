@@ -34,10 +34,8 @@ private const val LINE_WIDTH_PX = 4f
  * normalised image space onto this composable's own size the same way `PreviewView`'s default
  * `FILL_CENTER` scale type maps the camera stream onto the screen.
  *
- * Orientation, verified by dumping the analysed frame next to the screen: PreviewView already shows the front
- * camera as a selfie mirror. The analysed frame is that mirror turned 180 degrees (FrameConverter mirrors in
- * sensor space and then rotates), so a landmark maps to the screen with both axes flipped: (1 - x, 1 - y).
- * The preview must NOT be flipped again in CameraFrame, or left and right look inverted.
+ * FrameConverter rotates to display-upright, then mirrors in display space, matching PreviewView.
+ * Coordinates are drawn directly; the preview must not be mirrored a second time.
  */
 @Composable
 fun LandmarkOverlay(overlay: HandOverlay?, modifier: Modifier = Modifier) {
@@ -53,8 +51,8 @@ fun LandmarkOverlay(overlay: HandOverlay?, modifier: Modifier = Modifier) {
         fun point(index: Int): Offset {
             val landmark = overlay.imageLandmarks[index]
             return Offset(
-                (1f - landmark.x) * overlay.imageWidth * scale + offsetX,
-                (1f - landmark.y) * overlay.imageHeight * scale + offsetY,
+                landmark.x * overlay.imageWidth * scale + offsetX,
+                landmark.y * overlay.imageHeight * scale + offsetY,
             )
         }
 

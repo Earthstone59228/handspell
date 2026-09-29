@@ -44,6 +44,7 @@ import dev.handspell.app.ui.alphabet.AlphabetScreen
 import dev.handspell.app.ui.alphabet.AlphabetStorage
 import dev.handspell.app.ui.home.HomeScreen
 import dev.handspell.app.ui.home.HomeViewModel
+import dev.handspell.app.ui.home.ProPackAccess
 import dev.handspell.app.ui.home.ProPackRoute
 import dev.handspell.app.ui.home.OnboardingScreen
 import dev.handspell.app.ui.progress.ProgressRoute
@@ -95,11 +96,9 @@ fun HandspellApp(
     val homeState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val progress by progressStore.snapshot.collectAsStateWithLifecycle(initialValue = null)
     val isPro by entitlementGate.isPro.collectAsStateWithLifecycle()
+    val entitlementStatus by entitlementGate.status.collectAsStateWithLifecycle()
     fun openPack(pack: ContentPack) {
-        if (isPro) navController.navigate("$PACK_ROUTE/${pack.packId}")
-        else entitlementGate.requestPaywall(
-            if (pack.kind == PackKind.STORY) PaywallSource.STORY_LESSON else PaywallSource.SPEED_CHALLENGE,
-        )
+        navController.navigate("$PACK_ROUTE/${pack.packId}")
     }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
@@ -189,7 +188,7 @@ fun HandspellApp(
                 onRetry = homeViewModel::reload,
                 onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
                 onOpenPack = ::openPack,
-                showProPacks = entitlementGate !is NoopEntitlementGate,
+                showProPacks = true,
             )
         }
         composable("$DRILL_ROUTE/{drillId}") { entry ->
@@ -202,7 +201,7 @@ fun HandspellApp(
                     onRetry = homeViewModel::reload,
                     onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
                     onOpenPack = ::openPack,
-                    showProPacks = entitlementGate !is NoopEntitlementGate,
+                    showProPacks = true,
                 )
             } else {
                 LetterDrillRoute(
@@ -243,7 +242,17 @@ fun HandspellApp(
             if (packId != null && isPro) ProPackRoute(
                 packId, contentRepository, homeState.drills, signDetector, canonicalHandshapeCatalog,
                 progressStore, onBack = { navController.popBackStack() },
-            ) else LaunchedEffect(packId) { navController.popBackStack() }
+                contentLoading = homeState.isLoading, onRetryContent = homeViewModel::reload,
+            ) else ProPackAccess(
+                status = entitlementStatus,
+                billingConfigured = entitlementGate !is NoopEntitlementGate,
+                onBack = { navController.popBackStack() },
+                onPaywall = {
+                    val kind = homeState.packs.firstOrNull { it.packId == packId }?.kind
+                    entitlementGate.requestPaywall(if (kind == PackKind.SPEED) PaywallSource.SPEED_CHALLENGE else PaywallSource.STORY_LESSON)
+                },
+                onRetry = { scope.launch { runCatching { entitlementGate.refresh() } } },
+            )
         }
         composable(LICENSES_ROUTE) {
             LegalScreen(stringResource(R.string.paper_notices), "NOTICE.txt") { navController.popBackStack() }

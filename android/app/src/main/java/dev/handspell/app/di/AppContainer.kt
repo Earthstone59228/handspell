@@ -66,18 +66,16 @@ class AppContainer(context: Context) {
     )
 
     private fun loadClassifier(assets: AssetManager): LetterClassifier {
-        val stage1 = KnnLetterClassifier.load(
-            source = { assets.open(KnnLetterClassifier.ASSET_NAME) },
-        )
         return try {
             // Named argument, not a trailing lambda: `parse`'s last parameter is `assetName:
             // String`, so a trailing lambda would bind to that parameter and leave `source` unset.
             val weights = MlpWeights.parse(source = { assets.open(MlpWeights.ASSET_NAME) })
             MlpLetterClassifier(weights)
         } catch (_: ClassifierAssetException) {
-            // Stage 2 missing or unreadable: run stage 1. The visible "stage 1" notice is a UI
-            // workstream (docs/CLASSIFIER.md §4).
-            stage1
+            // Stage 2 missing or unreadable: run stage 1. Parsed only here, so a shipped MLP skips
+            // the 1.2 MB reference CSV at startup. The visible "stage 1" notice is a UI workstream
+            // (docs/CLASSIFIER.md §4).
+            KnnLetterClassifier.load(source = { assets.open(KnnLetterClassifier.ASSET_NAME) })
         }
     }
 

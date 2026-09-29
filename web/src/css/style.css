@@ -503,12 +503,23 @@ h1 {
 }
 .screen-back {
   top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 18px);
-  left:14px
+  left:14px;
+  touch-action:none;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;
+  user-select:none
 }
 .nav-control:focus-visible {
   outline:2px solid #007AFF;
   outline-offset:2px;
   border-radius:8px
+}
+.screen-back:focus,.screen-back:focus-visible {
+  outline:none;
+  box-shadow:none
+}
+.screen-back:focus-visible svg {
+  color:#007AFF
 }
 @media(max-height:500px) and (min-width:600px) {
   .practice-sheet {

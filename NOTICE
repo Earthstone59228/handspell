@@ -1,7 +1,7 @@
 Handspell — third-party notices
 
-This repository is MIT-licensed (see LICENSE). It redistributes or adapts the following
-Apache License 2.0 components, whose notices are preserved here per docs/QUALITY.md §1:
+Handspell application code is MIT-licensed (see LICENSE). The ASLYset-derived data and
+reference illustrations retain CC BY 4.0 terms as described below. Third-party components:
 
 1. MediaPipe Hand Landmarker model
    hand_landmarker.task model (c) Google LLC, licensed under the Apache License 2.0
@@ -30,3 +30,18 @@ The bundled alphabet includes Capacitor core and Capacitor splash-screen web cod
 MIT License. Their full license texts are available in the app's Documents screen.
 
 Apache License 2.0 full text: https://www.apache.org/licenses/LICENSE-2.0
+
+ASLYset reference data and illustrations
+
+Miguel Rivera (2019), “ASLYset”, Mendeley Data, V1, DOI: 10.17632/xs6mvhx6rh.1.
+Original source: https://data.mendeley.com/datasets/xs6mvhx6rh/1
+License: Creative Commons Attribution 4.0 International (CC BY 4.0).
+License terms: https://creativecommons.org/licenses/by/4.0/
+
+Handspell modified the original images by horizontal mirroring, extracted MediaPipe world
+landmarks, normalized them to Handspell spec v1, and selected signer-balanced reference
+exemplars. The alphabet and camera reference illustrations are derived from those landmarks.
+The existing team-recorded A–D exemplars remain in the combined reference set.
+The original images are not bundled with the app. No endorsement by the dataset creator is implied.
+ASLYset-derived vectors and illustrations are supplied under CC BY 4.0, independently of the
+application code's MIT license. Provenance and checksums: training/data/aslyset/provenance.json.
