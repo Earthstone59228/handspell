@@ -102,6 +102,26 @@ Run this on the S25 Ultra only. Mark each item Pass or Fail; on Fail, write what
 | 8.6 | Font 200% | Set system font size to the largest and display size to maximum: text on the menu, Settings, Progress and paywall wraps, with no clipped buttons and no horizontal scrolling | | |
 | 8.7 | Tap targets | Buttons and rows are easy to hit with a thumb; adjacent targets are not mis-tapped | | |
 
+## 10. Added 2026-09-30 (menu structure, words, rewards and more)
+
+| # | Check | Pass when | Result | Notes |
+| --- | --- | --- | --- | --- |
+| 10.1 | Main menu | After the intro, a main menu shows Letters, Words, a streak entry, quest card, Progress, Settings; Letters opens the alphabet, Words the words menu; back returns to the main menu; back from the main menu exits | | |
+| 10.2 | Mark complete | The letter sheet says "Mark complete" (never "practised"); a complete letter still shows Practice and opens the drill | | |
+| 10.3 | Reward sheet | Completing a letter (camera match or Mark complete) shows a reward sheet with today's count and streak; Continue closes it; a skip shows none | | |
+| 10.4 | Words menu | 12 free words open; Pro words show a grey lock; tapping a locked word opens the paywall | | |
+| 10.5 | Word drill (free) | "Sign it" shows; signing hello, yes, mom, drink and water (arm's length, shoulders in frame) each reach "Got it" within 10 s at least 7 times in 10 | | |
+| 10.6 | Word drill false accepts | With no hand or the wrong sign, "Got it" does not appear in 30 s | | |
+| 10.7 | Word drill (Pro) | With Pro active, a Pro word (for example bird or red) opens and can be matched | | |
+| 10.8 | Streak screen | The streak entry opens a screen with the current and longest streak, a calendar of practised days and milestone markers | | |
+| 10.9 | Speed challenge | One free session per day; the second shows the locked state with an honest Pro entry; with Pro it repeats | | |
+| 10.10 | Daily quest | The quest card shows progress, advances with practice, and shows a reward when finished | | |
+| 10.11 | Demo trial | "Start the 3-day demo trial" unlocks Pro, is labelled a demo everywhere, and Settings shows when it ends | | |
+| 10.12 | Insights | Pro shows weakest letters and a suggestion; free shows a locked preview with a Pro entry | | |
+| 10.13 | Reminder | Settings → Daily streak reminder is off by default; turning it on shows a rationale then the system prompt; denying leaves it off | | |
+| 10.14 | Theme toggle | The main-menu toggle switches light/dark immediately on every screen including the web alphabet | | |
+| 10.15 | Top bar | The frosted header on Settings and Progress sits close to the status bar, with no clipped title | | |
+
 ## 9. Results
 
 | Section | Items | Passed | Failed |

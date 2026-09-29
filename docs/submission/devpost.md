@@ -6,7 +6,7 @@ Practicing ASL fingerspelling alone leaves a learner without someone to check a 
 
 ## What it does
 
-Handspell is an Android ASL fingerspelling trainer. Its free alphabet menu opens camera drills for all 24 static letters, shows checkmarks, and saves progress on the device, with a streak chip on the menu, a Progress screen, a left-handed layout that moves the A–Z scrubber to the left edge, and a short first-run introduction. Recognition runs on the phone; there is no backend. J and Z are disabled because they require motion. Pro adds 3 story packs with 5 word prompts each and 3 timed speed rounds with pause, resume, and best scores. Pro access is gated through RevenueCat, and the paywall only opens after a tap on a locked pack or on Settings. Purchases use the RevenueCat Test Store and are simulated; this is not a live paid subscription.
+Handspell is an Android ASL fingerspelling trainer. A main menu leads to a free alphabet menu (camera drills for all 24 static letters) or to word signs (12 free words). Progress is saved on the device, with a streak screen, a daily quest, a completion reward, a Progress screen, a left-handed layout and a short first-run introduction. Recognition runs on the phone; there is no backend. J and Z are disabled because they require motion. Pro adds 3 story packs, 3 timed speed rounds, unlimited speed challenges (one a day is free), 24 more word signs and progress insights. Pro access is gated through RevenueCat, and the paywall only opens after a tap on a locked pack or on Settings. Purchases use the RevenueCat Test Store and are simulated; this is not a live paid subscription.
 
 ## How we built it
 
@@ -18,7 +18,7 @@ Handshapes vary by signer and hand. We normalize landmarks to the wrist origin a
 
 ## Accomplishments
 
-We have free camera drills for 24 static letters and Pro story and speed packs behind the paywall. Recognition reached about 92.5% macro F1 on held-out signers in still images, using public ASLYset data and 98 team-recorded A–D exemplars. The project passes 127 JVM tests; lint reports 0 errors.
+We have free camera drills for 24 static letters and Pro story and speed packs behind the paywall. Recognition reached about 92.5% macro F1 on held-out signers in still images, using public ASLYset data and 98 team-recorded A–D exemplars. Word recognition, a small on-device network, scores 0.84 top-1 on held-out signers in landmark data (not yet measured on the phone). The project passes 200 JVM and 75 Python tests; lint reports 0 errors.
 
 ## What we learned
 
@@ -26,7 +26,7 @@ Holding out whole signers gives a more useful check of how recognition handles h
 
 ## What's next
 
-We would like to explore motion recognition for J and Z and word signs (a first attempt on PopSign data did not work well enough to ship), add finger-by-finger correction hints and a free mode that names any letter, gather more signer data to improve R, T, and U, and add content through the versioned JSON pack format. A future store release could replace simulated Test Store purchases with live billing.
+We would like to explore motion recognition for J and Z and measuring word signs on real phones, add finger-by-finger correction hints and a free mode that names any letter, gather more signer data to improve R, T, and U, and add content through the versioned JSON pack format. A future store release could replace simulated Test Store purchases with live billing.
 
 ## Built with
 

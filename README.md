@@ -13,8 +13,15 @@ Free:
 - Camera drills for all 24 static letters (A–Z without J and Z). The app overlays your hand landmarks, shows
   three-state feedback (no hand, adjust, match) and confirms a match after a short hold. After a match you can
   Continue or Skip.
-- An alphabet menu with checkmarks for letters you have practised, an A–Z scrubber, and a streak chip. Tapping
-  the chip opens Progress.
+- A main menu that branches to the alphabet or to word signs, with a streak entry, a daily quest, Progress,
+  Settings and a quick light/dark toggle.
+- An alphabet menu with checkmarks for letters you have completed ("Mark complete"; a completed letter can always be
+  practised again) and an A–Z scrubber.
+- Word signs: 12 free words in a Words menu with a camera drill (Sign it / Got it). Recognition is an on-device
+  network over hand and body landmarks; see the limits below for how well it works.
+- A reward sheet when you complete a letter or word, and a streak screen with a calendar and 3/7/14/30-day markers.
+- Speed challenge: sign a random letter or word against a countdown. One free session a day.
+- A daily quest, and an optional daily streak reminder notification (off by default, made on the phone, nothing sent).
 - A Progress screen (streak, longest streak, letters practised, attempts, per-letter counts), all stored
   locally.
 - A left-handed layout (Settings, or on the first-run intro) that moves the scrubber to the left edge.
@@ -23,7 +30,10 @@ Free:
 - Settings for theme, subscription status, data deletion and the legal documents.
 
 Handspell Pro (sold through RevenueCat, Test Store only):
-- 3 story packs of 5 word prompts each, and 3 timed speed rounds with pause/resume and best scores.
+- 3 story packs of 5 word prompts each, 3 timed speed rounds with pause/resume and best scores, unlimited speed
+  challenges, 24 more word signs, and progress insights (weakest letters, this week's practice, a suggestion).
+- A labelled 3-day demo trial of the free-trial flow, and store trial terms on the paywall when the store reports a
+  trial phase. The demo never touches the store.
 - The paywall is an ordinary page with a header and back. It lists what Pro contains, shows the price and
   period before the purchase button, and offers Continue and Restore. It opens only after a tap on a locked
   pack or on the Pro row in Settings. Locked packs in the menu show a neutral lock, and nothing shows once you
@@ -39,9 +49,12 @@ Handspell Pro (sold through RevenueCat, Test Store only):
   measured on a large set of live signers. The training data is public ASLYset (CC BY 4.0) plus 98
   team-recorded A–D exemplars. Method and numbers: [`docs/research/`](docs/research/) and
   [`docs/CLASSIFIER.md`](docs/CLASSIFIER.md).
-- **Word signs are not included.** A spike on PopSign data failed (0.19 top-1); see
-  [`docs/research/words-v1-2026-09-30.md`](docs/research/words-v1-2026-09-30.md). The "word prompts" in Pro
-  packs are words you fingerspell letter by letter.
+- **Word signs are new and only measured on landmark data.** On signers the model never saw, the 12 free words score
+  0.84 top-1 and the 24 Pro words 0.83 (false accepts about 0.5%); see
+  [`docs/research/words-v3-2026-09-30.md`](docs/research/words-v3-2026-09-30.md). That is not yet measured on the
+  phone's own camera and landmarkers, so expect it to be less reliable than the letters. An earlier PopSign attempt
+  failed ([`words-v1`](docs/research/words-v1-2026-09-30.md)). The "word prompts" in Pro packs are words you
+  fingerspell letter by letter.
 - Purchases are Test Store only. There is no store listing.
 - The app is portrait-only and Android-only.
 
@@ -55,7 +68,7 @@ entitlement check. Progress lives in local storage, and Settings deletes it. Det
 
 ## How it is built
 
-Kotlin, Jetpack Compose, CameraX, MediaPipe Hand Landmarker (21 landmarks). Landmarks are normalised (wrist
+Kotlin, Jetpack Compose, CameraX, MediaPipe Hand Landmarker (21 landmarks) and Pose Landmarker lite (for word signs). Landmarks are normalised (wrist
 origin, palm scale, left hands mirrored), classified by a small on-device MLP, then smoothed with a
 hold-to-confirm. The alphabet menu is an Ionic web page in `web/`, bundled as assets. RevenueCat SDK against
 the Test Store; the paywall is hand-built Compose. Content comes from bundled versioned JSON packs.
