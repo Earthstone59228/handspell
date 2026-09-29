@@ -1,79 +1,114 @@
 # Handspell
 
-Handspell is an Android app for practising ASL fingerspelling. Its bundled Ionic alphabet opens
-native camera drills for letters supported by the on-device classifier. It was built for
-the RevenueCat Shipaton 2026, Next Gen track.
+Handspell is an Android app for practising ASL fingerspelling with your phone's front camera. It shows a
+letter, watches your hand, and tells you whether the hand shape matches. Recognition runs entirely on the
+device. Built for the RevenueCat Shipaton 2026, Next Gen track.
+
+**Testing it:** a debug APK is attached to the GitHub pre-release `debug-20260929-27852be`. Purchases in this
+build use RevenueCat's **Test Store**: they are simulated and no money changes hands.
+
+## What it does
+
+Free:
+- Camera drills for all 24 static letters (A–Z without J and Z). The app overlays your hand landmarks, shows
+  three-state feedback (no hand, adjust, match) and confirms a match after a short hold. After a match you can
+  Continue or Skip.
+- An alphabet menu with checkmarks for letters you have practised, an A–Z scrubber, and a streak chip. Tapping
+  the chip opens Progress.
+- A Progress screen (streak, longest streak, letters practised, attempts, per-letter counts), all stored
+  locally.
+- A left-handed layout (Settings, or on the first-run intro) that moves the scrubber to the left edge.
+  Recognition already mirrors left hands.
+- A first-run introduction: what the app does, how to hold the phone, and that the camera stays on the device.
+- Settings for theme, subscription status, data deletion and the legal documents.
+
+Handspell Pro (sold through RevenueCat, Test Store only):
+- 3 story packs of 5 word prompts each, and 3 timed speed rounds with pause/resume and best scores.
+- The paywall is an ordinary page with a header and back. It lists what Pro contains, shows the price and
+  period before the purchase button, and offers Continue and Restore. It opens only after a tap on a locked
+  pack or on the Pro row in Settings. Locked packs in the menu show a neutral lock, and nothing shows once you
+  have Pro.
+- The packs are also reachable from Settings → Handspell Pro → Open story and speed packs.
+
+## Honest limits
+
+- **J and Z are disabled.** They need motion, and the classifier works on single frames.
+- **R, T and U are weaker** and are flagged as experimental in the app. Look-alike letters (A/E/M/N/S/T) are
+  the main confusion.
+- Measured recognition is about 92.5% macro F1 on held-out signers, on still images. It has not been
+  measured on a large set of live signers. The training data is public ASLYset (CC BY 4.0) plus 98
+  team-recorded A–D exemplars. Method and numbers: [`docs/research/`](docs/research/) and
+  [`docs/CLASSIFIER.md`](docs/CLASSIFIER.md).
+- **Word signs are not included.** A spike on PopSign data failed (0.19 top-1); see
+  [`docs/research/words-v1-2026-09-30.md`](docs/research/words-v1-2026-09-30.md). The "word prompts" in Pro
+  packs are words you fingerspell letter by letter.
+- Purchases are Test Store only. There is no store listing.
+- The app is portrait-only and Android-only.
 
 ## Privacy
 
-All hand landmarking, normalisation and classification runs on the phone, in-process. Camera frames
-exist only as a `Bitmap` on the analysis thread and are never written to disk, encoded, uploaded or
-logged. The only data leaving the device is the RevenueCat SDK's entitlement check, which talks to
-`api.revenuecat.com` and nothing else — there is no backend, no account, no analytics SDK and no
-crash reporter. Camera and lesson progress is stored in DataStore; self-reported Alphabet
-checkmarks are stored separately in WebView local storage. Settings deletes both. See
-`docs/ARCHITECTURE.md` §10 for the full accounting.
+Hand landmarking and classification run on the phone. Camera frames are never saved, uploaded or logged.
+There is no backend, account, analytics or crash reporter. The only network traffic is RevenueCat's
+entitlement check. Progress lives in local storage, and Settings deletes it. Details: `docs/PRIVACY.md` and
+`docs/ARCHITECTURE.md` §10. Owner details still needed for the final notice and Terms are in
+`docs/LEGAL_OPEN_ITEMS.md`; operator, contact and jurisdiction are `[owner to provide]`.
 
-The paper icon on Alphabet opens the bundled privacy notice and license documents. Settings holds
-preferences, subscription controls and data deletion.
-Owner details needed to finish the privacy notice and Terms are tracked in `docs/LEGAL_OPEN_ITEMS.md`.
+## How it is built
+
+Kotlin, Jetpack Compose, CameraX, MediaPipe Hand Landmarker (21 landmarks). Landmarks are normalised (wrist
+origin, palm scale, left hands mirrored), classified by a small on-device MLP, then smoothed with a
+hold-to-confirm. The alphabet menu is an Ionic web page in `web/`, bundled as assets. RevenueCat SDK against
+the Test Store; the paywall is hand-built Compose. Content comes from bundled versioned JSON packs.
+Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Design system: [`docs/DESIGN.md`](docs/DESIGN.md).
 
 ## Build and run
 
-Full machine setup (JDK, Android SDK, env vars) is in `docs/DEV_SETUP.md`. Once that's done:
+Machine setup (JDK, Android SDK) is in [`docs/DEV_SETUP.md`](docs/DEV_SETUP.md). Then:
 
 ```bash
 source env.sh
 cd android
-./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lint
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug   # JVM tests, lint, debug APK
+./gradlew :app:installDebug                                          # to a connected device
 ```
 
-Install on a connected device with `./gradlew :app:installDebug`, or open `android/` in Android
-Studio.
+The web menu source is `web/`. After changing it:
 
-The bundled Alphabet build is generated from the Ionic frontend in `web/`. To refresh it, run
-`npm run build -- --base=./` in that frontend checkout, then run
-`scripts/sync-ionic-frontend.sh /path/to/ionic-app/dist` here. The browser preview at
-`http://localhost:5173` shows the frontend only; camera drills and native Settings/Progress
-require an Android build. The expanded prototype includes reference data and illustrations for all 24 static letters
-(J/Z excluded), derived from the original A–D recordings and CC BY 4.0 ASLYset. Recognition remains
-experimental, especially R/T/U; live-device validation is pending. See
-[the integration and evaluation note](docs/research/static-alphabet-integration-2026-09-28.md).
+```bash
+cd web && npm ci && npm run build -- --base=./
+cd .. && scripts/sync-ionic-frontend.sh web/dist
+```
 
 ### RevenueCat Test Store key
 
-The app reads its RevenueCat key from `android/local.properties` (gitignored), never from source:
+The key is read from `android/local.properties` (gitignored), never from source:
 
 ```bash
 cp android/local.properties.example android/local.properties
-# edit android/local.properties and set revenuecat.apiKey to your Test Store key
+# set revenuecat.apiKey to your Test Store key (RevenueCat dashboard → Apps and providers → Test Store)
 ```
 
-Get a Test Store key from the RevenueCat dashboard: **Apps and providers → Test configuration →
-Test Store**, no Google Play Console account needed (`docs/research/revenuecat.md` §2–3). Test Store
-purchases behave like real ones (they update entitlements) but charge no money; the app says so on
-the paywall and in Settings. Leaving `revenuecat.apiKey` blank still builds and runs — the
-entitlement gate just reports `Unavailable`.
+Leaving it blank still builds and runs; Pro purchases are then reported as unavailable. Test Store
+purchases only work in debuggable builds. See [`docs/research/revenuecat.md`](docs/research/revenuecat.md).
 
 ## Repo layout
 
 ```
-android/    Gradle project, single :app module (dev.handspell.app)
-scripts/    Copies the built Ionic frontend into bundled Android assets
-docs/       Architecture, contracts, quality bar, and research notes this build follows
-preview-windows/
-            Desktop camera preview: skeleton overlay plus the app's stage-1 pipeline, so
-            recognition can be measured on a laptop (docs/WINDOWS_PREVIEW.md)
-recorder/   Desktop tool that records the stage-1 reference set; the Android app also has a
-            debug-only landmark capture screen (docs/RECORDER.md)
-training/   Python pipeline that records landmark data and trains the offline classifier
+android/     Gradle project, single :app module (dev.handspell.app)
+web/         Ionic alphabet menu source (built and copied into Android assets)
+scripts/     Web sync and APK compatibility check
+docs/        Architecture, design, classifier, privacy, research, audits, submission notes
+training/    Python pipeline that trains the classifier from landmark data
+recorder/    Desktop tool that recorded the A–D reference set
+preview-windows/  Desktop camera preview of the recognition pipeline
 ```
 
-Inside `android/app/src/main/java/dev/handspell/app/`, see `docs/ARCHITECTURE.md` §2 for the package
-layout and `docs/CONTRACTS.md` for the interfaces each workstream builds against.
+## Roadmap
+
+Practice-depth features (finger-by-finger feedback, free mode, streak reminders), word signs and motion
+letters, and a store launch are planned in [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## License
 
-MIT — see `LICENSE`. Third-party components redistributed or adapted (the MediaPipe hand-landmarker
-model, MediaPipe Tasks, AndroidX, Material Symbols, the RevenueCat SDK) are listed with their own
-licenses in `NOTICE`.
+MIT, see `LICENSE`. Third-party components and data (MediaPipe model and Tasks, AndroidX, Material Symbols,
+RevenueCat SDK, ASLYset) are credited with their licences in `NOTICE`.
