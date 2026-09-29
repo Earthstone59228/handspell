@@ -52,6 +52,9 @@ class DrillViewModelTest {
         runCurrent()
         assertTrue(model.uiState.value.matched)
         assertEquals(1, progress.matches)
+        assertEquals(Letter.A, model.completion.value)
+        model.consumeCompletion()
+        assertEquals(null, model.completion.value)
 
         detector.feedbackState.value = SignFeedbackState.NoHand(Letter.A)
         runCurrent()
@@ -61,6 +64,11 @@ class DrillViewModelTest {
         runCurrent()
         assertFalse(model.uiState.value.matched)
         assertEquals(1, progress.matches)
+        // A skip never produces a reward.
+        detector.feedbackState.value = SignFeedbackState.NotRecognized(Letter.B, 0.2f)
+        runCurrent()
+        model.recordSkip()
+        assertEquals(null, model.completion.value)
     }
 
     @Test fun oldViewModelClearCannotStopNewOwnersDetectorOrThumbnail() = runTest(dispatcher) {

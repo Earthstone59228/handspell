@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="trial_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <plurals name="trial_weeks">
+        <item quantity="one">%1$d week</item>
+        <item quantity="other">%1$d weeks</item>
+    </plurals>
+    <plurals name="trial_months">
+        <item quantity="one">%1$d month</item>
+        <item quantity="other">%1$d months</item>
+    </plurals>
+    <plurals name="trial_years">
+        <item quantity="one">%1$d year</item>
+        <item quantity="other">%1$d years</item>
+    </plurals>
+    <string name="trial_store_terms">Free for %1$s, then %2$s per %3$s until you cancel. Cancel before the trial ends and you are not charged.</string>
+
+    <string name="demo_trial_header">Demo trial</string>
+    <string name="demo_trial_offer_title">Try Pro free for 3 days</string>
+    <string name="demo_trial_offer_body">A demo of the free-trial flow in this build. Pro unlocks on this phone for 3 days, then locks again by itself. Nothing is bought or charged, and it never turns into a subscription.</string>
+    <string name="demo_trial_start">Start the 3-day demo trial</string>
+    <string name="demo_trial_active_title">Demo trial: Pro until %1$s</string>
+    <string name="demo_trial_active_body">This is a demo of the free-trial flow in this build. It ends by itself and nothing is charged.</string>
+    <string name="demo_trial_ended_title">Demo trial ended</string>
+    <string name="demo_trial_ended_body">The 3-day demo of the free-trial flow has ended. It can be used once on this phone.</string>
+</resources>

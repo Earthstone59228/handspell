@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reward_title">%1$s complete</string>
+    <plurals name="reward_today">
+        <item quantity="one">%1$d completed today</item>
+        <item quantity="other">%1$d completed today</item>
+    </plurals>
+    <plurals name="reward_next_milestone">
+        <item quantity="one">%1$d more day to the %2$d-day mark</item>
+        <item quantity="other">%1$d more days to the %2$d-day mark</item>
+    </plurals>
+    <string name="reward_milestone">You reached the %1$d-day mark. Nice and steady.</string>
+    <string name="reward_past_milestones">Past every mark. Keep it going at your own pace.</string>
+</resources>

@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import dev.handspell.app.billing.EntitlementGate
 import dev.handspell.app.billing.EntitlementStatus
-import dev.handspell.app.billing.NoopEntitlementGate
 import dev.handspell.app.billing.PaywallSource
 import dev.handspell.app.billing.RestoreResult
 import dev.handspell.app.core.model.Letter
@@ -70,7 +69,7 @@ class SettingsViewModel(
 ) : ViewModel() {
     private val localUi = MutableStateFlow(LocalUi())
     private val initial = SettingsUiState(
-        billingConfigured = entitlementGate !is NoopEntitlementGate,
+        billingConfigured = entitlementGate.billingConfigured,
         classifierModelId = classifierModelId,
         versionName = buildInfo.versionName,
         versionCode = buildInfo.versionCode,

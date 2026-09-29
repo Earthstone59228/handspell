@@ -1,0 +1,185 @@
+{
+  "version": 2,
+  "words": [
+    {
+      "gloss": "hello",
+      "display": "hello",
+      "tier": "free"
+    },
+    {
+      "gloss": "bye",
+      "display": "bye",
+      "tier": "free"
+    },
+    {
+      "gloss": "thankyou",
+      "display": "thank you",
+      "tier": "free"
+    },
+    {
+      "gloss": "yes",
+      "display": "yes",
+      "tier": "free"
+    },
+    {
+      "gloss": "happy",
+      "display": "happy",
+      "tier": "free"
+    },
+    {
+      "gloss": "sad",
+      "display": "sad",
+      "tier": "free"
+    },
+    {
+      "gloss": "hungry",
+      "display": "hungry",
+      "tier": "free"
+    },
+    {
+      "gloss": "drink",
+      "display": "drink",
+      "tier": "free"
+    },
+    {
+      "gloss": "water",
+      "display": "water",
+      "tier": "free"
+    },
+    {
+      "gloss": "mom",
+      "display": "mom",
+      "tier": "free"
+    },
+    {
+      "gloss": "dad",
+      "display": "dad",
+      "tier": "free"
+    },
+    {
+      "gloss": "home",
+      "display": "home",
+      "tier": "free"
+    },
+    {
+      "gloss": "bird",
+      "display": "bird",
+      "tier": "pro"
+    },
+    {
+      "gloss": "uncle",
+      "display": "uncle",
+      "tier": "pro"
+    },
+    {
+      "gloss": "horse",
+      "display": "horse",
+      "tier": "pro"
+    },
+    {
+      "gloss": "cow",
+      "display": "cow",
+      "tier": "pro"
+    },
+    {
+      "gloss": "cry",
+      "display": "cry",
+      "tier": "pro"
+    },
+    {
+      "gloss": "sick",
+      "display": "sick",
+      "tier": "pro"
+    },
+    {
+      "gloss": "boy",
+      "display": "boy",
+      "tier": "pro"
+    },
+    {
+      "gloss": "girl",
+      "display": "girl",
+      "tier": "pro"
+    },
+    {
+      "gloss": "aunt",
+      "display": "aunt",
+      "tier": "pro"
+    },
+    {
+      "gloss": "read",
+      "display": "read",
+      "tier": "pro"
+    },
+    {
+      "gloss": "talk",
+      "display": "talk",
+      "tier": "pro"
+    },
+    {
+      "gloss": "red",
+      "display": "red",
+      "tier": "pro"
+    },
+    {
+      "gloss": "black",
+      "display": "black",
+      "tier": "pro"
+    },
+    {
+      "gloss": "wake",
+      "display": "wake",
+      "tier": "pro"
+    },
+    {
+      "gloss": "now",
+      "display": "now",
+      "tier": "pro"
+    },
+    {
+      "gloss": "think",
+      "display": "think",
+      "tier": "pro"
+    },
+    {
+      "gloss": "tomorrow",
+      "display": "tomorrow",
+      "tier": "pro"
+    },
+    {
+      "gloss": "yellow",
+      "display": "yellow",
+      "tier": "pro"
+    },
+    {
+      "gloss": "green",
+      "display": "green",
+      "tier": "pro"
+    },
+    {
+      "gloss": "mad",
+      "display": "mad",
+      "tier": "pro"
+    },
+    {
+      "gloss": "morning",
+      "display": "morning",
+      "tier": "pro"
+    },
+    {
+      "gloss": "brother",
+      "display": "brother",
+      "tier": "pro"
+    },
+    {
+      "gloss": "grandpa",
+      "display": "grandpa",
+      "tier": "pro"
+    },
+    {
+      "gloss": "cat",
+      "display": "cat",
+      "tier": "pro"
+    }
+  ]
+}

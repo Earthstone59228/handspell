@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /** Where a paywall was triggered from. Logged to RevenueCat as the presentation source. */
-enum class PaywallSource { STORY_LESSON, SPEED_CHALLENGE, SETTINGS, PROGRESS_DETAIL }
+enum class PaywallSource { STORY_LESSON, SPEED_CHALLENGE, SETTINGS, PROGRESS_DETAIL, MAIN_MENU, WORDS, STREAK_MILESTONE, SPEED_LIMIT }
 
 enum class RestoreResult { RESTORED, NOTHING_TO_RESTORE, FAILED }
 enum class PurchaseResult { PURCHASED, CANCELLED, FAILED }
@@ -17,6 +17,8 @@ data class PaywallPackage(
     val period: BillingPeriod,
     val amountMicros: Long = 0,
     val currencyCode: String = "",
+    /** The store's introductory free phase on this package, if RevenueCat reports one; null means no trial. */
+    val freeTrial: FreeTrialTerms? = null,
 )
 
 /** Entitlement fetch lifecycle, so the UI can distinguish "not Pro" from "don't know yet". */
@@ -59,4 +61,15 @@ interface EntitlementGate {
     suspend fun loadPackages(): List<PaywallPackage>
 
     suspend fun purchase(packageId: String, activity: Activity): PurchaseResult
+
+    /** False in builds with no RevenueCat key: purchases and restore are unavailable, and the UI says so. */
+    val billingConfigured: Boolean get() = true
+
+    /** The local demo of the free-trial flow (see [DemoTrialState]). */
+    val demoTrial: StateFlow<DemoTrialState> get() = NO_DEMO_TRIAL
+
+    /** Starts the demo trial if it has never been started. */
+    suspend fun startDemoTrial() {}
 }
+
+private val NO_DEMO_TRIAL: StateFlow<DemoTrialState> = kotlinx.coroutines.flow.MutableStateFlow(DemoTrialState.NotStarted)

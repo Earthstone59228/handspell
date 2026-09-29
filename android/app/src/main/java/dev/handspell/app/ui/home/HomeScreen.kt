@@ -124,34 +124,10 @@ private fun PracticeCatalogue(state: HomeUiState, onSelectDrill: (PackItem.Drill
                     Text(pack.title, style = MaterialTheme.typography.titleMedium)
                     Text(pack.summary, style = MaterialTheme.typography.bodyMedium,
                         color = LocalAslColors.current.onSurfaceSecondary)
-                    if (!state.isPro) Row(
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        PackLockIcon(LocalAslColors.current.onSurfaceSecondary)
-                        Text(stringResource(R.string.home_pro_label), style = MaterialTheme.typography.labelMedium,
-                            color = LocalAslColors.current.onSurfaceSecondary)
-                    }
+                    if (!state.isPro) dev.handspell.app.ui.components.ProLockLabel(LocalAslColors.current.onSurfaceSecondary)
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun PackLockIcon(color: Color) {
-    Canvas(Modifier.size(Spacing.md)) {
-        drawRoundRect(
-            color, topLeft = Offset(size.width * 0.3f, size.height * 0.1f),
-            size = Size(size.width * 0.4f, size.height * 0.55f),
-            cornerRadius = CornerRadius(size.width * 0.2f),
-            style = Stroke(width = size.width * 0.09f),
-        )
-        drawRoundRect(
-            color, topLeft = Offset(size.width * 0.16f, size.height * 0.45f),
-            size = Size(size.width * 0.68f, size.height * 0.48f),
-            cornerRadius = CornerRadius(size.width * 0.09f),
-        )
     }
 }
 

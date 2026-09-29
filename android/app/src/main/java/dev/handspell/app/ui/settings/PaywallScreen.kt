@@ -31,6 +31,10 @@ import dev.handspell.app.billing.BillingPeriod
 import dev.handspell.app.billing.PaywallPackage
 import dev.handspell.app.billing.PurchaseResult
 import dev.handspell.app.billing.RestoreResult
+import dev.handspell.app.billing.DemoTrialState
+import dev.handspell.app.ui.pro.DemoTrialGroup
+import dev.handspell.app.ui.pro.trialLength
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.handspell.app.content.ContentPack
 import dev.handspell.app.content.PackKind
 import androidx.compose.foundation.border
@@ -53,6 +57,8 @@ fun PaywallRoute(gate: EntitlementGate, packs: List<ContentPack>, onBack: () -> 
     var working by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<PurchaseResult?>(null) }
     var restore by remember { mutableStateOf<RestoreResult?>(null) }
+    val demoTrial by gate.demoTrial.collectAsStateWithLifecycle()
+    val isPro by gate.isPro.collectAsStateWithLifecycle()
     LaunchedEffect(gate) {
         runCatchingUnlessCancelled { gate.loadPackages() }.onSuccess {
             packages = it
@@ -98,6 +104,9 @@ fun PaywallRoute(gate: EntitlementGate, packs: List<ContentPack>, onBack: () -> 
             }
         },
         onBack = onBack,
+        demoTrial = demoTrial,
+        isPro = isPro,
+        onStartDemoTrial = { scope.launch { gate.startDemoTrial(); onBack() } },
     )
 }
 
@@ -115,6 +124,9 @@ private fun PaywallScreen(
     onPurchase: () -> Unit,
     onRestore: () -> Unit,
     onBack: () -> Unit,
+    demoTrial: DemoTrialState = DemoTrialState.NotStarted,
+    isPro: Boolean = false,
+    onStartDemoTrial: () -> Unit = {},
 ) {
     val colors = LocalAslColors.current
     Column(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
@@ -131,6 +143,9 @@ private fun PaywallScreen(
                 }
             }
         } else Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge)
+        dev.handspell.app.ui.pro.ProComparison()
+        // A real Pro user (not on the demo) has nothing to try.
+        DemoTrialGroup(demoTrial, isRealPro = isPro && demoTrial !is DemoTrialState.Active, onStart = onStartDemoTrial)
         Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
         Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
         when {
@@ -165,6 +180,11 @@ private fun PaywallScreen(
                                     R.string.paywall_price, item.price,
                                     stringResource(if (item.period == BillingPeriod.YEAR) R.string.paywall_year else R.string.paywall_month),
                                 ), style = MaterialTheme.typography.bodyLarge)
+                                item.freeTrial?.let { terms ->
+                                    Text(stringResource(R.string.trial_store_terms, trialLength(terms), item.price,
+                                        stringResource(if (item.period == BillingPeriod.YEAR) R.string.paywall_year else R.string.paywall_month)),
+                                        style = MaterialTheme.typography.bodyLarge)
+                                }
                                 Text(stringResource(R.string.paywall_renewal), style = MaterialTheme.typography.bodyMedium,
                                     color = colors.onSurfaceSecondary)
                                 val saving = annualSavingPercent(monthly, item)

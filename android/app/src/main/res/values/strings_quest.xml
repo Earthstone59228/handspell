@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="quest_header">Today’s quest</string>
+    <plurals name="quest_letters">
+        <item quantity="one">Complete %1$d letter today</item>
+        <item quantity="other">Complete %1$d letters today</item>
+    </plurals>
+    <plurals name="quest_words">
+        <item quantity="one">Complete %1$d word today</item>
+        <item quantity="other">Complete %1$d words today</item>
+    </plurals>
+    <string name="quest_speed">Finish a speed round</string>
+    <string name="quest_progress">%1$d of %2$d</string>
+    <string name="quest_done">Done</string>
+    <string name="quest_go_letters">Go to letters</string>
+    <string name="quest_go_words">Go to words</string>
+    <string name="quest_go_speed">Go to the speed challenge</string>
+    <string name="quest_complete_title">Today’s quest is done</string>
+    <string name="quest_complete_tile">Quest done</string>
+</resources>

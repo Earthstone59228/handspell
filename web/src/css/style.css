@@ -34,7 +34,7 @@ button {
   top:0;
   left:0;
   right:0;
-  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 23px) 20px 20px 20px;
+  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 11px) 20px 20px 20px;
   background:#1D1D1FCC;
   backdrop-filter:blur(22px);
   -webkit-backdrop-filter:blur(22px)
@@ -45,7 +45,33 @@ button {
   justify-content:space-between;
   gap:10px
 }
+.header-back {
+  display:grid;
+  place-items:center;
+  flex:none;
+  width:44px;
+  height:44px;
+  margin-left:-12px;
+  margin-right:-6px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:#F5F5F7;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent
+}
+.header-back svg {
+  display:block;
+  width:30px;
+  height:30px
+}
+.header-back:focus-visible {
+  outline:2px solid #007AFF;
+  outline-offset:2px;
+  border-radius:8px
+}
 h1 {
+  flex:1;
   margin:0;
   font-size:clamp(28px,8vw,34px);
   font-weight:700;
@@ -128,7 +154,7 @@ h1 {
   overflow-anchor:none;
   overscroll-behavior:contain;
   scrollbar-width:none;
-  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 160px) 66px calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 18px) 20px;
+  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 148px) 66px calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 18px) 20px;
   scroll-padding-top:8px
 }
 .letter-scroll::-webkit-scrollbar {
@@ -248,7 +274,7 @@ html.left-handed .letter-list {
 .alphabet-index {
   position:absolute;
   z-index:5;
-  top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 160px);
+  top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 148px);
   right:7px;
   bottom:calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 13px);
   display:grid;
@@ -407,8 +433,17 @@ html.left-handed .index-surface {
   background:#F5F5F7;
   color:#1D1D1F
 }
-.sheet-actions[hidden],.undo-button[hidden] {
+.sheet-actions[hidden],.sheet-actions [hidden],.undo-button[hidden],.practice-status[hidden] {
   display:none
+}
+.practice-status {
+  margin:8px 0 0;
+  color:#F5F5F7;
+  font-size:11px;
+  font-weight:650;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  opacity:.62
 }
 .undo-button {
   display:block;
@@ -542,7 +577,7 @@ html.left-handed .index-surface {
   right:16px
 }
 .screen-back {
-  top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 18px);
+  top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 6px);
   left:14px;
   touch-action:none;
   -webkit-tap-highlight-color:transparent;
@@ -593,4 +628,69 @@ html.left-handed .index-surface {
   .letter-list,.letter-card,.index-glyph,.modal-backdrop,.practice-sheet {
     transition-duration:.01ms!important
   }
+}
+/* Light appearance: the same four colours swapped (Paper ground, Ink text, white cards, Blue for actions), set from the
+   app's Theme setting through the bridge. Nothing new is introduced; tints are these colours at lower opacity. */
+html.theme-light {
+  color-scheme:light
+}
+html.theme-light,html.theme-light body {
+  color:#1D1D1F;
+  background:#F5F5F7
+}
+html.theme-light .app-shell,html.theme-light .setup-screen,html.theme-light .utility-screen {
+  background:#F5F5F7;
+  color:#1D1D1F
+}
+html.theme-light .top-area {
+  background:#F5F5F7CC
+}
+html.theme-light .header-icon,html.theme-light .header-back,html.theme-light .nav-control,html.theme-light .progress-line,
+html.theme-light .index-cell,html.theme-light .practice-status {
+  color:#1D1D1F
+}
+html.theme-light .streak-chip {
+  border-color:#1D1D1F24;
+  background:#FFFFFF;
+  color:#1D1D1F
+}
+html.theme-light .letter-card {
+  background:#FFFFFF;
+  box-shadow:0 0 0 1px #1D1D1F14
+}
+html.theme-light .letter-card.selected {
+  box-shadow:0 0 0 1px #007AFF99
+}
+html.theme-light .index-surface {
+  fill:#FFFFFF;
+  stroke:#1D1D1F24
+}
+html.theme-light .index-cell.active {
+  color:#007AFF
+}
+html.theme-light .index-cell.active .index-glyph {
+  border-color:#1D1D1F24;
+  background:#FFFFFF;
+  box-shadow:0 4px 14px #1D1D1F24
+}
+html.theme-light .modal-backdrop {
+  background:#F5F5F799
+}
+html.theme-light .practice-sheet {
+  border-color:#1D1D1F24;
+  background:#F5F5F7E6;
+  box-shadow:0 -14px 38px #1D1D1F24;
+  color:#1D1D1F
+}
+html.theme-light .practice-letter {
+  background:#FFFFFF;
+  box-shadow:0 0 0 1px #1D1D1F14
+}
+html.theme-light .complete-button {
+  background:#FFFFFF;
+  color:#1D1D1F;
+  box-shadow:0 0 0 1px #1D1D1F24
+}
+html.theme-light .setup-confirm:focus-visible {
+  outline-color:#1D1D1F
 }

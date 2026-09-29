@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="insights_title">Insights</string>
+    <string name="insights_suggestion_title">Next up</string>
+    <string name="insights_suggestion_one">Practise %1$s next</string>
+    <string name="insights_suggestion_two">Practise %1$s and %2$s next</string>
+    <string name="insights_suggestion_none">Keep mixing letters. Nothing stands out yet.</string>
+    <string name="insights_weakest">Lowest match rate</string>
+    <string name="insights_weakest_none">No letter stands out yet</string>
+    <string name="insights_this_week">Letters practised this week</string>
+    <plurals name="insights_letters">
+        <item quantity="one">%1$d letter</item>
+        <item quantity="other">%1$d letters</item>
+    </plurals>
+    <string name="insights_average">Average time to a match</string>
+    <string name="insights_seconds">%1$.1f s</string>
+    <string name="insights_not_enough">Not enough matches yet</string>
+    <string name="insights_best_speed">Best speed score</string>
+    <plurals name="insights_matches">
+        <item quantity="one">%1$d match</item>
+        <item quantity="other">%1$d matches</item>
+    </plurals>
+    <string name="insights_footer">Worked out on this phone from your camera practice. A match rate counts letters tried at least twice.</string>
+    <string name="insights_footer_locked">Insights are part of Pro. They are worked out on this phone from the practice you have already done.</string>
+    <string name="compare_insights">Progress insights</string>
+    <string name="compare_preview">Preview</string>
+</resources>

@@ -63,6 +63,8 @@ object AslPalette {
     val Paper = Color(0xFFF5F5F7)
     val Blue = Color(0xFF007AFF)
     val Slate = Color(0xFF2C2C2E)
+    /** The web menu's white (buttons' text, and the light appearance's cards). */
+    val White = Color(0xFFFFFFFF)
 }
 
 data class AslColors(
@@ -85,6 +87,10 @@ data class AslColors(
     val feedbackAdjust: Color,
     val feedbackNeutral: Color,
     val destructive: Color,
+    /** The alphabet menu's letter cards: an off-white card with dark text, raised against the dark ground. */
+    val card: Color = AslPalette.Paper,
+    val onCard: Color = AslPalette.Ink,
+    val onCardSecondary: Color = AslPalette.Ink.copy(alpha = 0.62f),
 )
 
 private val AslDarkColors = AslColors(
@@ -106,7 +112,56 @@ private val AslDarkColors = AslColors(
     destructive = AslPalette.Paper,
 )
 
+/**
+ * Light appearance: the same palette swapped, as the web menu's light mode does. Paper ground, Ink text, white cards
+ * and rows, Blue for actions; secondary text and hairlines are Ink at the dark theme's opacities.
+ */
+private val AslLightColors = AslColors(
+    label = AslPalette.Ink,
+    labelSecondary = AslPalette.Ink.copy(alpha = 0.62f),
+    labelTertiary = AslPalette.Ink.copy(alpha = 0.45f),
+    backgroundGrouped = AslPalette.Paper,
+    surface = AslPalette.White,
+    onSurface = AslPalette.Ink,
+    onSurfaceSecondary = AslPalette.Ink.copy(alpha = 0.62f),
+    separator = AslPalette.Ink.copy(alpha = 0.14f),
+    accent = AslPalette.Blue,
+    onAccent = AslPalette.Paper,
+    feedbackMatch = AslPalette.Blue,
+    feedbackAdjust = AslPalette.Ink,
+    feedbackNeutral = AslPalette.Ink.copy(alpha = 0.62f),
+    destructive = AslPalette.Ink,
+    card = AslPalette.White,
+    onCard = AslPalette.Ink,
+    onCardSecondary = AslPalette.Ink.copy(alpha = 0.62f),
+)
+
 val LocalAslColors = staticCompositionLocalOf { AslDarkColors }
+
+/** The resolved appearance (the Theme setting, with System read from the phone). */
+val LocalDarkTheme = staticCompositionLocalOf { true }
+
+/** System follows the phone; Light and Dark are fixed. */
+fun resolveDark(mode: ThemeMode, systemDark: Boolean): Boolean = when (mode) {
+    ThemeMode.SYSTEM -> systemDark
+    ThemeMode.LIGHT -> false
+    ThemeMode.DARK -> true
+}
+
+/** The main menu's quick toggle: always flips what is on screen now, and stores an explicit Light or Dark. */
+fun toggledTheme(mode: ThemeMode, systemDark: Boolean): ThemeMode =
+    if (resolveDark(mode, systemDark)) ThemeMode.LIGHT else ThemeMode.DARK
+
+/**
+ * True when the system animator scale is 0 (Settings > Accessibility > Remove animations). Every animation checks it
+ * and becomes an instant state change (docs/DESIGN.md §1, Shape and motion).
+ */
+val LocalReduceMotion = staticCompositionLocalOf { false }
+
+internal fun reduceMotionEnabled(context: android.content.Context): Boolean =
+    android.provider.Settings.Global.getFloat(
+        context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f,
+    ) == 0f
 
 object AslText {
     val largeTitle = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 38.sp, letterSpacing = (-1.5).sp)
@@ -118,19 +173,19 @@ object AslText {
     val callout = TextStyle(fontFamily = FontFamily.Default, fontSize = 16.sp, lineHeight = 22.sp)
     val subhead = TextStyle(fontFamily = FontFamily.Default, fontSize = 15.sp, lineHeight = 20.sp)
     val footnote = TextStyle(fontFamily = FontFamily.Default, fontSize = 13.sp, lineHeight = 18.sp)
+    /** The alphabet sheet's big letter tile (web `.practice-letter`), for a single letter on a reward card. */
+    val hero = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, fontSize = 96.sp, lineHeight = 100.sp, letterSpacing = (-3).sp)
     /** Small uppercase-style section label, like the alphabet's progress line. */
     val eyebrow = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 1.sp)
 }
 
-/**
- * The app is dark-only, matching the alphabet menu. [themeMode] is still accepted so the saved preference and
- * the caller keep compiling; it no longer changes the palette.
- */
+/** Dark (the alphabet menu's look) or its light counterpart, from the Theme setting. */
 @Composable
-@Suppress("UNUSED_PARAMETER")
 fun HandspellTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, content: @Composable () -> Unit) {
-    val colors = AslDarkColors
-    val scheme: ColorScheme = darkColorScheme(
+    val dark = resolveDark(themeMode, androidx.compose.foundation.isSystemInDarkTheme())
+    val colors = if (dark) AslDarkColors else AslLightColors
+    val base: ColorScheme = if (dark) darkColorScheme() else androidx.compose.material3.lightColorScheme()
+    val scheme: ColorScheme = base.copy(
         primary = colors.accent, onPrimary = colors.onAccent,
         background = colors.backgroundGrouped, onBackground = colors.label,
         surface = colors.backgroundGrouped, onSurface = colors.label,
@@ -141,7 +196,9 @@ fun HandspellTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, content: @Composable
         secondaryContainer = colors.accent, onSecondaryContainer = colors.onAccent,
         error = colors.label, onError = colors.backgroundGrouped,
     )
-    androidx.compose.runtime.CompositionLocalProvider(LocalAslColors provides colors) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val reduceMotion = androidx.compose.runtime.remember(context) { reduceMotionEnabled(context) }
+    androidx.compose.runtime.CompositionLocalProvider(LocalAslColors provides colors, LocalReduceMotion provides reduceMotion, LocalDarkTheme provides dark) {
         MaterialTheme(
             colorScheme = scheme,
             typography = androidx.compose.material3.Typography(

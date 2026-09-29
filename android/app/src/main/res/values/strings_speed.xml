@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="speed_challenge_title">Speed challenge</string>
+    <string name="speed_challenge_body">Sign as many as you can in %1$d seconds. A match scores and the next one appears.</string>
+    <string name="speed_challenge_mode">Choose</string>
+    <string name="speed_challenge_best">Best: %1$d</string>
+    <string name="speed_access_free">1 free round today.</string>
+    <string name="speed_access_pro">Pro: as many rounds as you like.</string>
+    <string name="speed_access_used">Today’s free round is used. The next one is ready at midnight, in %1$d h %2$d min.</string>
+    <string name="speed_access_pro_note">Pro includes unlimited speed rounds, as well as the story lessons and timed speed packs.</string>
+    <string name="speed_challenge_footer">Skips don’t score. Leaving a round early still uses the free round for today.</string>
+    <string name="speed_choose_mode">Back to the challenge</string>
+    <plurals name="speed_challenge_score_letters">
+        <item quantity="one">%1$d letter matched</item>
+        <item quantity="other">%1$d letters matched</item>
+    </plurals>
+    <plurals name="speed_challenge_score_words">
+        <item quantity="one">%1$d word matched</item>
+        <item quantity="other">%1$d words matched</item>
+    </plurals>
+    <string name="menu_speed_title">Speed challenge</string>
+    <string name="menu_speed_free">Sign against the clock. 1 free round a day.</string>
+    <string name="menu_speed_used">Today’s free round is used. Back at midnight.</string>
+    <string name="menu_speed_pro">Sign against the clock, as often as you like.</string>
+</resources>

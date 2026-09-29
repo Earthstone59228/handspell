@@ -5,6 +5,7 @@ import android.content.res.AssetManager
 import dev.handspell.app.billing.EntitlementGate
 import dev.handspell.app.billing.NoopEntitlementGate
 import dev.handspell.app.billing.RevenueCatEntitlementGate
+import dev.handspell.app.billing.TrialAwareEntitlementGate
 import dev.handspell.app.BuildConfig
 import dev.handspell.app.content.AssetContentRepository
 import dev.handspell.app.content.ContentRepository
@@ -22,6 +23,9 @@ import dev.handspell.app.vision.classify.MlpWeights
 import dev.handspell.app.vision.detector.CameraSignDetector
 import dev.handspell.app.vision.feedback.DefaultFeedbackEngine
 import dev.handspell.app.vision.normalize.DefaultHandNormalizer
+import dev.handspell.app.vision.words.CameraWordDetector
+import dev.handspell.app.vision.words.WordClassifier
+import dev.handspell.app.vision.words.WordDetector
 
 /**
  * Hand-written dependency graph (docs/ARCHITECTURE.md §6) — no Hilt. Constructed once in
@@ -37,11 +41,15 @@ class AppContainer(context: Context) {
 
     val appPreferencesStore: AppPreferencesStore = DataStoreAppPreferencesStore(context)
     val progressStore: ProgressStore = DataStoreProgressStore(context)
-    val entitlementGate: EntitlementGate = if (BuildConfig.REVENUECAT_API_KEY.isBlank()) {
-        NoopEntitlementGate()
-    } else {
-        RevenueCatEntitlementGate(context, BuildConfig.REVENUECAT_API_KEY)
-    }
+    val entitlementGate: EntitlementGate = TrialAwareEntitlementGate(
+        inner = if (BuildConfig.REVENUECAT_API_KEY.isBlank()) {
+            NoopEntitlementGate()
+        } else {
+            RevenueCatEntitlementGate(context, BuildConfig.REVENUECAT_API_KEY)
+        },
+        trialStartedAt = appPreferencesStore.demoTrialStartedAt,
+        startTrial = appPreferencesStore::setDemoTrialStartedAt,
+    )
 
     private val classifierLoad = try {
         ClassifierLoad(classifier = loadClassifier(context.assets), failure = null)
@@ -64,6 +72,30 @@ class AppContainer(context: Context) {
         feedbackEngine = DefaultFeedbackEngine(),
         initialFailure = classifierFailure,
     )
+
+    /**
+     * Word signs. Built on first use so the letter menu never pays for it. A missing or unreadable model gives a null
+     * classifier, which puts the detector in its Failed state; the word drill then says word signs aren't available
+     * in this build instead of crashing.
+     */
+    val wordDetector: WordDetector by lazy {
+        val free = loadWordModel(context.assets, WordClassifier.ASSET_NAME)
+        val pro = loadWordModel(context.assets, WordClassifier.PRO_ASSET_NAME)
+        CameraWordDetector(context.applicationContext, free, extraClassifiers = listOfNotNull(pro))
+    }
+
+    /** A word model, or null when its asset is missing or unreadable (never a crash). */
+    private fun loadWordModel(assets: AssetManager, name: String): WordClassifier? = try {
+        WordClassifier.load({ assets.open(name) }, name)
+    } catch (_: ClassifierAssetException) {
+        null
+    } catch (_: IllegalArgumentException) {
+        null
+    } catch (_: IllegalStateException) {
+        null
+    } catch (_: java.io.IOException) {
+        null
+    }
 
     private fun loadClassifier(assets: AssetManager): LetterClassifier {
         return try {

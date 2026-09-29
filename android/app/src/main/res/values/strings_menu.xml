@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Main menu -->
+    <string name="menu_hero_body">Practise ASL fingerspelling and first words with your camera.</string>
+    <string name="menu_open_paper">Open documents</string>
+    <string name="menu_open_settings">Open settings</string>
+    <string name="menu_theme_to_light">Switch to light appearance</string>
+    <string name="menu_theme_to_dark">Switch to dark appearance</string>
+    <string name="menu_letters">Letters</string>
+    <string name="menu_letters_meta">%1$d of %2$d complete</string>
+    <string name="menu_words">Words</string>
+    <string name="menu_words_meta">%1$d of %2$d complete</string>
+    <plurals name="menu_streak_days">
+        <item quantity="one">%1$d-day streak</item>
+        <item quantity="other">%1$d-day streak</item>
+    </plurals>
+    <string name="menu_streak_none">No streak yet</string>
+    <string name="menu_streak_start">Practise a letter or a word to start one.</string>
+    <string name="menu_streak_today_done">Today counts. See your week.</string>
+    <string name="menu_streak_today_pending">Practise today to keep it.</string>
+
+    <!-- Words menu -->
+    <string name="words_title">Words</string>
+    <string name="words_hero_body">%1$d of %2$d complete</string>
+    <string name="words_empty">No words are bundled with this build.</string>
+    <string name="words_footer">Words are checked on this phone, like letters. Mark complete is your own record.</string>
+    <string name="words_card_description">Practise the word %1$s</string>
+    <string name="words_card_complete_description">Practise the word %1$s, complete</string>
+    <string name="words_card_locked_description">%1$s, included with Pro</string>
+    <string name="words_card_complete">complete</string>
+    <string name="words_sheet_title">%1$s</string>
+    <string name="words_sheet_title_complete">%1$s · complete</string>
+    <string name="words_practice">Practice</string>
+    <string name="mark_complete">Mark complete</string>
+    <string name="mark_complete_undo">Undo completion</string>
+
+    <!-- Word drill -->
+    <string name="word_drill_title">Word practice</string>
+    <string name="word_drill_failed_title">This word can’t be checked right now</string>
+    <string name="words_unavailable_title">Word signs aren’t available in this build yet</string>
+    <string name="words_unavailable_body">The word model isn’t included in this build. Letters work as usual.</string>
+    <string name="word_prompt">Sign it</string>
+    <string name="word_prompt_matched">Got it</string>
+    <string name="word_drill_hint">Sign the whole word at a steady pace, with your hands and face in the frame.</string>
+    <string name="word_reference">Word to sign: %1$s</string>
+    <string name="word_reference_label">Sign</string>
+    <string name="word_feedback_match">That’s %1$s</string>
+    <string name="word_feedback_trying">Keep signing</string>
+    <string name="word_feedback_no_hand">Show your hands to the camera</string>
+</resources>

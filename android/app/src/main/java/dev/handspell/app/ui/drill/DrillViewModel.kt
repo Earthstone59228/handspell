@@ -63,6 +63,12 @@ class DrillViewModel(
     )
     val uiState: StateFlow<DrillUiState> = mutableUiState.asStateFlow()
 
+    /** The letter just matched, until the screen has shown its reward ([consumeCompletion]). Never set by a skip. */
+    private val mutableCompletion = MutableStateFlow<Letter?>(null)
+    val completion: StateFlow<Letter?> = mutableCompletion.asStateFlow()
+
+    fun consumeCompletion() { mutableCompletion.value = null }
+
     /** Per-frame camera thumbnail, kept out of [uiState] so a 30 fps stream does not recompose the whole screen. */
     val previewThumbnail: StateFlow<android.graphics.Bitmap?> = signDetector.previewThumbnail
 
@@ -80,6 +86,7 @@ class DrillViewModel(
                 ) {
                     attemptRecorded = true
                     mutableUiState.value = mutableUiState.value.copy(matched = true)
+                    mutableCompletion.value = feedback.target
                     val elapsed = (monotonicTime() - startedAtMs).coerceAtLeast(0L)
                     viewModelScope.launch {
                         withContext(NonCancellable) { progressStore.recordAttempt(feedback.target, true, elapsed) }
@@ -103,6 +110,7 @@ class DrillViewModel(
         if (activeSessionKey == sessionKey) return
         activeSessionKey = sessionKey
         attemptRecorded = false
+        mutableCompletion.value = null
         startedAtMs = monotonicTime()
         signDetector.stop(this)
         signDetector.setTarget(drill.letter)

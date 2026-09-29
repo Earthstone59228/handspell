@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Very light haptic ticks on the alphabet scrubber; a normal permission, no prompt. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Android 13+: the optional daily streak reminder (off by default, asked for with a rationale first). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Both declared android:required="false": lint (PermissionImpliesUnsupportedChromeOsHardware)
          wants the general camera feature disclaimed too, since CAMERA implies it by default. -->

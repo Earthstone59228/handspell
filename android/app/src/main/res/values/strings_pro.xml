@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="menu_pro_title">What Pro adds</string>
+    <string name="menu_pro_body_free">More word signs, progress insights, unlimited speed challenges, three story lessons and three timed speed packs. All letters and the first 12 words stay free.</string>
+    <string name="menu_pro_title_active">Pro is active</string>
+    <string name="menu_pro_body_active">Your story lessons and timed speed packs are ready.</string>
+
+    <string name="compare_title">What you get</string>
+    <string name="compare_free">Free</string>
+    <string name="compare_included">Included</string>
+    <string name="compare_not_included">—</string>
+    <string name="compare_not_included_spoken">not included</string>
+    <string name="compare_letters">24 letter drills</string>
+    <string name="compare_words">First 12 words</string>
+    <string name="compare_speed">Speed challenge</string>
+    <string name="compare_speed_free">1 a day</string>
+    <string name="compare_speed_pro">Unlimited</string>
+    <string name="compare_stories">Story lessons (3)</string>
+    <string name="compare_speed_packs">Timed speed packs (3)</string>
+    <string name="compare_more_words">More word signs</string>
+    <string name="compare_row_description">%1$s. Free: %2$s. Pro: %3$s.</string>
+
+    <string name="pro_mention_milestone">Enjoying the streak? Pro adds story lessons and timed speed packs to practise with.</string>
+    <string name="pro_mention_not_now">Not now</string>
+</resources>

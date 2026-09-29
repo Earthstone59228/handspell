@@ -82,7 +82,8 @@ fun HandshapeGuide(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
         ) {
-            Text(label, style = MaterialTheme.typography.labelMedium, color = colors.label)
+            // Always light text: the card sits on a darkened patch of the camera picture in both appearances.
+            Text(label, style = MaterialTheme.typography.labelMedium, color = AslPalette.Paper)
             Canvas(Modifier.size(Spacing.referenceGuide)) {
                 // Catalog restores the recorded display orientation, including down-pointing P/Q.
                 val points = handshape.landmarks.map { landmark ->

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The alphabet menu's settings gear (web/src/index.html #open-settings), stroked, 32-unit viewBox. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="29dp"
+    android:height="29dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    <group android:translateY="-1.5">
+        <path
+            android:pathData="M13.6,3.5h4.8l0.6,3.1c0.8,0.3 1.5,0.6 2.1,1l2.8,-1.5 3.4,3.4 -1.5,2.8c0.4,0.6 0.7,1.3 1,2.1l3.1,0.6v4.8l-3.1,0.6c-0.3,0.8 -0.6,1.5 -1,2.1l1.5,2.8 -3.4,3.4 -2.8,-1.5c-0.6,0.4 -1.3,0.7 -2.1,1l-0.6,3.1h-4.8l-0.6,-3.1c-0.8,-0.3 -1.5,-0.6 -2.1,-1l-2.8,1.5 -3.4,-3.4 1.5,-2.8c-0.4,-0.6 -0.7,-1.3 -1,-2.1l-3.1,-0.6V15l3.1,-0.6c0.3,-0.8 0.6,-1.5 1,-2.1L4.7,9.5l3.4,-3.4 2.8,1.5c0.6,-0.4 1.3,-0.7 2.1,-1l0.6,-3.1Z"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.8"
+            android:strokeLineJoin="round" />
+        <path
+            android:pathData="M16,17.4m-4.1,0a4.1,4.1 0,1 1,8.2 0a4.1,4.1 0,1 1,-8.2 0"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="1.8" />
+    </group>
+</vector>

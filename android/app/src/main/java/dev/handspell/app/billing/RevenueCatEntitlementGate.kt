@@ -117,6 +117,9 @@ class RevenueCatEntitlementGate(context: Context, apiKey: String) : EntitlementG
                 period = if (item.packageType == PackageType.ANNUAL) BillingPeriod.YEAR else BillingPeriod.MONTH,
                 amountMicros = item.product.price.amountMicros,
                 currencyCode = item.product.price.currencyCode,
+                freeTrial = item.product.defaultOption?.freePhase?.billingPeriod?.let { period ->
+                    freeTrialTerms(period.value, period.unit.name)
+                },
             )
         }
     }
@@ -147,4 +150,11 @@ class RevenueCatEntitlementGate(context: Context, apiKey: String) : EntitlementG
         isPro.value = active
         status.value = EntitlementStatus.Resolved(active)
     }
+}
+
+/** RevenueCat's `Period` (value + unit name) as trial terms; unknown units or non-positive lengths mean no trial. */
+internal fun freeTrialTerms(value: Int, unitName: String): FreeTrialTerms? {
+    if (value <= 0) return null
+    val unit = TrialUnit.entries.firstOrNull { it.name == unitName } ?: return null
+    return FreeTrialTerms(value, unit)
 }

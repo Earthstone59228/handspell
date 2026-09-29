@@ -22,6 +22,7 @@ reference illustrations retain CC BY 4.0 terms as described below. Third-party c
 4. Material Symbols
    Copyright Google LLC, licensed under the Apache License 2.0.
    https://github.com/google/material-design-icons
+   Used as individual vector drawables: "local_fire_department" (Rounded), the streak mark.
 
 RevenueCat SDK (com.revenuecat.purchases:purchases) is licensed under the MIT License.
 https://github.com/RevenueCat/purchases-android

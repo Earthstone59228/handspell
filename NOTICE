@@ -22,6 +22,7 @@ reference illustrations retain CC BY 4.0 terms as described below. Third-party c
 4. Material Symbols
    Copyright Google LLC, licensed under the Apache License 2.0.
    https://github.com/google/material-design-icons
+   Used as individual vector drawables: "local_fire_department" (Rounded), the streak mark.
 
 RevenueCat SDK (com.revenuecat.purchases:purchases) is licensed under the MIT License.
 https://github.com/RevenueCat/purchases-android
@@ -45,3 +46,20 @@ The existing team-recorded A–D exemplars remain in the combined reference set.
 The original images are not bundled with the app. No endorsement by the dataset creator is implied.
 ASLYset-derived vectors and illustrations are supplied under CC BY 4.0, independently of the
 application code's MIT license. Provenance and checksums: training/data/aslyset/provenance.json.
+
+MediaPipe Pose Landmarker (lite) model
+
+pose_landmarker_lite.task (c) Google LLC, licensed under the Apache License 2.0, obtained from
+https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task
+Unmodified from the upstream download. Used only to find the nose and shoulders that word recognition measures hand
+positions against.
+
+Word-sign model training data: Google Isolated Sign Language Recognition (Kaggle "asl-signs")
+
+Google, "Google - Isolated Sign Language Recognition", Kaggle competition data (2023),
+https://www.kaggle.com/competitions/asl-signs. License: Creative Commons Attribution 4.0 International (CC BY 4.0),
+https://creativecommons.org/licenses/by/4.0/. The data is MediaPipe Holistic landmark sequences of ASL signs by 21
+signers; it contains no images or video. Handspell used the landmark sequences of 12 words plus unrelated signs to
+train the word-recognition network `classifier/words-v3.bin`, keeping only hand, nose and shoulder points. The landmark
+files are not bundled with the app. No endorsement by Google or the signers is implied. The trained network's
+weights are supplied under CC BY 4.0, independently of the application code's MIT license.

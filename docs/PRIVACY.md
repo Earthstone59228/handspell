@@ -35,8 +35,10 @@ that's running it, and a teammate moves the files off it by hand (a USB cable, o
 
 ## What is stored on your phone, and how to delete it
 
-The native app keeps one small file of camera drill counts, story steps, up to your last 50 speed-run
-results, streaks, and whether you completed onboarding. The embedded Alphabet screen separately
+The native app keeps one small file of camera drill counts (letters and words), story steps, up to your
+last 50 speed-run results, streaks and the days you practised, today's quest progress, and whether you
+completed onboarding. Its preferences file keeps your settings (appearance, layout, the daily reminder
+and its time, and when a demo trial was started). The embedded Alphabet screen separately
 keeps self-reported checkmarks and its streak in WebView local storage on this phone. An Alphabet
 checkmark does not mean the camera recognized a sign. Neither store contains photos, video, or raw
 landmark data.
@@ -79,6 +81,11 @@ charged and no real money changes hands. The paywall and Settings both say so in
   for anything else: no ads, no analytics, no content downloads (lesson content ships inside the app).
 - **Vibration** — a very light haptic tick when you drag along the alphabet scrubber or mark a letter
   complete. It never asks you anything and collects nothing.
+- **Notifications** (Android 13 and later, optional) — only for the daily streak reminder, which is off
+  until you turn it on in Settings → Reminders. It is scheduled and decided on the phone (WorkManager
+  reads your local practice record and stays quiet if you have already practised that day). Nothing is
+  sent over the network and no push service is involved. Turn it off in the same place, or deny the
+  permission, and no reminder is shown.
 
 The app asks for nothing else: no microphone, no location, no contacts, no storage access, no
 accounts.

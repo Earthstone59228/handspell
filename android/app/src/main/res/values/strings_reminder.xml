@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="reminder_keep_streak">
+        <item quantity="one">Keep your %1$d-day streak</item>
+        <item quantity="other">Keep your %1$d-day streak</item>
+    </plurals>
+    <string name="reminder_keep_streak_body">A letter or a word today keeps it going.</string>
+    <string name="reminder_start_title">Time to practise</string>
+    <string name="reminder_start_body">A letter or a word today starts a streak.</string>
+    <string name="reminder_channel_name">Streak reminder</string>
+    <string name="reminder_channel_body">One reminder a day at the time you chose, only if you have not practised yet.</string>
+
+    <string name="settings_reminders">Reminders</string>
+    <string name="settings_reminder_title">Daily streak reminder</string>
+    <string name="settings_reminder_body">One quiet reminder a day, and none once you have practised. Made on this phone; nothing is sent anywhere.</string>
+    <string name="settings_reminder_morning">Morning (9:00)</string>
+    <string name="settings_reminder_afternoon">Afternoon (14:00)</string>
+    <string name="settings_reminder_evening">Evening (19:00)</string>
+    <string name="settings_reminder_blocked">Notifications are turned off for Handspell. Allow them in system settings to get the reminder.</string>
+    <string name="reminder_rationale_title">Allow a daily reminder?</string>
+    <string name="reminder_rationale_body">Android will ask whether Handspell may show notifications. Handspell only uses this for the one daily streak reminder you turned on, and you can turn it off here at any time.</string>
+    <string name="reminder_rationale_continue">Continue</string>
+</resources>

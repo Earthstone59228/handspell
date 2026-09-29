@@ -14,6 +14,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.handspell.app.prefs.ThemeMode
 import dev.handspell.app.ui.HandspellApp
 import dev.handspell.app.ui.theme.HandspellTheme
+import dev.handspell.app.ui.theme.resolveDark
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
 
 /**
  * Single activity (docs/ARCHITECTURE.md §1). `singleTop` because RevenueCat's paywall flow
@@ -22,7 +25,7 @@ import dev.handspell.app.ui.theme.HandspellTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // The app is dark-only: transparent bars with light icons, so screens can draw under the status bar.
+        // Transparent bars so screens can draw under the status bar; icon colours are set again per appearance below.
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
@@ -30,6 +33,15 @@ class MainActivity : ComponentActivity() {
         val container = (application as HandspellApplication).container
         setContent {
             val themeMode by container.appPreferencesStore.themeMode.collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
+            val dark = resolveDark(themeMode, isSystemInDarkTheme())
+            // Status and navigation bar icons follow the appearance: light icons on the dark ground, dark on light.
+            LaunchedEffect(dark) {
+                val transparent = android.graphics.Color.TRANSPARENT
+                enableEdgeToEdge(
+                    statusBarStyle = if (dark) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent),
+                    navigationBarStyle = if (dark) SystemBarStyle.dark(transparent) else SystemBarStyle.light(transparent, transparent),
+                )
+            }
             HandspellTheme(themeMode = themeMode) {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     HandspellApp(
@@ -39,6 +51,7 @@ class MainActivity : ComponentActivity() {
                         preferences = container.appPreferencesStore,
                         progressStore = container.progressStore,
                         entitlementGate = container.entitlementGate,
+                        wordDetector = { container.wordDetector },
                         onOpenCapture = if (BuildConfig.DEBUG) {
                             {
                                 startActivity(Intent().setClassName(this, DEBUG_CAPTURE_ACTIVITY))

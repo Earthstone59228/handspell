@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
@@ -52,6 +53,10 @@ internal fun FrostedSettingsHero(
     title: String = stringResource(R.string.settings),
     body: String? = stringResource(R.string.settings_hero_body),
     modifier: Modifier = Modifier,
+    /** Header icons on the title row, right-aligned, as on the alphabet menu (settings, paper). */
+    actions: (@Composable RowScope.() -> Unit)? = null,
+    /** Space above the title when there is no back chevron. */
+    topSpace: androidx.compose.ui.unit.Dp = Spacing.xxxl,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = LocalAslColors.current
@@ -89,9 +94,15 @@ internal fun FrostedSettingsHero(
         ) {
             if (onBack != null) Row(Modifier.fillMaxWidth().padding(start = BackChevronStart, top = BackChevronTop),
                 verticalAlignment = Alignment.CenterVertically) { BackChevron(onBack) }
-            else Spacer(Modifier.height(Spacing.xxxl))
-            Text(title, style = MaterialTheme.typography.displaySmall,
+            else Spacer(Modifier.height(topSpace))
+            if (actions == null) Text(title, style = MaterialTheme.typography.displaySmall,
                 modifier = Modifier.padding(horizontal = Spacing.lg).semantics { heading() })
+            else Row(Modifier.fillMaxWidth().padding(start = Spacing.lg, end = Spacing.sm),
+                verticalAlignment = Alignment.CenterVertically) {
+                Text(title, style = MaterialTheme.typography.displaySmall,
+                    modifier = Modifier.weight(1f).semantics { heading() })
+                actions()
+            }
             if (body != null) Text(body, style = MaterialTheme.typography.bodyMedium,
                 color = colors.labelSecondary,
                 modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.sm))

@@ -54,7 +54,9 @@ import dev.handspell.app.ui.theme.Spacing
 import kotlin.math.tanh
 
 internal val BackChevronStart = 12.dp
-internal val BackChevronTop = 16.dp
+// 4dp below the status bar (was 16): the owner found the frosted top bars sat too low. The 48dp touch box is unchanged,
+// and the alphabet page moved by the same 12px (web/src/css/style.css .top-area / .screen-back).
+internal val BackChevronTop = 4.dp
 
 /**
  * Header shared by every secondary screen: the alphabet menu's single back chevron at top left, then a large,
@@ -71,7 +73,7 @@ fun ScreenHeader(
     val colors = LocalAslColors.current
     Column(modifier.fillMaxWidth().background(colors.backgroundGrouped)) {
         Row(
-            // Same spot as the alphabet menu's back button (top 18, left 14, 44 box): centre 36 from the left, 40 down.
+            // Same spot as the alphabet menu's back button (top 6, left 14, 44 box): centre 36 from the left, 28 down.
             Modifier.fillMaxWidth().padding(start = BackChevronStart, end = Spacing.md, top = BackChevronTop),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -212,5 +214,31 @@ fun AslTabBar(labels: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit,
                 )
             }
         }
+    }
+}
+
+/** The neutral grey lock and "Pro" label on locked content: never the accent colour, never an advert. */
+@Composable
+fun ProLockLabel(color: Color, modifier: Modifier = Modifier) {
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(Spacing.xxs), verticalAlignment = Alignment.CenterVertically) {
+        ProLockIcon(color)
+        Text(stringResource(R.string.home_pro_label), style = MaterialTheme.typography.labelMedium, color = color)
+    }
+}
+
+@Composable
+fun ProLockIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier.size(Spacing.md)) {
+        drawRoundRect(
+            color, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.3f, size.height * 0.1f),
+            size = androidx.compose.ui.geometry.Size(size.width * 0.4f, size.height * 0.55f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width * 0.2f),
+            style = Stroke(width = size.width * 0.09f),
+        )
+        drawRoundRect(
+            color, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.16f, size.height * 0.45f),
+            size = androidx.compose.ui.geometry.Size(size.width * 0.68f, size.height * 0.48f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width * 0.09f),
+        )
     }
 }

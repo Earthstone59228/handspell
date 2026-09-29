@@ -24,6 +24,18 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.handspell.app.R
 import dev.handspell.app.billing.EntitlementGate
 import dev.handspell.app.prefs.AppPreferencesStore
+import dev.handspell.app.prefs.ThemeMode
+import dev.handspell.app.billing.DemoTrialState
+import dev.handspell.app.ui.pro.DemoTrialGroup
+import dev.handspell.app.ui.pro.demoTrialTitle
+import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.ui.components.AslButtonStyle
@@ -48,10 +60,17 @@ fun SettingsRoute(
         preferences, progressStore, clearAlphabetData, entitlementGate, classifierModelId, buildInfo,
     ))
     val state by model.uiState.collectAsStateWithLifecycle()
+    val demoTrial by entitlementGate.demoTrial.collectAsStateWithLifecycle()
+    val reminders = rememberReminderController(preferences)
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     SettingsScreen(
         state, onBack, model::askClearProgress, model::dismissDialog,
         model::confirmClearProgress, model::openPaywall, model::restorePurchases,
         model::retryEntitlement, model::setLeftHanded, onOpenCapture, onOpenPacks,
+        onSetTheme = { model.setThemeMode(it) },
+        demoTrial = demoTrial,
+        onStartDemoTrial = { scope.launch { entitlementGate.startDemoTrial() } },
+        reminders = reminders,
     )
 }
 
@@ -68,14 +87,25 @@ fun SettingsScreen(
     onSetLeftHanded: (Boolean) -> Unit,
     onOpenCapture: (() -> Unit)? = null,
     onOpenPacks: () -> Unit = {},
+    onSetTheme: (ThemeMode) -> Unit = {},
+    demoTrial: DemoTrialState = DemoTrialState.NotStarted,
+    onStartDemoTrial: () -> Unit = {},
+    reminders: ReminderController? = null,
 ) {
     val colors = LocalAslColors.current
+    androidx.compose.foundation.layout.Box {
     FrostedSettingsHero(onBack) {
+        AppearanceGroup(state.themeMode, onSetTheme)
         PracticeGroup(state, onAskClear, onSetLeftHanded)
-        SubscriptionGroup(state, onOpenPaywall, onRestore, onRetryEntitlement, onOpenPacks)
+        if (reminders != null) ReminderGroup(reminders)
+        SubscriptionGroup(state, onOpenPaywall, onRestore, onRetryEntitlement, onOpenPacks, demoTrial)
+        DemoTrialGroup(demoTrial, isRealPro = state.subscription == SubscriptionUi.PRO && demoTrial !is DemoTrialState.Active,
+            onStart = onStartDemoTrial)
         PrivacyGroup(state.classifierModelId)
         AboutGroup(state)
         if (onOpenCapture != null) DebugGroup(onOpenCapture)
+    }
+    if (reminders != null) ReminderRationale(reminders)
     }
     if (state.confirmClearProgress) {
         Dialog(onDismissRequest = onDismissClear) {
@@ -114,6 +144,38 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+}
+
+/** Theme: System, Light or Dark. The main menu's quick toggle writes the same setting. */
+@Composable
+private fun AppearanceGroup(mode: ThemeMode, onSetTheme: (ThemeMode) -> Unit) {
+    val colors = LocalAslColors.current
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        SettingsGroupHeader(stringResource(R.string.settings_appearance))
+        SettingsGroup {
+            Column(Modifier.selectableGroup()) {
+                listOf(
+                    ThemeMode.SYSTEM to R.string.settings_theme_system,
+                    ThemeMode.LIGHT to R.string.settings_theme_light,
+                    ThemeMode.DARK to R.string.settings_theme_dark,
+                ).forEachIndexed { index, (option, label) ->
+                    if (index > 0) SettingsDivider()
+                    Row(
+                        Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
+                            .selectable(selected = mode == option, role = Role.RadioButton) { onSetTheme(option) }
+                            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(stringResource(label), style = MaterialTheme.typography.bodyLarge, color = colors.onSurface,
+                            modifier = Modifier.weight(1f))
+                        if (mode == option) Text("✓", style = MaterialTheme.typography.titleLarge, color = colors.accent,
+                            modifier = Modifier.clearAndSetSemantics {})
+                    }
+                }
+            }
+        }
+        SettingsGroupFooter(stringResource(R.string.settings_theme_footer))
     }
 }
 
@@ -168,6 +230,7 @@ private fun PracticeGroup(state: SettingsUiState, onAskClear: () -> Unit, onSetL
 @Composable
 private fun SubscriptionGroup(
     state: SettingsUiState, onPaywall: () -> Unit, onRestore: () -> Unit, onRetry: () -> Unit, onOpenPacks: () -> Unit,
+    demoTrial: DemoTrialState,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.settings_pro))
@@ -181,7 +244,7 @@ private fun SubscriptionGroup(
                 val status = when (state.subscription) {
                     SubscriptionUi.CHECKING -> stringResource(R.string.settings_pro_checking)
                     SubscriptionUi.FREE -> stringResource(R.string.settings_pro_free)
-                    SubscriptionUi.PRO -> stringResource(R.string.settings_pro_active)
+                    SubscriptionUi.PRO -> demoTrialTitle(demoTrial) ?: stringResource(R.string.settings_pro_active)
                     SubscriptionUi.UNAVAILABLE -> stringResource(
                         if (state.billingConfigured) R.string.settings_pro_unavailable else R.string.settings_pro_not_configured)
                 }

@@ -54,8 +54,15 @@ fun AlphabetScreen(
     onPaper: () -> Unit,
     onNativePractice: () -> Unit,
     onProgress: () -> Unit,
+    /** Back with nothing open on the page: leave the alphabet for the main menu. */
+    onExit: () -> Unit = {},
+    /** The page's completed letters, reported whenever it saves them. */
+    onCompletedChanged: (Set<String>) -> Unit = {},
+    /** The page's "Mark complete" for one letter, for the reward and today's count. */
+    onMarkedComplete: (String) -> Unit = {},
     progressSnapshot: ProgressSnapshot? = null,
     leftHanded: Boolean = false,
+    darkTheme: Boolean = true,
     /** Camera-confirmed match counts by letter name; the web menu marks those letters complete. */
     cameraMatches: Map<String, Int> = emptyMap(),
     modifier: Modifier = Modifier,
@@ -85,7 +92,11 @@ fun AlphabetScreen(
     val currentProgress = rememberUpdatedState(onProgress)
     val currentSnapshot = rememberUpdatedState(progressSnapshot)
     val currentLeftHanded = rememberUpdatedState(leftHanded)
+    val currentDark = rememberUpdatedState(darkTheme)
     val currentMatches = rememberUpdatedState(cameraMatches)
+    val currentCompleted = rememberUpdatedState(onCompletedChanged)
+    val currentExit = rememberUpdatedState(onExit)
+    val currentMarked = rememberUpdatedState(onMarkedComplete)
     val callbacks = remember {
         AlphabetBridge(
             context.applicationContext,
@@ -96,6 +107,10 @@ fun AlphabetScreen(
             { currentSnapshot.value },
             { currentProgress.value() },
             { currentLeftHanded.value },
+            { letters -> currentCompleted.value(letters) },
+            { currentExit.value() },
+            { letter -> currentMarked.value(letter) },
+            { currentDark.value },
         )
     }
     val webView = remember(context) {
@@ -147,8 +162,11 @@ fun AlphabetScreen(
         }
     }
     BackHandler {
-        if (loadFailed) onNativePractice()
-        else webView.evaluateJavascript("window.dispatchEvent(new Event('aslNativeBack'))", null)
+        if (loadFailed || !pageReady) onExit()
+        // The page closes its topmost sheet or screen and says whether it did; with nothing open, back leaves.
+        else webView.evaluateJavascript(
+            "(() => { const f = window.aslHandleBack; if (f) return f(); window.dispatchEvent(new Event('aslNativeBack')); return true; })()",
+        ) { handled -> if (handled == "false") onExit() }
     }
     Box(modifier.fillMaxSize()) {
         if (loadFailed) AlphabetUnavailable(onNativePractice, Modifier.fillMaxSize())
@@ -168,7 +186,7 @@ fun AlphabetScreen(
                 "document.documentElement.style.setProperty('--safe-bottom','${safeBottom}px');", null,
         )
     }
-    LaunchedEffect(pageReady, cameraMatches, progressSnapshot, leftHanded) {
+    LaunchedEffect(pageReady, cameraMatches, progressSnapshot, leftHanded, darkTheme) {
         if (pageReady) webView.evaluateJavascript("window.dispatchEvent(new Event('aslNativeProgress'))", null)
     }
     DisposableEffect(webView) {
@@ -204,7 +222,32 @@ class AlphabetBridge(
     private val streakProvider: () -> ProgressSnapshot?,
     private val onProgress: () -> Unit,
     private val handednessProvider: () -> Boolean,
+    private val onCompleted: (Set<String>) -> Unit = {},
+    private val onExit: () -> Unit = {},
+    private val onMarked: (String) -> Unit = {},
+    private val darkProvider: () -> Boolean = { true },
 ) {
+    /** "light" or "dark": the app's appearance, applied by the page as it changes. */
+    @JavascriptInterface
+    fun theme(): String = themeLabel(darkProvider())
+
+    /** The learner tapped "Mark complete" for [letter] on the page. */
+    @JavascriptInterface
+    fun markedComplete(letter: String) {
+        if (letter.length == 1 && letter[0] in 'A'..'Z') dispatch { onMarked(letter) }
+    }
+
+    /** The page's completed letters as a JSON array of letter names, sent after every save. */
+    @JavascriptInterface
+    fun reportCompleted(json: String) {
+        val letters = parseCompletedLetters(json) ?: return
+        dispatch { onCompleted(letters) }
+    }
+
+    /** The header's back chevron. */
+    @JavascriptInterface
+    fun exitMenu() { dispatch(onExit) }
+
     /** `{"A":2,"B":1}`: letters the camera has confirmed, with how many times. Read by the page on load/resume. */
     @JavascriptInterface
     fun cameraMatches(): String =
@@ -274,5 +317,17 @@ internal fun streakJson(snapshot: ProgressSnapshot?, nowMs: Long): String {
     } ?: 0
     return "{\"current\":$current,\"longest\":${snapshot?.longestStreakDays ?: 0},\"today\":$practisedToday}"
 }
+
+/** `["A","B"]` to a set of single letters A–Z; anything else is rejected rather than half-read. */
+internal fun parseCompletedLetters(json: String): Set<String>? {
+    val trimmed = json.trim()
+    if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) return null
+    val body = trimmed.substring(1, trimmed.length - 1).trim()
+    if (body.isEmpty()) return emptySet()
+    val letters = body.split(",").map { it.trim().removeSurrounding("\"") }
+    return if (letters.all { it.length == 1 && it[0] in 'A'..'Z' }) letters.toSet() else null
+}
+
+internal fun themeLabel(dark: Boolean): String = if (dark) "dark" else "light"
 
 internal fun handednessLabel(leftHanded: Boolean): String = if (leftHanded) "left" else "right"

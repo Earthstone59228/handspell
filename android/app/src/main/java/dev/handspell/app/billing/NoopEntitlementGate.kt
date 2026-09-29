@@ -11,6 +11,7 @@ class NoopEntitlementGate : EntitlementGate {
     override val status = MutableStateFlow<EntitlementStatus>(EntitlementStatus.Unavailable(null))
     override val paywallRequests: Flow<PaywallSource> = emptyFlow()
     override val entitlementId: String = "pro"
+    override val billingConfigured: Boolean = false
 
     override fun requestPaywall(source: PaywallSource) = Unit
     override suspend fun refresh() = Unit

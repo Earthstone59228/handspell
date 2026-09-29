@@ -53,6 +53,12 @@ function saveProgress() {
   } catch {
     document.querySelector('#save-error').hidden = false;
   }
+  reportCompleted();
+}
+
+// The native main menu counts completed letters, so the page tells it after every save (and once on load).
+function reportCompleted() {
+  try { native?.reportCompleted?.(JSON.stringify(progress.completed)); } catch { /* the page works without it */ }
 }
 
 function renderCards() {
@@ -61,7 +67,7 @@ function renderCards() {
     const done = progress.completed.includes(letter);
     const available = isPracticable(letter);
     const label = available
-      ? `Practice letter ${letter}${done ? ', completed' : ''}`
+      ? `Practice letter ${letter}${done ? ', complete' : ''}`
       : `Letter ${letter}, not available yet: it needs motion`;
     return `<button class="letter-card${done ? ' done' : ''}${available ? '' : ' unavailable'}" id="letter-${letter}" data-letter="${letter}" type="button" aria-label="${label}"${available ? '' : ' aria-disabled="true"'}>
       <span class="card-letter" aria-hidden="true">${letter}</span>
@@ -91,7 +97,7 @@ function updateCard(letter) {
   const card = document.querySelector(`#letter-${letter}`);
   const done = progress.completed.includes(letter);
   card.classList.toggle('done', done);
-  card.setAttribute('aria-label', `Practice letter ${letter}${done ? ', completed' : ''}`);
+  card.setAttribute('aria-label', `Practice letter ${letter}${done ? ', complete' : ''}`);
   card.querySelector('.card-meta').textContent = cardMeta(letter, done);
   document.querySelector('#completion-count').textContent = `${progress.completed.length} / ${practicable.length}`;
 }
@@ -284,8 +290,10 @@ function openPractice(letter) {
   previousFocus = document.activeElement;
   document.querySelector('#practice-letter').textContent = letter;
   document.querySelector('#practice-title').textContent = `Letter ${letter}`;
+  // A complete letter stays fully practicable: Practice is always offered; only the second action changes.
   const completed = progress.completed.includes(letter);
-  document.querySelector('.sheet-actions').hidden = completed;
+  document.querySelector('#practice-status').hidden = !completed;
+  document.querySelector('#complete-practice').hidden = completed;
   document.querySelector('#undo-completion').hidden = !completed;
   modal.hidden = false;
   modal.classList.remove('closing');
@@ -391,11 +399,20 @@ document.addEventListener('keydown', event => {
     else if (!event.shiftKey && document.activeElement === last) { first.focus(); event.preventDefault(); }
   }
 });
-window.addEventListener('aslNativeBack', () => {
+// System back: close the topmost sheet or screen and report true; with nothing open, report false so the app
+// returns to the main menu.
+window.aslHandleBack = () => {
   if (!modal.hidden) closePractice();
   else if (!nextScreen.hidden) closeNext();
   else if (!setup.hidden) closeSetup();
   else if (!utility.hidden) closeUtility();
+  else return false;
+  return true;
+};
+window.addEventListener('aslNativeBack', () => { window.aslHandleBack(); });
+document.querySelector('#alphabet-back').addEventListener('click', () => {
+  if (native?.exitMenu) native.exitMenu();
+  else history.back();
 });
 
 document.querySelector('#complete-practice').addEventListener('click', () => {
@@ -413,6 +430,8 @@ document.querySelector('#complete-practice').addEventListener('click', () => {
   updateCard(letter);
   closePractice();
   confirmTick();
+  // The app shows its reward card over the page and counts the letter for today.
+  try { native?.markedComplete?.(letter); } catch { /* the page works without it */ }
 });
 
 document.querySelector('#start-practice').addEventListener('click', () => {
@@ -490,8 +509,21 @@ function syncHandedness() {
 }
 window.addEventListener('aslNativeProgress', syncHandedness);
 
+// Light or dark, from the app's Theme setting (the main menu's toggle or Settings), applied as soon as it changes.
+function syncTheme() {
+  if (!native?.theme) return;
+  let light;
+  try { light = native.theme() === 'light'; } catch { return; }
+  document.documentElement.classList.toggle('theme-light', light);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', light ? '#F5F5F7' : '#1D1D1F');
+}
+window.addEventListener('aslNativeProgress', syncTheme);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncTheme(); });
+
+syncTheme();
 renderCards();
 syncNativeMatches();
+reportCompleted();
 syncNativeStreak();
 syncHandedness();
 drawGlass();

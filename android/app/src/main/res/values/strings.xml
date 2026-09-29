@@ -2,8 +2,8 @@
 <resources>
     <string name="letter_unavailable_motion">Letter %1$s needs motion, which the camera can\'t check yet.</string>
     <string name="letter_unavailable_soon">Letter %1$s isn\'t ready for camera practice yet.</string>
-    <string name="letter_unavailable_body">You can still mark it as practised on the alphabet screen.</string>
-    <string name="alphabet_drill_unavailable">Live camera feedback is not available for letter %1$s in this build. You can still mark practice on the alphabet screen.</string>
+    <string name="letter_unavailable_body">You can still mark it complete on the alphabet screen.</string>
+    <string name="alphabet_drill_unavailable">Live camera feedback is not available for letter %1$s in this build. You can still mark it complete on the alphabet screen.</string>
     <string name="paper_title">Documents</string>
     <string name="paper_intro">Privacy and license documents included with Handspell.</string>
     <string name="paper_mit_license">Handspell license</string>

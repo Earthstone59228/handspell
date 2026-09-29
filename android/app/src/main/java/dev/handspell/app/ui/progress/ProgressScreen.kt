@@ -26,6 +26,8 @@ import dev.handspell.app.core.model.Letter
 import dev.handspell.app.progress.ProgressSnapshot
 import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.ui.components.AslCard
+import dev.handspell.app.ui.components.ProLockLabel
+import androidx.compose.runtime.remember
 import dev.handspell.app.ui.settings.FrostedSettingsHero
 import dev.handspell.app.ui.settings.SettingsActionRow
 import dev.handspell.app.ui.settings.SettingsDivider
@@ -38,14 +40,20 @@ import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 
 @Composable
-fun ProgressRoute(progressStore: ProgressStore, onBack: () -> Unit, onPractice: () -> Unit, onSettings: () -> Unit) {
+fun ProgressRoute(
+    progressStore: ProgressStore, onBack: () -> Unit, onPractice: () -> Unit, onSettings: () -> Unit,
+    isPro: Boolean = false, onSeePro: () -> Unit = {},
+) {
     val snapshot by progressStore.snapshot.collectAsStateWithLifecycle(initialValue = null)
-    ProgressScreen(snapshot, onBack, onPractice, onSettings)
+    ProgressScreen(snapshot, onBack, onPractice, onSettings, isPro, onSeePro)
 }
 
 /** Same frosted hero and grouped cards as Settings: a stat row first, then the detail groups. */
 @Composable
-private fun ProgressScreen(snapshot: ProgressSnapshot?, onBack: () -> Unit, onPractice: () -> Unit, onSettings: () -> Unit) {
+private fun ProgressScreen(
+    snapshot: ProgressSnapshot?, onBack: () -> Unit, onPractice: () -> Unit, onSettings: () -> Unit,
+    isPro: Boolean, onSeePro: () -> Unit,
+) {
     FrostedSettingsHero(
         onBack = onBack,
         title = stringResource(R.string.progress_title),
@@ -63,13 +71,13 @@ private fun ProgressScreen(snapshot: ProgressSnapshot?, onBack: () -> Unit, onPr
                         SettingsActionRow(stringResource(R.string.progress_start), onClick = onPractice)
                     }
                 }
-            else -> RecordedProgress(snapshot, onSettings)
+            else -> RecordedProgress(snapshot, onSettings, isPro, onSeePro)
         }
     }
 }
 
 @Composable
-private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit) {
+private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit, isPro: Boolean, onSeePro: () -> Unit) {
     val colors = LocalAslColors.current
     val letters = snapshot.letters.values.sortedBy { it.letter.name }
     val attempts = letters.sumOf { it.attempts }
@@ -83,6 +91,8 @@ private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit)
             Modifier.weight(1f))
         StatTile(matches.toString(), stringResource(R.string.progress_stat_matched), colors.label, Modifier.weight(1f))
     }
+
+    InsightsGroup(remember(snapshot) { insightsFor(snapshot, System.currentTimeMillis()) }, isPro, onSeePro)
 
     Group(stringResource(R.string.progress_summary)) {
         SettingsValueRow(stringResource(R.string.progress_stat_best),
@@ -117,6 +127,64 @@ private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit)
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroup { SettingsActionRow(stringResource(R.string.progress_manage_data), onClick = onSettings) }
         SettingsGroupFooter(stringResource(R.string.alphabet_progress_note))
+    }
+}
+
+/**
+ * Progress insights (Pro). Free users see the same rows as a locked preview: the questions, a neutral grey lock in
+ * place of each answer, and one "See what Pro adds" row. Nothing opens by itself.
+ */
+@Composable
+private fun InsightsGroup(insights: Insights, isPro: Boolean, onSeePro: () -> Unit) {
+    val colors = LocalAslColors.current
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        SettingsGroupHeader(stringResource(R.string.insights_title))
+        SettingsGroup {
+            Column {
+                val suggestion = when (insights.suggestion.size) {
+                    0 -> stringResource(R.string.insights_suggestion_none)
+                    1 -> stringResource(R.string.insights_suggestion_one, insights.suggestion[0].display)
+                    else -> stringResource(R.string.insights_suggestion_two, insights.suggestion[0].display, insights.suggestion[1].display)
+                }
+                InsightRow(stringResource(R.string.insights_suggestion_title), suggestion, isPro)
+                SettingsDivider()
+                InsightRow(stringResource(R.string.insights_weakest),
+                    if (insights.weakest.isEmpty()) stringResource(R.string.insights_weakest_none)
+                    else insights.weakest.joinToString(" · ") { rate ->
+                        "${rate.letter.display} ${(rate.rate * 100).toInt()}%"
+                    }, isPro)
+                SettingsDivider()
+                InsightRow(stringResource(R.string.insights_this_week),
+                    pluralStringResource(R.plurals.insights_letters, insights.practisedThisWeek, insights.practisedThisWeek), isPro)
+                SettingsDivider()
+                InsightRow(stringResource(R.string.insights_average),
+                    insights.averageMatchMs?.let { stringResource(R.string.insights_seconds, it / 1000.0) }
+                        ?: stringResource(R.string.insights_not_enough), isPro)
+                SettingsDivider()
+                InsightRow(stringResource(R.string.insights_best_speed),
+                    insights.bestSpeedScore?.let { pluralStringResource(R.plurals.insights_matches, it, it) }
+                        ?: stringResource(R.string.speed_no_best), isPro)
+                if (!isPro) {
+                    SettingsDivider()
+                    SettingsActionRow(stringResource(R.string.settings_see_pro), onClick = onSeePro)
+                }
+            }
+        }
+        SettingsGroupFooter(stringResource(if (isPro) R.string.insights_footer else R.string.insights_footer_locked))
+    }
+}
+
+@Composable
+private fun InsightRow(title: String, value: String, unlocked: Boolean) {
+    val colors = LocalAslColors.current
+    Column(
+        Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget).semantics(mergeDescendants = true) {}
+            .padding(Spacing.md),
+        verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
+    ) {
+        Text(title, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceSecondary)
+        if (unlocked) Text(value, style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+        else ProLockLabel(colors.onSurfaceSecondary)
     }
 }
 

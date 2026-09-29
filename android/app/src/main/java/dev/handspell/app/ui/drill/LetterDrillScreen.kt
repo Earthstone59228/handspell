@@ -79,8 +79,8 @@ import dev.handspell.app.vision.SignDetector
 import dev.handspell.app.vision.classify.CanonicalHandshapeCatalog
 import kotlinx.coroutines.launch
 
-private const val CAMERA_PREVIEW_ASPECT_RATIO = 0.75f
-private val CAMERA_FRAME_MAX_WIDTH = 420.dp
+internal const val CAMERA_PREVIEW_ASPECT_RATIO = 0.75f
+internal val CAMERA_FRAME_MAX_WIDTH = 420.dp
 
 /** Screen root: it owns the ViewModel; all children receive immutable state and callbacks. */
 @Composable
@@ -96,6 +96,8 @@ fun LetterDrillRoute(
     modifier: Modifier = Modifier,
     sessionKey: String = drill.id,
     showHeader: Boolean = true,
+    /** Called once per confirmed match (never for a skip), for the reward. Packs leave it null. */
+    onCompleted: ((Letter) -> Unit)? = null,
 ) {
     val viewModel: DrillViewModel = viewModel(
         key = "drill",
@@ -103,6 +105,12 @@ fun LetterDrillRoute(
     )
     LaunchedEffect(drill, drills, sessionKey) { viewModel.setDrill(drill, drills, sessionKey) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val completion by viewModel.completion.collectAsStateWithLifecycle()
+    LaunchedEffect(completion) {
+        val letter = completion ?: return@LaunchedEffect
+        if (onCompleted != null && state.sessionKey == sessionKey) onCompleted(letter)
+        viewModel.consumeCompletion()
+    }
     val scope = rememberCoroutineScope()
     LetterDrillScreen(
         state = if (state.sessionKey == sessionKey) state else DrillUiState(),
@@ -190,7 +198,7 @@ private fun DrillLoading() = Box(Modifier.fillMaxSize(), contentAlignment = Alig
 }
 
 @Composable
-private fun CameraPermissionState(
+internal fun CameraPermissionState(
     permanentlyDenied: Boolean,
     onRequest: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -341,29 +349,51 @@ private fun FeedbackBadge(feedback: SignFeedbackState) {
         is SignFeedbackState.Match -> stringResource(visual.message, feedback.target.display)
         else -> stringResource(visual.message)
     }
+    val ring = when (feedback) {
+        is SignFeedbackState.NoHand -> FeedbackRing.Dotted
+        is SignFeedbackState.NotRecognized -> FeedbackRing.Dashed
+        is SignFeedbackState.Adjust -> FeedbackRing.Solid
+        is SignFeedbackState.Match -> FeedbackRing.Filled
+    }
+    FeedbackBadgeView(stringResource(visual.glyph), message, visual.color, ring, visual.holdProgress)
+}
+
+/** Ring shapes of the three-state feedback (docs/DESIGN.md §3): each state differs in shape, not only colour. */
+internal enum class FeedbackRing { Dotted, Dashed, Solid, Filled }
+
+/** The drawn feedback badge, shared by the letter and word drills. */
+@Composable
+internal fun FeedbackBadgeView(
+    glyph: String,
+    message: String,
+    color: androidx.compose.ui.graphics.Color,
+    ring: FeedbackRing,
+    holdProgress: Float?,
+) {
+    val colors = LocalAslColors.current
     Row(Modifier.semantics { contentDescription = message; liveRegion = LiveRegionMode.Polite }, horizontalArrangement = Arrangement.spacedBy(Spacing.sm), verticalAlignment = Alignment.CenterVertically) {
         Box(
             modifier = Modifier.size(Spacing.touchTarget).drawBehind {
                 val stroke = Spacing.stroke.toPx()
                 val radius = size.minDimension / 2 - stroke / 2
-                if (visual.filled) drawCircle(visual.color, radius = radius)
+                if (ring == FeedbackRing.Filled) drawCircle(color, radius = radius)
                 else {
-                    val pattern = when (feedback) {
-                        is SignFeedbackState.NoHand -> floatArrayOf(stroke, stroke * 2)
-                        is SignFeedbackState.NotRecognized -> floatArrayOf(stroke * 3, stroke * 2)
+                    val pattern = when (ring) {
+                        FeedbackRing.Dotted -> floatArrayOf(stroke, stroke * 2)
+                        FeedbackRing.Dashed -> floatArrayOf(stroke * 3, stroke * 2)
                         else -> null
                     }
-                    drawCircle(visual.color, radius = radius,
+                    drawCircle(color, radius = radius,
                         style = Stroke(stroke, pathEffect = pattern?.let { PathEffect.dashPathEffect(it) }))
-                    visual.holdProgress?.let { progress ->
-                        drawArc(visual.color, startAngle = -90f, sweepAngle = 360f * progress.coerceIn(0f, 1f),
+                    holdProgress?.let { progress ->
+                        drawArc(color, startAngle = -90f, sweepAngle = 360f * progress.coerceIn(0f, 1f),
                             useCenter = false, style = Stroke(stroke * 2))
                     }
                 }
             },
             contentAlignment = Alignment.Center,
         ) {
-            Text(stringResource(visual.glyph), color = if (visual.filled) MaterialTheme.colorScheme.onPrimary else visual.color,
+            Text(glyph, color = if (ring == FeedbackRing.Filled) MaterialTheme.colorScheme.onPrimary else color,
                 style = MaterialTheme.typography.titleLarge)
         }
         Text(message, style = MaterialTheme.typography.bodyLarge, color = colors.label)
@@ -400,5 +430,5 @@ private fun hintText(id: String?): String = stringResource(when (id) {
     else -> R.string.hint_generic
 })
 
-private fun hasCameraPermission(context: android.content.Context): Boolean =
+internal fun hasCameraPermission(context: android.content.Context): Boolean =
     androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED

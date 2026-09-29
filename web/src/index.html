@@ -15,6 +15,7 @@
   <div class="app-shell">
     <header class="top-area">
       <div class="top-line">
+        <button class="header-back" id="alphabet-back" type="button" aria-label="Back to menu"><svg aria-hidden="true"><use href="#icon-back"></use></svg></button>
         <h1>Alphabet</h1>
         <div class="header-icons">
           <button class="header-icon" id="open-settings" type="button" aria-label="Open settings">
@@ -35,11 +36,12 @@
       <button class="nav-control sheet-close" id="close-practice" type="button" aria-label="Close practice view"><svg aria-hidden="true"><use href="#icon-close"></use></svg></button>
       <div class="practice-letter" id="practice-letter" aria-hidden="true">A</div>
       <h2 id="practice-title">Letter A</h2>
+      <p class="practice-status" id="practice-status" hidden>Complete</p>
       <div class="sheet-actions">
         <button class="practice-button" id="start-practice" type="button">Practice</button>
-        <button class="complete-button" id="complete-practice" type="button">Mark practice</button>
+        <button class="complete-button" id="complete-practice" type="button">Mark complete</button>
+        <button class="complete-button" id="undo-completion" type="button" hidden>Undo completion</button>
       </div>
-      <button class="undo-button" id="undo-completion" type="button" hidden>Undo completion</button>
     </section>
   </div>
   <section class="setup-screen" id="setup-screen" role="dialog" aria-modal="true" aria-labelledby="setup-title" hidden>
