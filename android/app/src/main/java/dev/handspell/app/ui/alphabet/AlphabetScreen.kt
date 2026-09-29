@@ -33,6 +33,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.webkit.WebViewAssetLoader
 import dev.handspell.app.R
+import dev.handspell.app.progress.ProgressSnapshot
+import dev.handspell.app.progress.localPracticeDay
 import dev.handspell.app.ui.theme.Spacing
 import java.io.ByteArrayInputStream
 
@@ -51,6 +53,8 @@ fun AlphabetScreen(
     onSettings: () -> Unit,
     onPaper: () -> Unit,
     onNativePractice: () -> Unit,
+    onProgress: () -> Unit,
+    progressSnapshot: ProgressSnapshot? = null,
     /** Camera-confirmed match counts by letter name; the web menu marks those letters complete. */
     cameraMatches: Map<String, Int> = emptyMap(),
     modifier: Modifier = Modifier,
@@ -77,6 +81,8 @@ fun AlphabetScreen(
     val currentPractice = rememberUpdatedState(onPractice)
     val currentSettings = rememberUpdatedState(onSettings)
     val currentPaper = rememberUpdatedState(onPaper)
+    val currentProgress = rememberUpdatedState(onProgress)
+    val currentSnapshot = rememberUpdatedState(progressSnapshot)
     val currentMatches = rememberUpdatedState(cameraMatches)
     val callbacks = remember {
         AlphabetBridge(
@@ -85,6 +91,8 @@ fun AlphabetScreen(
             { currentSettings.value() },
             { currentPaper.value() },
             { currentMatches.value },
+            { currentSnapshot.value },
+            { currentProgress.value() },
         )
     }
     val webView = remember(context) {
@@ -157,7 +165,7 @@ fun AlphabetScreen(
                 "document.documentElement.style.setProperty('--safe-bottom','${safeBottom}px');", null,
         )
     }
-    LaunchedEffect(pageReady, cameraMatches) {
+    LaunchedEffect(pageReady, cameraMatches, progressSnapshot) {
         if (pageReady) webView.evaluateJavascript("window.dispatchEvent(new Event('aslNativeProgress'))", null)
     }
     DisposableEffect(webView) {
@@ -190,11 +198,16 @@ class AlphabetBridge(
     private val onSettings: () -> Unit,
     private val onPaper: () -> Unit,
     private val matchesProvider: () -> Map<String, Int>,
+    private val streakProvider: () -> ProgressSnapshot?,
+    private val onProgress: () -> Unit,
 ) {
     /** `{"A":2,"B":1}`: letters the camera has confirmed, with how many times. Read by the page on load/resume. */
     @JavascriptInterface
     fun cameraMatches(): String =
         matchesProvider().entries.joinToString(",", "{", "}") { (letter, count) -> "\"$letter\":$count" }
+
+    @JavascriptInterface
+    fun streak(): String = streakJson(streakProvider(), System.currentTimeMillis())
 
     /** Very light detent for the A-Z scrubber. */
     @JavascriptInterface
@@ -215,6 +228,9 @@ class AlphabetBridge(
     @JavascriptInterface
     fun openPaper() { dispatch(onPaper) }
 
+    @JavascriptInterface
+    fun openProgress() { dispatch(onProgress) }
+
     private fun dispatch(action: () -> Unit) = android.os.Handler(android.os.Looper.getMainLooper()).post(action)
 }
 
@@ -232,12 +248,22 @@ private val BRIDGE_SCRIPT = """
           event.stopImmediatePropagation();
           document.querySelector('#close-setup')?.click();
           HandspellBridge.openPractice(letter);
-        } else if (button.id === 'open-settings' || button.id === 'open-paper') {
+        } else if (button.id === 'open-settings' || button.id === 'open-paper' || button.id === 'open-progress') {
           event.preventDefault();
           event.stopImmediatePropagation();
           if (button.id === 'open-settings') HandspellBridge.openSettings();
-          else HandspellBridge.openPaper();
+          else if (button.id === 'open-paper') HandspellBridge.openPaper();
+          else HandspellBridge.openProgress();
         }
       }, true);
     })();
 """.trimIndent()
+
+internal fun streakJson(snapshot: ProgressSnapshot?, nowMs: Long): String {
+    val today = localPracticeDay(nowMs)
+    val practisedToday = snapshot?.lastPracticeDay == today
+    val current = snapshot?.let {
+        if (it.lastPracticeDay == today || it.lastPracticeDay == today - 1) it.currentStreakDays else 0
+    } ?: 0
+    return "{\"current\":$current,\"longest\":${snapshot?.longestStreakDays ?: 0},\"today\":$practisedToday}"
+}

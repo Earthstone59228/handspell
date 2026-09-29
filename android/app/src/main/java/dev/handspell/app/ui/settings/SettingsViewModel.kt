@@ -13,6 +13,7 @@ import dev.handspell.app.prefs.AppPreferencesStore
 import dev.handspell.app.prefs.ThemeMode
 import dev.handspell.app.progress.ProgressSnapshot
 import dev.handspell.app.progress.ProgressStore
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -106,7 +107,7 @@ class SettingsViewModel(
 
     fun confirmClearProgress() = viewModelScope.launch {
         localUi.update { it.copy(confirmClearProgress = false, deletion = DeletionUi.IN_PROGRESS) }
-        val result = runCatching {
+        val result = runCatchingUnlessCancelled {
             clearAlphabetData()
             progressStore.clearAll()
         }
@@ -117,7 +118,7 @@ class SettingsViewModel(
 
     fun restorePurchases() = viewModelScope.launch {
         localUi.update { it.copy(restore = RestoreUi.IN_PROGRESS) }
-        val result = runCatching { entitlementGate.restorePurchases() }.getOrDefault(RestoreResult.FAILED)
+        val result = runCatchingUnlessCancelled { entitlementGate.restorePurchases() }.getOrDefault(RestoreResult.FAILED)
         localUi.update { it.copy(restore = when (result) {
             RestoreResult.RESTORED -> RestoreUi.RESTORED
             RestoreResult.NOTHING_TO_RESTORE -> RestoreUi.NOTHING_TO_RESTORE
@@ -125,7 +126,7 @@ class SettingsViewModel(
         }) }
     }
 
-    fun retryEntitlement() = viewModelScope.launch { runCatching { entitlementGate.refresh() } }
+    fun retryEntitlement() = viewModelScope.launch { runCatchingUnlessCancelled { entitlementGate.refresh() } }
 
     companion object {
         fun factory(
@@ -142,6 +143,9 @@ class SettingsViewModel(
         }
     }
 }
+
+internal inline fun <T> runCatchingUnlessCancelled(block: () -> T): Result<T> =
+    runCatching(block).onFailure { if (it is CancellationException) throw it }
 
 internal fun ProgressSnapshot.toSummary(): ProgressSummary {
     if (letters.isEmpty() && completedStoryStepIds.isEmpty() && speedRuns.isEmpty()) return ProgressSummary.Empty

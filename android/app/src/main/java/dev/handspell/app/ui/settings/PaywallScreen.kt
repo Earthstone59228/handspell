@@ -13,10 +13,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,18 +31,20 @@ import dev.handspell.app.billing.BillingPeriod
 import dev.handspell.app.billing.PaywallPackage
 import dev.handspell.app.billing.PurchaseResult
 import dev.handspell.app.billing.RestoreResult
+import dev.handspell.app.content.ContentPack
+import dev.handspell.app.content.PackKind
 import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.text.font.FontWeight
 import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.ui.components.AslButtonStyle
+import dev.handspell.app.ui.components.ScreenHeader
 import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
 @Composable
-fun PaywallRoute(gate: EntitlementGate, onBack: () -> Unit) {
+fun PaywallRoute(gate: EntitlementGate, packs: List<ContentPack>, onBack: () -> Unit) {
     val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
     var packages by remember { mutableStateOf<List<PaywallPackage>?>(null) }
@@ -54,12 +54,13 @@ fun PaywallRoute(gate: EntitlementGate, onBack: () -> Unit) {
     var result by remember { mutableStateOf<PurchaseResult?>(null) }
     var restore by remember { mutableStateOf<RestoreResult?>(null) }
     LaunchedEffect(gate) {
-        runCatching { gate.loadPackages() }.onSuccess {
+        runCatchingUnlessCancelled { gate.loadPackages() }.onSuccess {
             packages = it
             selectedId = null
         }.onFailure { error = true }
     }
     PaywallScreen(
+        packs = packs.filter { it.kind != PackKind.DRILL },
         packages = packages,
         selectedId = selectedId,
         error = error,
@@ -71,7 +72,7 @@ fun PaywallRoute(gate: EntitlementGate, onBack: () -> Unit) {
             error = false
             packages = null
             scope.launch {
-                runCatching { gate.loadPackages() }.onSuccess {
+                runCatchingUnlessCancelled { gate.loadPackages() }.onSuccess {
                     packages = it
                     selectedId = null
                 }.onFailure { error = true }
@@ -82,7 +83,7 @@ fun PaywallRoute(gate: EntitlementGate, onBack: () -> Unit) {
             if (id != null && activity != null) {
                 working = true
                 scope.launch {
-                    result = runCatching { gate.purchase(id, activity) }.getOrDefault(PurchaseResult.FAILED)
+                    result = runCatchingUnlessCancelled { gate.purchase(id, activity) }.getOrDefault(PurchaseResult.FAILED)
                     working = false
                     if (result == PurchaseResult.PURCHASED) onBack()
                 }
@@ -91,7 +92,7 @@ fun PaywallRoute(gate: EntitlementGate, onBack: () -> Unit) {
         onRestore = {
             working = true
             scope.launch {
-                restore = runCatching { gate.restorePurchases() }.getOrDefault(RestoreResult.FAILED)
+                restore = runCatchingUnlessCancelled { gate.restorePurchases() }.getOrDefault(RestoreResult.FAILED)
                 working = false
                 if (restore == RestoreResult.RESTORED) onBack()
             }
@@ -102,6 +103,7 @@ fun PaywallRoute(gate: EntitlementGate, onBack: () -> Unit) {
 
 @Composable
 private fun PaywallScreen(
+    packs: List<ContentPack>,
     packages: List<PaywallPackage>?,
     selectedId: String?,
     error: Boolean,
@@ -116,15 +118,21 @@ private fun PaywallScreen(
 ) {
     val colors = LocalAslColors.current
     Column(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
+      ScreenHeader(stringResource(R.string.paywall_title), onBack)
       Column(
           Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
           verticalArrangement = Arrangement.spacedBy(Spacing.md),
       ) {
-        Text(stringResource(R.string.paywall_title), style = MaterialTheme.typography.displaySmall)
-        Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
-        Text(stringResource(R.string.pro_features_detail), style = MaterialTheme.typography.bodyLarge)
+        if (packs.isNotEmpty()) SettingsGroup {
+            Column {
+                packs.forEachIndexed { index, pack ->
+                    if (index > 0) SettingsDivider()
+                    SettingsInfoRow(pack.title, pack.summary)
+                }
+            }
+        } else Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge)
         Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
-        Text(stringResource(R.string.pro_features_offline), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
+        Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
         when {
             error -> {
                 Text(stringResource(R.string.paywall_load_failed), style = MaterialTheme.typography.bodyLarge)
@@ -179,10 +187,6 @@ private fun PaywallScreen(
         if (result == PurchaseResult.FAILED) Text(stringResource(R.string.paywall_purchase_failed), style = MaterialTheme.typography.bodyLarge)
         if (restore == RestoreResult.FAILED) Text(stringResource(R.string.settings_restore_failed), style = MaterialTheme.typography.bodyLarge)
         if (restore == RestoreResult.NOTHING_TO_RESTORE) Text(stringResource(R.string.settings_nothing_to_restore), style = MaterialTheme.typography.bodyLarge)
-      }
-      TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth().padding(Spacing.md).sizeIn(minHeight = Spacing.touchTarget),
-          colors = ButtonDefaults.textButtonColors(contentColor = colors.label)) {
-          Text(stringResource(R.string.paywall_not_now), fontWeight = FontWeight.SemiBold)
       }
     }
 }

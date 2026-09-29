@@ -1,6 +1,7 @@
 package dev.handspell.app.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,13 +11,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,6 +25,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -32,6 +38,7 @@ import dev.handspell.app.R
 import dev.handspell.app.content.PackItem
 import dev.handspell.app.content.ContentPack
 import dev.handspell.app.content.PackKind
+import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
@@ -124,11 +131,34 @@ private fun PracticeCatalogue(state: HomeUiState, onSelectDrill: (PackItem.Drill
                     Text(pack.title, style = MaterialTheme.typography.titleMedium)
                     Text(pack.summary, style = MaterialTheme.typography.bodyMedium,
                         color = LocalAslColors.current.onSurfaceSecondary)
-                    Text(stringResource(R.string.home_pro_label), style = MaterialTheme.typography.bodyMedium,
-                        color = LocalAslColors.current.accent)
+                    if (!state.isPro) Row(
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xxs),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        PackLockIcon(LocalAslColors.current.onSurfaceSecondary)
+                        Text(stringResource(R.string.home_pro_label), style = MaterialTheme.typography.labelMedium,
+                            color = LocalAslColors.current.onSurfaceSecondary)
+                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PackLockIcon(color: Color) {
+    Canvas(Modifier.size(Spacing.md)) {
+        drawRoundRect(
+            color, topLeft = Offset(size.width * 0.3f, size.height * 0.1f),
+            size = Size(size.width * 0.4f, size.height * 0.55f),
+            cornerRadius = CornerRadius(size.width * 0.2f),
+            style = Stroke(width = size.width * 0.09f),
+        )
+        drawRoundRect(
+            color, topLeft = Offset(size.width * 0.16f, size.height * 0.45f),
+            size = Size(size.width * 0.68f, size.height * 0.48f),
+            cornerRadius = CornerRadius(size.width * 0.09f),
+        )
     }
 }
 
@@ -192,9 +222,9 @@ private fun HomeMessage(title: String, body: String?, onRetry: (() -> Unit)?, mo
     ) {
         Text(title, style = MaterialTheme.typography.headlineSmall)
         if (body != null) Text(body, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = Spacing.xs))
-        if (onRetry != null) Button(
-            onClick = onRetry,
-            modifier = Modifier.padding(top = Spacing.lg).sizeIn(minHeight = Spacing.touchTarget),
-        ) { Text(stringResource(R.string.retry)) }
+        if (onRetry != null) AslButton(
+            stringResource(R.string.retry), onRetry,
+            Modifier.padding(top = Spacing.lg).sizeIn(minHeight = Spacing.touchTarget),
+        )
     }
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dev.handspell.app.content.ContentRepository
 import dev.handspell.app.content.ContentPack
 import dev.handspell.app.content.PackItem
+import dev.handspell.app.billing.EntitlementGate
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.progress.ProgressStore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,13 +22,15 @@ data class HomeUiState(
     val packs: List<ContentPack> = emptyList(),
     val error: Boolean = false,
     val attemptCounts: Map<Letter, Int> = emptyMap(),
+    val isPro: Boolean = false,
 )
 
 class HomeViewModel(
     private val contentRepository: ContentRepository,
     progressStore: ProgressStore,
+    entitlementGate: EntitlementGate,
 ) : ViewModel() {
-    private val mutableUiState = MutableStateFlow(HomeUiState())
+    private val mutableUiState = MutableStateFlow(HomeUiState(isPro = entitlementGate.isPro.value))
     val uiState: StateFlow<HomeUiState> = mutableUiState.asStateFlow()
 
     init {
@@ -42,6 +45,11 @@ class HomeViewModel(
                 mutableUiState.update { current ->
                     current.copy(attemptCounts = snapshot.letters.mapValues { it.value.attempts })
                 }
+            }
+        }
+        viewModelScope.launch {
+            entitlementGate.isPro.collect { isPro ->
+                mutableUiState.update { it.copy(isPro = isPro) }
             }
         }
     }
@@ -59,11 +67,12 @@ class HomeViewModel(
     }
 
     companion object {
-        fun factory(contentRepository: ContentRepository, progressStore: ProgressStore): ViewModelProvider.Factory =
+        fun factory(contentRepository: ContentRepository, progressStore: ProgressStore,
+                    entitlementGate: EntitlementGate): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T =
-                    HomeViewModel(contentRepository, progressStore) as T
+                    HomeViewModel(contentRepository, progressStore, entitlementGate) as T
             }
     }
 }

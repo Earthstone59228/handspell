@@ -91,7 +91,6 @@
     <string name="paywall_year">year</string>
     <string name="paywall_renewal">In a real store, the plan renews until you cancel. This build uses simulated purchases.</string>
     <string name="paywall_continue">Continue with plan</string>
-    <string name="paywall_not_now">Not now</string>
     <string name="paywall_purchase_failed">Couldn’t complete the purchase. Try again.</string>
     <string name="debug_capture_title">Calibration capture</string>
     <string name="debug_capture_body">Debug build only. Records landmark rows while held; never use a real name as the signer ID.</string>
@@ -106,7 +105,7 @@
     <string name="onboarding_camera_title">Your camera stays on your phone</string>
     <string name="onboarding_continue">Start practising</string>
     <string name="home_pro_packs">Story and speed packs</string>
-    <string name="home_pro_label">Handspell Pro</string>
+    <string name="home_pro_label">Pro</string>
     <string name="pro_pack_unavailable">This pack could not be opened in this build.</string>
     <string name="story_step_count">Step %1$d of %2$d</string>
     <string name="story_spell_progress">Spell %1$s · letter %2$d of %3$d</string>

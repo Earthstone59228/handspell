@@ -34,7 +34,7 @@ button {
   top:0;
   left:0;
   right:0;
-  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 23px) 20px 37px 20px;
+  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 23px) 20px 20px 20px;
   background:#1D1D1FCC;
   backdrop-filter:blur(22px);
   -webkit-backdrop-filter:blur(22px)
@@ -83,7 +83,10 @@ h1 {
 .progress-line {
   display:flex;
   justify-content:space-between;
-  margin-top:19px;
+  align-items:center;
+  gap:8px;
+  min-height:48px;
+  margin-top:10px;
   color:#F5F5F7;
   font-size:11px;
   font-weight:600;
@@ -92,6 +95,27 @@ h1 {
 }
 .progress-line [hidden] {
   display:none
+}
+.streak-chip {
+  min-height:44px;
+  max-width:75%;
+  padding:6px 10px;
+  border:1px solid #F5F5F733;
+  border-radius:20px;
+  background:#1D1D1F;
+  color:#F5F5F7;
+  font-size:12px;
+  line-height:1.2;
+  letter-spacing:0;
+  text-align:center;
+  cursor:pointer
+}
+.streak-chip.pending {
+  opacity:.62
+}
+.streak-chip:focus-visible {
+  outline:2px solid #007AFF;
+  outline-offset:2px
 }
 #save-error {
   color:#FFB3B3;
@@ -104,7 +128,7 @@ h1 {
   overflow-anchor:none;
   overscroll-behavior:contain;
   scrollbar-width:none;
-  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 139px) 66px calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 18px) 20px;
+  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 160px) 66px calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 18px) 20px;
   scroll-padding-top:8px
 }
 .letter-scroll::-webkit-scrollbar {
@@ -217,7 +241,7 @@ h1 {
 .alphabet-index {
   position:absolute;
   z-index:5;
-  top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 140px);
+  top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 160px);
   right:7px;
   bottom:calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + 13px);
   display:grid;
@@ -459,13 +483,13 @@ h1 {
     padding-bottom:30px
   }
   .progress-line {
-    margin-top:10px
+    margin-top:8px
   }
   .letter-scroll {
-    padding-top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 110px)
+    padding-top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 146px)
   }
   .alphabet-index {
-    top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 116px)
+    top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 146px)
   }
 }
 @media(min-width:561px) {

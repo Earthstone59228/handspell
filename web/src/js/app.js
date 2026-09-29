@@ -463,8 +463,25 @@ function syncNativeMatches() {
 }
 window.addEventListener('aslNativeProgress', syncNativeMatches);
 
+function syncNativeStreak() {
+  const chip = document.querySelector('#open-progress');
+  if (!native?.streak) { chip.hidden = true; return; }
+  let streak;
+  try { streak = JSON.parse(native.streak()); } catch { chip.hidden = true; return; }
+  if (!Number.isInteger(streak.current) || streak.current <= 0) { chip.hidden = true; return; }
+  chip.hidden = false;
+  chip.classList.toggle('pending', !streak.today);
+  chip.textContent = streak.today
+    ? `${streak.current}-day streak`
+    : `${streak.current}-day streak · practise today to keep it`;
+  chip.setAttribute('aria-label', `${streak.current}-day streak`);
+}
+window.addEventListener('aslNativeProgress', syncNativeStreak);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncNativeStreak(); });
+
 renderCards();
 syncNativeMatches();
+syncNativeStreak();
 drawGlass();
 window.addEventListener('resize', () => { updateWave(); drawGlass(); });
 SplashScreen.hide().catch(() => {});

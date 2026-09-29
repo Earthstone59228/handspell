@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.padding
 import dev.handspell.app.content.ContentRepository
 import dev.handspell.app.content.ContentPack
 import dev.handspell.app.content.PackKind
+import dev.handspell.app.content.Tier
 import dev.handspell.app.billing.EntitlementGate
 import dev.handspell.app.billing.PaywallSource
 import dev.handspell.app.billing.NoopEntitlementGate
@@ -92,13 +93,13 @@ fun HandspellApp(
     LaunchedEffect(entitlementGate) {
         entitlementGate.paywallRequests.collect { navController.navigate(PAYWALL_ROUTE) }
     }
-    val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(contentRepository, progressStore))
+    val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(contentRepository, progressStore, entitlementGate))
     val homeState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val progress by progressStore.snapshot.collectAsStateWithLifecycle(initialValue = null)
     val isPro by entitlementGate.isPro.collectAsStateWithLifecycle()
     val entitlementStatus by entitlementGate.status.collectAsStateWithLifecycle()
     fun openPack(pack: ContentPack) {
-        navController.navigate("$PACK_ROUTE/${pack.packId}")
+        routePackTap(pack, isPro, entitlementGate) { navController.navigate("$PACK_ROUTE/$it") }
     }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
@@ -139,6 +140,8 @@ fun HandspellApp(
                 onSettings = { navController.navigate(SETTINGS_ROUTE) },
                 onPaper = { navController.navigate(PAPER_ROUTE) },
                 onNativePractice = { navController.navigate(PRACTICE_ROUTE) },
+                onProgress = { navController.navigate(PROGRESS_ROUTE) },
+                progressSnapshot = progress,
                 cameraMatches = progress?.letters
                     ?.filterValues { it.matches > 0 }
                     ?.map { (letter, item) -> letter.name to item.matches }?.toMap().orEmpty(),
@@ -284,7 +287,15 @@ fun HandspellApp(
             LegalScreen(stringResource(R.string.paper_capacitor_splash_license), "CAPACITOR_SPLASH_LICENSE.txt") { navController.popBackStack() }
         }
         composable(PAYWALL_ROUTE) {
-            PaywallRoute(entitlementGate) { navController.popBackStack() }
+            PaywallRoute(entitlementGate, homeState.packs) { navController.popBackStack() }
         }
     } }
+}
+
+internal fun routePackTap(
+    pack: ContentPack, isPro: Boolean, gate: EntitlementGate, navigate: (String) -> Unit,
+) {
+    if (pack.tier == Tier.PRO && !isPro && gate !is NoopEntitlementGate) {
+        gate.requestPaywall(if (pack.kind == PackKind.SPEED) PaywallSource.SPEED_CHALLENGE else PaywallSource.STORY_LESSON)
+    } else navigate(pack.packId)
 }

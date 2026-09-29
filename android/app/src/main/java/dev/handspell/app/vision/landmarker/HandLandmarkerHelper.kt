@@ -16,8 +16,7 @@ import dev.handspell.app.core.model.Landmark3
  *
  * The analyser thread converts frames and calls [detect] with a monotonic timestamp; MediaPipe runs
  * inference on its own thread and delivers [HandLandmarks] back through [onResults]. The wrapper
- * only remembers the most recent frame size and timestamp (they do not change between adjacent
- * frames and are not present on the async result), then closes the landmarker in [close].
+ * associates each submitted timestamp with its frame size, then closes the landmarker in [close].
  *
  * CPU delegate is the verified default for the hand model at preview resolutions
  * (docs/research/mediapipe.md §1).
@@ -32,14 +31,7 @@ class HandLandmarkerHelper(
 
     private val landmarker: HandLandmarker
 
-    @Volatile
-    private var lastTimestampMs = 0L
-
-    @Volatile
-    private var lastImageWidth = 0
-
-    @Volatile
-    private var lastImageHeight = 0
+    private val frameSizes = SubmittedFrameSizes()
 
     init {
         val baseOptions = BaseOptions.builder()
@@ -60,10 +52,13 @@ class HandLandmarkerHelper(
     }
 
     fun detect(image: MPImage, timestampMs: Long, imageWidth: Int, imageHeight: Int) {
-        lastTimestampMs = timestampMs
-        lastImageWidth = imageWidth
-        lastImageHeight = imageHeight
-        landmarker.detectAsync(image, timestampMs)
+        frameSizes.record(timestampMs, imageWidth, imageHeight)
+        try {
+            landmarker.detectAsync(image, timestampMs)
+        } catch (failure: RuntimeException) {
+            frameSizes.remove(timestampMs)
+            throw failure
+        }
     }
 
     fun close() = landmarker.close()
@@ -74,6 +69,8 @@ class HandLandmarkerHelper(
      * the strength of that contract, which the landmarker itself guarantees.
      */
     private fun toHandLandmarks(result: HandLandmarkerResult): List<HandLandmarks> {
+        val timestampMs = result.timestampMs()
+        val frameSize = frameSizes.remove(timestampMs) ?: return emptyList()
         val world = result.worldLandmarks()
         val image = result.landmarks()
         val handedness = result.handedness()
@@ -91,9 +88,9 @@ class HandLandmarkerHelper(
                 image = imagePoints,
                 handedness = hand,
                 handednessScore = category?.score() ?: 0f,
-                timestampMs = lastTimestampMs,
-                imageWidth = lastImageWidth,
-                imageHeight = lastImageHeight,
+                timestampMs = timestampMs,
+                imageWidth = frameSize.width,
+                imageHeight = frameSize.height,
             )
         }
     }
@@ -102,4 +99,20 @@ class HandLandmarkerHelper(
         const val MODEL_ASSET_PATH = "models/hand_landmarker.task"
         const val MAX_HANDS = 2
     }
+}
+
+/** MediaPipe may skip frames, so old entries are bounded rather than waiting for every callback. */
+internal class SubmittedFrameSizes(private val capacity: Int = 32) {
+    internal data class Size(val width: Int, val height: Int)
+
+    private val sizes = LinkedHashMap<Long, Size>()
+
+    init { require(capacity > 0) }
+
+    @Synchronized fun record(timestampMs: Long, width: Int, height: Int) {
+        sizes[timestampMs] = Size(width, height)
+        if (sizes.size > capacity) sizes.remove(sizes.keys.first())
+    }
+
+    @Synchronized fun remove(timestampMs: Long): Size? = sizes.remove(timestampMs)
 }

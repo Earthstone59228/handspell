@@ -31,6 +31,8 @@ data class ProgressSnapshot(
     val currentStreakDays: Int,
     val longestStreakDays: Int,
     val onboardingCompleted: Boolean,
+    val unreadable: Boolean = false,
+    val lastPracticeDay: Long? = null,
 ) {
     companion object {
         const val SCHEMA_VERSION = 1
