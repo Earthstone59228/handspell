@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
@@ -40,6 +41,7 @@ fun SettingsRoute(
     classifierModelId: String?,
     buildInfo: BuildInfo,
     onBack: () -> Unit,
+    onOpenPacks: () -> Unit = {},
     onOpenCapture: (() -> Unit)? = null,
 ) {
     val model: SettingsViewModel = viewModel(factory = SettingsViewModel.factory(
@@ -49,7 +51,7 @@ fun SettingsRoute(
     SettingsScreen(
         state, onBack, model::askClearProgress, model::dismissDialog,
         model::confirmClearProgress, model::openPaywall, model::restorePurchases,
-        model::retryEntitlement, model::setLeftHanded, onOpenCapture,
+        model::retryEntitlement, model::setLeftHanded, onOpenCapture, onOpenPacks,
     )
 }
 
@@ -65,11 +67,12 @@ fun SettingsScreen(
     onRetryEntitlement: () -> Unit,
     onSetLeftHanded: (Boolean) -> Unit,
     onOpenCapture: (() -> Unit)? = null,
+    onOpenPacks: () -> Unit = {},
 ) {
     val colors = LocalAslColors.current
     FrostedSettingsHero(onBack) {
         PracticeGroup(state, onAskClear, onSetLeftHanded)
-        SubscriptionGroup(state, onOpenPaywall, onRestore, onRetryEntitlement)
+        SubscriptionGroup(state, onOpenPaywall, onRestore, onRetryEntitlement, onOpenPacks)
         PrivacyGroup(state.classifierModelId)
         AboutGroup(state)
         if (onOpenCapture != null) DebugGroup(onOpenCapture)
@@ -127,15 +130,15 @@ private fun PracticeGroup(state: SettingsUiState, onAskClear: () -> Unit, onSetL
                         SettingsValueRow(
                             stringResource(R.string.settings_streak),
                             if (progress.currentStreakDays == 0) stringResource(R.string.settings_no_streak)
-                            else stringResource(R.string.settings_streak_days, progress.currentStreakDays),
+                            else pluralStringResource(R.plurals.settings_streak_days, progress.currentStreakDays, progress.currentStreakDays),
                         )
                         SettingsDivider()
                         SettingsValueRow(stringResource(R.string.settings_letters_practised), stringResource(
                             R.string.settings_letters_count, progress.lettersPractised, progress.lettersTotal,
                         ))
                         SettingsDivider()
-                        SettingsValueRow(stringResource(R.string.settings_attempts), stringResource(
-                            R.string.settings_attempts_count, progress.attempts, progress.matches,
+                        SettingsValueRow(stringResource(R.string.settings_attempts), pluralStringResource(
+                            R.plurals.settings_attempts_count, progress.attempts, progress.attempts, progress.matches,
                         ))
                     }
                 }
@@ -163,12 +166,17 @@ private fun PracticeGroup(state: SettingsUiState, onAskClear: () -> Unit, onSetL
 }
 
 @Composable
-private fun SubscriptionGroup(state: SettingsUiState, onPaywall: () -> Unit, onRestore: () -> Unit, onRetry: () -> Unit) {
+private fun SubscriptionGroup(
+    state: SettingsUiState, onPaywall: () -> Unit, onRestore: () -> Unit, onRetry: () -> Unit, onOpenPacks: () -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.settings_pro))
         SettingsGroup {
             Column {
                 SettingsInfoRow(stringResource(R.string.home_pro_packs), stringResource(R.string.pro_features_detail))
+                SettingsDivider()
+                // Interim home of the story and speed packs since the tab bar went; the owner may move it.
+                SettingsActionRow(stringResource(R.string.settings_open_packs), onClick = onOpenPacks)
                 SettingsDivider()
                 val status = when (state.subscription) {
                     SubscriptionUi.CHECKING -> stringResource(R.string.settings_pro_checking)

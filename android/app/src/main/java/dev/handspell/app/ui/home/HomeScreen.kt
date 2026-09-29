@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,6 +38,7 @@ import dev.handspell.app.content.PackItem
 import dev.handspell.app.content.ContentPack
 import dev.handspell.app.content.PackKind
 import dev.handspell.app.ui.components.AslButton
+import dev.handspell.app.ui.components.ScreenHeader
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
@@ -53,19 +53,12 @@ fun HomeScreen(
     onOpenPack: (ContentPack) -> Unit,
     showProPacks: Boolean = true,
     modifier: Modifier = Modifier,
+    onBack: (() -> Unit)? = null,
 ) {
     val colors = LocalAslColors.current
     Column(modifier.fillMaxSize().background(colors.backgroundGrouped)) {
-        Row(
-            Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background)
-                .padding(start = Spacing.md, end = Spacing.xs, top = Spacing.xs, bottom = Spacing.xs),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
-            TextButton(onClick = onOpenSettings, modifier = Modifier.sizeIn(minHeight = Spacing.touchTarget)) {
-                Text(stringResource(R.string.settings))
-            }
-        }
+        // The large "Practice" title is the first item of the catalogue, so the bar carries only the back chevron.
+        ScreenHeader(title = "", onBack = onBack, compact = true)
         when {
             state.isLoading -> HomeMessage(stringResource(R.string.content_loading), null, null, Modifier.weight(1f))
             state.error -> HomeMessage(

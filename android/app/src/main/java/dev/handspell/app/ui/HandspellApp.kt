@@ -3,6 +3,10 @@ package dev.handspell.app.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.WindowInsets
@@ -22,7 +26,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material3.MaterialTheme
 import dev.handspell.app.ui.components.AslButton
-import dev.handspell.app.ui.components.AslTabBar
 import dev.handspell.app.ui.components.SetupScreen
 import dev.handspell.app.ui.theme.LocalAslColors
 import androidx.compose.material3.Scaffold
@@ -47,7 +50,7 @@ import dev.handspell.app.ui.home.HomeScreen
 import dev.handspell.app.ui.home.HomeViewModel
 import dev.handspell.app.ui.home.ProPackAccess
 import dev.handspell.app.ui.home.ProPackRoute
-import dev.handspell.app.ui.home.OnboardingScreen
+import dev.handspell.app.ui.home.OnboardingRoute
 import dev.handspell.app.ui.progress.ProgressRoute
 import dev.handspell.app.ui.settings.BuildInfo
 import dev.handspell.app.ui.settings.LegalScreen
@@ -104,32 +107,24 @@ fun HandspellApp(
     }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
-    val topRoutes = listOf(PRACTICE_ROUTE, PROGRESS_ROUTE)
+
+    // Decided once per launch, when saved progress has loaded: first-run introduction, otherwise the menu.
+    var gate by remember { mutableStateOf(RootGate.Loading) }
+    LaunchedEffect(progress) { gate = resolveGate(gate, progress?.onboardingCompleted) }
+    when (gate) {
+        RootGate.Loading -> Box(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped))
+        RootGate.Onboarding -> OnboardingRoute(progressStore, preferences) { gate = RootGate.Menu }
+        RootGate.Menu -> {
 
     // The alphabet is a WebView that draws under the status and navigation bars itself; every native screen
     // is inset here instead, so no native screen has to know about system bars.
     val isAlphabet = currentRoute == null || currentRoute == ALPHABET_ROUTE
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    Scaffold(containerColor = MaterialTheme.colorScheme.background, contentWindowInsets = WindowInsets(0), bottomBar = {
-        if (currentRoute in topRoutes) AslTabBar(
-            labels = topRoutes.map { route ->
-                stringResource(if (route == PROGRESS_ROUTE) R.string.progress_title else R.string.practice_title)
-            },
-            selectedIndex = topRoutes.indexOf(currentRoute),
-            onSelect = { index ->
-                navController.navigate(topRoutes[index]) {
-                    popUpTo(ALPHABET_ROUTE) { saveState = true }
-                    launchSingleTop = true
-                    restoreState = true
-                }
-            },
-        )
-    }) { padding -> NavHost(
+    Scaffold(containerColor = MaterialTheme.colorScheme.background, contentWindowInsets = WindowInsets(0)) { padding -> NavHost(
         navController = navController,
         startDestination = ALPHABET_ROUTE,
         modifier = when {
             isAlphabet -> Modifier
-            currentRoute in topRoutes -> Modifier.padding(padding).padding(top = statusBarTop)
             else -> Modifier.padding(padding).padding(top = statusBarTop).navigationBarsPadding()
         },
     ) {
@@ -183,12 +178,9 @@ fun HandspellApp(
             )
         }
         composable(PRACTICE_ROUTE) {
-            if (progress == null) Text(stringResource(R.string.content_loading))
-            else if (progress?.onboardingCompleted == false) OnboardingScreen {
-                scope.launch { progressStore.setOnboardingCompleted(true) }
-            }
-            else HomeScreen(
+            HomeScreen(
                 state = homeState,
+                onBack = { navController.popBackStack() },
                 onSelectDrill = { drill -> navController.navigate("$DRILL_ROUTE/${drill.id}") },
                 onRetry = homeViewModel::reload,
                 onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
@@ -207,6 +199,7 @@ fun HandspellApp(
                     onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
                     onOpenPack = ::openPack,
                     showProPacks = true,
+                    onBack = { navController.popBackStack() },
                 )
             } else {
                 LetterDrillRoute(
@@ -230,6 +223,8 @@ fun HandspellApp(
                 progressStore = progressStore,
                 clearAlphabetData = AlphabetStorage::clear,
                 entitlementGate = entitlementGate,
+                // INTERIM entry to the Story and speed packs (owner has not decided where they live).
+                onOpenPacks = { navController.navigate(PRACTICE_ROUTE) },
                 classifierModelId = signDetector.classifierModelId,
                 buildInfo = BuildInfo(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
                 onBack = { navController.popBackStack() },
@@ -238,7 +233,8 @@ fun HandspellApp(
         }
         composable(PROGRESS_ROUTE) {
             ProgressRoute(progressStore,
-                onPractice = { navController.navigate(PRACTICE_ROUTE) { launchSingleTop = true } },
+                onBack = { navController.popBackStack() },
+                onPractice = { navController.popBackStack() },
                 onSettings = { navController.navigate(SETTINGS_ROUTE) },
             )
         }
@@ -292,6 +288,8 @@ fun HandspellApp(
             PaywallRoute(entitlementGate, homeState.packs) { navController.popBackStack() }
         }
     } }
+        }
+    }
 }
 
 internal fun routePackTap(

@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -39,9 +41,19 @@ import dev.handspell.app.ui.components.BackChevronTop
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 
-/** Alphabet's pinned dark frosted hero, sampling the actual rows as they scroll beneath it. */
+/**
+ * Alphabet's pinned dark frosted hero, sampling the actual rows as they scroll beneath it. Settings, Progress and
+ * the first-run introduction share it, so every grouped screen has the same large title and blurred header.
+ * Without [onBack] (first run) the chevron row is replaced by the same amount of space.
+ */
 @Composable
-internal fun FrostedSettingsHero(onBack: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+internal fun FrostedSettingsHero(
+    onBack: (() -> Unit)?,
+    title: String = stringResource(R.string.settings),
+    body: String? = stringResource(R.string.settings_hero_body),
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     val colors = LocalAslColors.current
     val density = LocalDensity.current
     val contentLayer = rememberGraphicsLayer()
@@ -51,7 +63,7 @@ internal fun FrostedSettingsHero(onBack: () -> Unit, content: @Composable Column
     val blurRadius = with(density) { Spacing.lg.toPx() }
     val supportsBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     backdropLayer.renderEffect = if (supportsBlur) BlurEffect(blurRadius, blurRadius, TileMode.Clamp) else null
-    Box(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
+    Box(modifier.fillMaxSize().background(colors.backgroundGrouped)) {
         Column(
             Modifier.fillMaxSize().drawWithContent {
                 contentLayer.record { this@drawWithContent.drawContent() }
@@ -75,13 +87,15 @@ internal fun FrostedSettingsHero(onBack: () -> Unit, content: @Composable Column
                 drawContent()
             },
         ) {
-            Row(Modifier.fillMaxWidth().padding(start = BackChevronStart, top = BackChevronTop),
+            if (onBack != null) Row(Modifier.fillMaxWidth().padding(start = BackChevronStart, top = BackChevronTop),
                 verticalAlignment = Alignment.CenterVertically) { BackChevron(onBack) }
-            Text(stringResource(R.string.settings), style = MaterialTheme.typography.displaySmall,
+            else Spacer(Modifier.height(Spacing.xxxl))
+            Text(title, style = MaterialTheme.typography.displaySmall,
                 modifier = Modifier.padding(horizontal = Spacing.lg).semantics { heading() })
-            Text(stringResource(R.string.settings_hero_body), style = MaterialTheme.typography.bodyMedium,
+            if (body != null) Text(body, style = MaterialTheme.typography.bodyMedium,
                 color = colors.labelSecondary,
-                modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.sm, bottom = Spacing.xl))
+                modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.sm))
+            Spacer(Modifier.height(Spacing.xl))
         }
     }
 }

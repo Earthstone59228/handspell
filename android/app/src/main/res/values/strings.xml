@@ -37,11 +37,9 @@
     <string name="settings_no_progress_body">Camera drills and lessons are counted here. Alphabet checkmarks are self-reported.</string>
     <string name="settings_streak">Current streak</string>
     <string name="settings_no_streak">No streak yet</string>
-    <string name="settings_streak_days">%1$d days</string>
     <string name="settings_letters_practised">Letters practised</string>
     <string name="settings_letters_count">%1$d of %2$d</string>
     <string name="settings_attempts">Attempts recorded</string>
-    <string name="settings_attempts_count">%1$d attempts, %2$d matched</string>
     <string name="settings_delete_data">Delete practice data</string>
     <string name="settings_progress_footer">Alphabet checkmarks are stored separately on this phone. Delete practice data clears both stores. No camera frames are saved.</string>
     <string name="settings_delete_confirm_title">Delete practice data?</string>
@@ -102,10 +100,11 @@
     <string name="onboarding_title">Welcome to Handspell</string>
     <string name="onboarding_practice_title">A practice aid</string>
     <string name="onboarding_practice_body">Use live handshape feedback to practise ASL fingerspelling. Handspell does not certify or grade your signing.</string>
-    <string name="onboarding_letters_title">24 letters</string>
-    <string name="onboarding_letters_body">J and Z need motion, so they are not part of the still-handshape drills.</string>
+    <string name="onboarding_hold_title">How to hold your phone</string>
+    <string name="onboarding_hold_body">Hold it at arm\'s length, keep your hand in the frame, and use good light.</string>
+    <string name="onboarding_left_hand">I sign with my left hand</string>
     <string name="onboarding_camera_title">Your camera stays on your phone</string>
-    <string name="onboarding_continue">Start practising</string>
+    <string name="onboarding_continue">Get started</string>
     <string name="home_pro_packs">Story and speed packs</string>
     <string name="home_pro_label">Pro</string>
     <string name="pro_pack_unavailable">This pack could not be opened in this build.</string>
@@ -125,10 +124,7 @@
     <string name="progress_empty_body">Practise a letter to see your attempts and matches.</string>
     <string name="progress_start">Choose a letter</string>
     <string name="progress_by_letter">By letter</string>
-    <string name="progress_story_steps">%1$d story steps completed</string>
     <string name="progress_speed_runs">Recent speed rounds</string>
-    <string name="progress_speed_result">%1$d matched in %2$d seconds</string>
-    <string name="progress_letter_count">%1$d matched of %2$d attempts</string>
     <string name="progress_manage_data">Manage practice data</string>
     <string name="practice_letters_heading">Available letters</string>
     <string name="practice_letters_summary">%1$d letters are ready to practise in this build.</string>
@@ -177,4 +173,36 @@
     <string name="error_classifier_spec_mismatch">The handshape data in this build was made for a different version of the app.</string>
     <string name="error_classifier_asset_corrupt">The handshape data failed its integrity check, so scoring is turned off.</string>
     <string name="error_landmarker_failed">Handspell could not start hand detection on this device.</string>
+
+    <plurals name="settings_streak_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <plurals name="settings_attempts_count">
+        <item quantity="one">%1$d attempt, %2$d matched</item>
+        <item quantity="other">%1$d attempts, %2$d matched</item>
+    </plurals>
+    <plurals name="progress_letter_count">
+        <item quantity="one">%1$d of %2$d attempt matched</item>
+        <item quantity="other">%1$d of %2$d attempts matched</item>
+    </plurals>
+    <plurals name="progress_speed_result">
+        <item quantity="one">%2$d matched in %1$d second</item>
+        <item quantity="other">%2$d matched in %1$d seconds</item>
+    </plurals>
+    <plurals name="progress_story_steps">
+        <item quantity="one">%1$d story step completed</item>
+        <item quantity="other">%1$d story steps completed</item>
+    </plurals>
+    <string name="progress_stat_streak">day streak</string>
+    <string name="progress_hero_body">Camera drills and lessons on this phone.</string>
+    <string name="progress_stat_letters">letters</string>
+    <string name="progress_stat_matched">matched</string>
+    <string name="progress_stat_best">Longest streak</string>
+    <string name="progress_summary">Summary</string>
+    <string name="progress_letter_row">%1$s, %2$s</string>
+    <string name="onboarding_hero_body">Practise ASL fingerspelling with your camera.</string>
+    <string name="onboarding_before_you_start">Before you start</string>
+    <string name="onboarding_layout">Layout</string>
+    <string name="settings_open_packs">Open story and speed packs</string>
 </resources>
