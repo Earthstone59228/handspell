@@ -1,0 +1,29 @@
+{
+  "file": "words-v3.bin",
+  "spec": 30,
+  "labels": [
+    "bye",
+    "dad",
+    "drink",
+    "happy",
+    "hello",
+    "home",
+    "hungry",
+    "mom",
+    "sad",
+    "thankyou",
+    "water",
+    "yes",
+    "other"
+  ],
+  "gate": 0.5,
+  "cv": {
+    "folds": 3,
+    "top1": 0.8540994172619212,
+    "accept": 0.8311931906503872,
+    "false": 0.004712284840485897,
+    "worst_false": 0.011925695976463277
+  },
+  "signers": 21,
+  "samples": 6155
+}

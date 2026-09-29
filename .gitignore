@@ -42,3 +42,5 @@ web/dist/
 # PopSign word-sign data (tens of GB, downloaded by scripts); only the vocabulary is tracked
 training/data/popsign/*
 !training/data/popsign/vocab-v1.json
+training/data/islr/*
+training/data/islr/**
