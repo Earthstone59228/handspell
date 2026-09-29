@@ -49,7 +49,7 @@ fun SettingsRoute(
     SettingsScreen(
         state, onBack, model::askClearProgress, model::dismissDialog,
         model::confirmClearProgress, model::openPaywall, model::restorePurchases,
-        model::retryEntitlement, onOpenCapture,
+        model::retryEntitlement, model::setLeftHanded, onOpenCapture,
     )
 }
 
@@ -63,11 +63,12 @@ fun SettingsScreen(
     onOpenPaywall: () -> Unit,
     onRestore: () -> Unit,
     onRetryEntitlement: () -> Unit,
+    onSetLeftHanded: (Boolean) -> Unit,
     onOpenCapture: (() -> Unit)? = null,
 ) {
     val colors = LocalAslColors.current
     FrostedSettingsHero(onBack) {
-        PracticeGroup(state, onAskClear)
+        PracticeGroup(state, onAskClear, onSetLeftHanded)
         SubscriptionGroup(state, onOpenPaywall, onRestore, onRetryEntitlement)
         PrivacyGroup(state.classifierModelId)
         AboutGroup(state)
@@ -114,7 +115,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun PracticeGroup(state: SettingsUiState, onAskClear: () -> Unit) {
+private fun PracticeGroup(state: SettingsUiState, onAskClear: () -> Unit, onSetLeftHanded: (Boolean) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.settings_progress))
         SettingsGroup {
@@ -138,6 +139,12 @@ private fun PracticeGroup(state: SettingsUiState, onAskClear: () -> Unit) {
                         ))
                     }
                 }
+                SettingsDivider()
+                SettingsToggleRow(
+                    stringResource(R.string.settings_left_handed_layout),
+                    stringResource(R.string.settings_left_handed_layout_body),
+                    state.leftHanded, onSetLeftHanded,
+                )
                 SettingsDivider()
                 SettingsDestructiveRow(
                     stringResource(R.string.settings_delete_data),

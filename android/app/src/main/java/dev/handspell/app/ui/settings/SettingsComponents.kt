@@ -1,7 +1,9 @@
 package dev.handspell.app.ui.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,11 +11,14 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
@@ -91,6 +96,31 @@ internal fun SettingsActionRow(title: String, enabled: Boolean = true, onClick: 
         )
         Text("›", style = MaterialTheme.typography.titleLarge, color = colors.accent.copy(alpha = alpha),
             modifier = Modifier.clearAndSetSemantics {})
+    }
+}
+
+@Composable
+internal fun SettingsToggleRow(
+    title: String, body: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit,
+) {
+    val colors = LocalAslColors.current
+    Row(
+        Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.md),
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge, color = colors.onSurface)
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceSecondary)
+        }
+        Canvas(Modifier.size(Spacing.touchTarget, Spacing.xxl).clearAndSetSemantics {}) {
+            drawRoundRect(if (checked) colors.accent else colors.separator,
+                cornerRadius = CornerRadius(size.height / 2))
+            drawCircle(colors.onSurface, radius = size.height * 0.37f,
+                center = Offset(if (checked) size.width - size.height / 2 else size.height / 2, size.height / 2))
+        }
     }
 }
 

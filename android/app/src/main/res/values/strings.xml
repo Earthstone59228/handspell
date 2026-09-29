@@ -59,6 +59,8 @@
     <string name="settings_pro_unavailable">Can’t check right now. Pro content stays locked until this succeeds.</string>
     <string name="settings_pro_not_configured">Pro purchases are unavailable in this build.</string>
     <string name="settings_see_pro">See what Pro adds</string>
+    <string name="settings_left_handed_layout">Left-handed layout</string>
+    <string name="settings_left_handed_layout_body">Moves the letter scrubber to the left edge.</string>
     <string name="settings_restore">Restore purchases</string>
     <string name="settings_restoring">Restoring purchases…</string>
     <string name="settings_restored">Purchases restored.</string>

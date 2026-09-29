@@ -97,6 +97,7 @@ fun HandspellApp(
     val homeState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val progress by progressStore.snapshot.collectAsStateWithLifecycle(initialValue = null)
     val isPro by entitlementGate.isPro.collectAsStateWithLifecycle()
+    val leftHanded by preferences.leftHanded.collectAsStateWithLifecycle(initialValue = false)
     val entitlementStatus by entitlementGate.status.collectAsStateWithLifecycle()
     fun openPack(pack: ContentPack) {
         routePackTap(pack, isPro, entitlementGate) { navController.navigate("$PACK_ROUTE/$it") }
@@ -142,6 +143,7 @@ fun HandspellApp(
                 onNativePractice = { navController.navigate(PRACTICE_ROUTE) },
                 onProgress = { navController.navigate(PROGRESS_ROUTE) },
                 progressSnapshot = progress,
+                leftHanded = leftHanded,
                 cameraMatches = progress?.letters
                     ?.filterValues { it.matches > 0 }
                     ?.map { (letter, item) -> letter.name to item.matches }?.toMap().orEmpty(),

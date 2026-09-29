@@ -134,6 +134,10 @@ h1 {
 .letter-scroll::-webkit-scrollbar {
   display:none
 }
+html.left-handed .letter-scroll {
+  padding-right:20px;
+  padding-left:66px
+}
 .letter-list {
   display:flex;
   flex-direction:column;
@@ -141,6 +145,9 @@ h1 {
   gap:11px;
   transform:translateY(var(--pull,0px));
   transition:transform .32s cubic-bezier(.2,.8,.2,1)
+}
+html.left-handed .letter-list {
+  align-items:flex-end
 }
 .letter-list.pulling {
   transition:none
@@ -251,6 +258,10 @@ h1 {
   touch-action:none;
   user-select:none
 }
+html.left-handed .alphabet-index {
+  right:auto;
+  left:7px
+}
 .index-surface {
   position:absolute;
   z-index:0;
@@ -264,6 +275,11 @@ h1 {
   stroke:#F5F5F733;
   stroke-width:.8;
   vector-effect:non-scaling-stroke
+}
+html.left-handed .index-surface {
+  left:auto;
+  right:-38px;
+  transform:scaleX(-1)
 }
 .index-cell {
   position:relative;

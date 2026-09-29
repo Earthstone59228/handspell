@@ -57,7 +57,8 @@ class ProEntryTest {
 
     @Test fun `paywall requests require a pack or settings tap`() = runTest(dispatcher) {
         val gate = FakeGate()
-        val settings = SettingsViewModel(FakePreferences(), FakeProgress(), {}, gate, null, BuildInfo("test", 1))
+        val preferences = FakePreferences()
+        val settings = SettingsViewModel(preferences, FakeProgress(), {}, gate, null, BuildInfo("test", 1))
         runCurrent()
         assertTrue(gate.requests.isEmpty())
         val pack = ContentPack(1, "story", 1, PackKind.STORY, Tier.PRO, "Story", "Summary", "2026-09-29", emptyList())
@@ -71,6 +72,9 @@ class ProEntryTest {
         assertEquals(1, gate.requests.size)
         settings.openPaywall()
         assertEquals(listOf(PaywallSource.STORY_LESSON, PaywallSource.SETTINGS), gate.requests)
+        settings.setLeftHanded(true)
+        runCurrent()
+        assertTrue(preferences.leftHanded.value)
         val unavailableRoute = mutableListOf<String>()
         routePackTap(pack, false, NoopEntitlementGate(), unavailableRoute::add)
         assertEquals(listOf("story"), unavailableRoute)
@@ -99,7 +103,9 @@ class ProEntryTest {
 
     private class FakePreferences : AppPreferencesStore {
         override val themeMode = MutableStateFlow(ThemeMode.SYSTEM)
+        override val leftHanded = MutableStateFlow(false)
         override suspend fun setThemeMode(mode: ThemeMode) { themeMode.value = mode }
+        override suspend fun setLeftHanded(enabled: Boolean) { leftHanded.value = enabled }
     }
 
     private class FakeProgress : ProgressStore {

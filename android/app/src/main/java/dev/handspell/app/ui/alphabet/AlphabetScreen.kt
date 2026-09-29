@@ -55,6 +55,7 @@ fun AlphabetScreen(
     onNativePractice: () -> Unit,
     onProgress: () -> Unit,
     progressSnapshot: ProgressSnapshot? = null,
+    leftHanded: Boolean = false,
     /** Camera-confirmed match counts by letter name; the web menu marks those letters complete. */
     cameraMatches: Map<String, Int> = emptyMap(),
     modifier: Modifier = Modifier,
@@ -83,6 +84,7 @@ fun AlphabetScreen(
     val currentPaper = rememberUpdatedState(onPaper)
     val currentProgress = rememberUpdatedState(onProgress)
     val currentSnapshot = rememberUpdatedState(progressSnapshot)
+    val currentLeftHanded = rememberUpdatedState(leftHanded)
     val currentMatches = rememberUpdatedState(cameraMatches)
     val callbacks = remember {
         AlphabetBridge(
@@ -93,6 +95,7 @@ fun AlphabetScreen(
             { currentMatches.value },
             { currentSnapshot.value },
             { currentProgress.value() },
+            { currentLeftHanded.value },
         )
     }
     val webView = remember(context) {
@@ -165,7 +168,7 @@ fun AlphabetScreen(
                 "document.documentElement.style.setProperty('--safe-bottom','${safeBottom}px');", null,
         )
     }
-    LaunchedEffect(pageReady, cameraMatches, progressSnapshot) {
+    LaunchedEffect(pageReady, cameraMatches, progressSnapshot, leftHanded) {
         if (pageReady) webView.evaluateJavascript("window.dispatchEvent(new Event('aslNativeProgress'))", null)
     }
     DisposableEffect(webView) {
@@ -200,6 +203,7 @@ class AlphabetBridge(
     private val matchesProvider: () -> Map<String, Int>,
     private val streakProvider: () -> ProgressSnapshot?,
     private val onProgress: () -> Unit,
+    private val handednessProvider: () -> Boolean,
 ) {
     /** `{"A":2,"B":1}`: letters the camera has confirmed, with how many times. Read by the page on load/resume. */
     @JavascriptInterface
@@ -208,6 +212,9 @@ class AlphabetBridge(
 
     @JavascriptInterface
     fun streak(): String = streakJson(streakProvider(), System.currentTimeMillis())
+
+    @JavascriptInterface
+    fun handedness(): String = handednessLabel(handednessProvider())
 
     /** Very light detent for the A-Z scrubber. */
     @JavascriptInterface
@@ -267,3 +274,5 @@ internal fun streakJson(snapshot: ProgressSnapshot?, nowMs: Long): String {
     } ?: 0
     return "{\"current\":$current,\"longest\":${snapshot?.longestStreakDays ?: 0},\"today\":$practisedToday}"
 }
+
+internal fun handednessLabel(leftHanded: Boolean): String = if (leftHanded) "left" else "right"

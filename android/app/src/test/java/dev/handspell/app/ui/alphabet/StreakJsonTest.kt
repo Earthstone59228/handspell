@@ -18,4 +18,9 @@ class StreakJsonTest {
         assertEquals("{\"current\":0,\"longest\":7,\"today\":false}", streakJson(snapshot(day - 2), now))
         assertEquals("{\"current\":0,\"longest\":0,\"today\":false}", streakJson(null, now))
     }
+
+    @Test fun `handedness bridge uses persisted layout side`() {
+        assertEquals("right", handednessLabel(false))
+        assertEquals("left", handednessLabel(true))
+    }
 }

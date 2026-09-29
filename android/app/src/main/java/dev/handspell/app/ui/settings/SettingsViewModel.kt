@@ -42,6 +42,7 @@ enum class DeletionUi { IDLE, IN_PROGRESS, DONE, FAILED }
 
 data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val leftHanded: Boolean = false,
     val progress: ProgressSummary = ProgressSummary.Loading,
     val subscription: SubscriptionUi = SubscriptionUi.CHECKING,
     val billingConfigured: Boolean = false,
@@ -77,12 +78,14 @@ class SettingsViewModel(
 
     val uiState: StateFlow<SettingsUiState> = combine(
         preferences.themeMode,
+        preferences.leftHanded,
         progressStore.snapshot,
         entitlementGate.status,
         localUi,
-    ) { theme, progress, entitlement, local ->
+    ) { theme, leftHanded, progress, entitlement, local ->
         initial.copy(
             themeMode = theme,
+            leftHanded = leftHanded,
             progress = progress.toSummary(),
             subscription = when (entitlement) {
                 EntitlementStatus.Unknown, EntitlementStatus.Loading -> SubscriptionUi.CHECKING
@@ -96,6 +99,7 @@ class SettingsViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initial)
 
     fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { preferences.setThemeMode(mode) }
+    fun setLeftHanded(enabled: Boolean) = viewModelScope.launch { preferences.setLeftHanded(enabled) }
 
     fun askClearProgress() {
         localUi.update { it.copy(confirmClearProgress = true, deletion = DeletionUi.IDLE) }

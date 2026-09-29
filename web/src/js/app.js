@@ -193,7 +193,8 @@ function updateWave() {
   index.querySelectorAll('.index-cell').forEach((cell, n) => {
     const distance = Math.abs(n - activeIndex);
     const wave = !scrubbing || activeIndex < 0 ? 0 : Math.exp(-(distance * distance) / (2 * 1.3 * 1.3));
-    cell.style.setProperty('--push', `${(-12 * wave).toFixed(2)}px`);
+    const direction = document.documentElement.classList.contains('left-handed') ? 1 : -1;
+    cell.style.setProperty('--push', `${(direction * 12 * wave).toFixed(2)}px`);
     cell.style.setProperty('--scale', (1 + .14 * wave).toFixed(3));
     cell.classList.toggle('active', scrubbing && n === activeIndex);
   });
@@ -479,9 +480,20 @@ function syncNativeStreak() {
 window.addEventListener('aslNativeProgress', syncNativeStreak);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) syncNativeStreak(); });
 
+function syncHandedness() {
+  if (!native?.handedness) return;
+  let leftHanded;
+  try { leftHanded = native.handedness() === 'left'; } catch { return; }
+  document.documentElement.classList.toggle('left-handed', leftHanded);
+  updateWave();
+  drawGlass();
+}
+window.addEventListener('aslNativeProgress', syncHandedness);
+
 renderCards();
 syncNativeMatches();
 syncNativeStreak();
+syncHandedness();
 drawGlass();
 window.addEventListener('resize', () => { updateWave(); drawGlass(); });
 SplashScreen.hide().catch(() => {});
