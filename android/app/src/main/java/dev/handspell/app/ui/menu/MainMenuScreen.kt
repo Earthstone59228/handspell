@@ -82,11 +82,6 @@ fun MainMenuScreen(
         }
         ProgressEntry(state, actions.onProgress)
         belowEntries()
-        SettingsGroup {
-            Column {
-                SettingsActionRow(stringResource(R.string.settings), onClick = actions.onSettings)
-            }
-        }
     }
 }
 

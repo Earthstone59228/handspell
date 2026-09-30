@@ -231,7 +231,8 @@ fun HandspellApp(
                         })
                     }
                     val speed = speedAccess(isPro, progress?.freeSpeedChallengeDay, System.currentTimeMillis())
-                    MenuRowCard(
+                    // While today's open quest is the speed round, its card already leads there: one entry, not two.
+                    if (!(quest.quest == Quest.SPEED_ROUND && !quest.complete)) MenuRowCard(
                         stringResource(R.string.menu_speed_title),
                         stringResource(when (speed) {
                             SpeedAccess.Unlimited -> R.string.menu_speed_pro
