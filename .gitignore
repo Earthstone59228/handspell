@@ -9,6 +9,7 @@ captures/
 local.properties
 android/local.properties
 *.apk
+!/artifacts/handspell-debug.apk
 *.aab
 *.ap_
 *.dex
