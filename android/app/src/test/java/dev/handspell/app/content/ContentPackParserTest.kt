@@ -27,6 +27,13 @@ class ContentPackParserTest {
         }
     }
 
+    @Test fun alphabetDrillsIncludeEveryLetterAndMotionInstructions() {
+        val drills = bundled("drills-core").items.filterIsInstance<PackItem.Drill>()
+        assertEquals(dev.handspell.app.core.model.Letter.entries.toSet(), drills.map { it.letter }.toSet())
+        assertEquals(26, drills.size)
+        assertTrue(drills.filter { it.letter.requiresMotion }.all { it.description.contains("Hold briefly") })
+    }
+
     @Test fun speedPackContainsThreePlayableStaticRounds() {
         val rounds = bundled("speed-core").items.filterIsInstance<PackItem.SpeedRound>()
         assertEquals(listOf(30, 60, 60), rounds.map { it.durationSeconds })

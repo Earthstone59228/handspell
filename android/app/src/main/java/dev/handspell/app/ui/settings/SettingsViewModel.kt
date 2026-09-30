@@ -155,7 +155,7 @@ internal fun ProgressSnapshot.toSummary(): ProgressSummary {
     return ProgressSummary.Recorded(
         currentStreakDays = currentStreakDays,
         lettersPractised = letters.values.count { it.attempts > 0 },
-        lettersTotal = Letter.staticLetters.size,
+        lettersTotal = Letter.entries.size,
         attempts = letters.values.sumOf { it.attempts },
         matches = letters.values.sumOf { it.matches },
     )

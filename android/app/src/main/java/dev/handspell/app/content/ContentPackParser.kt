@@ -17,7 +17,7 @@ internal object ContentPackParser {
             val item = value.jsonObject
             val id = item.string("id").also { require(it.isNotBlank()) }
             when (kind) {
-                PackKind.DRILL -> PackItem.Drill(id, letter(item.getValue("letter").jsonPrimitive),
+                PackKind.DRILL -> PackItem.Drill(id, letter(item.getValue("letter").jsonPrimitive, allowMotion = true),
                     item.string("prompt"), item.string("description"), item["hintId"]?.jsonPrimitive?.contentOrNull)
                 PackKind.STORY -> {
                     val narration = item["narration"]?.jsonPrimitive?.contentOrNull
@@ -50,9 +50,9 @@ internal object ContentPackParser {
         }
     }
 
-    private fun letter(value: JsonPrimitive): Letter =
+    private fun letter(value: JsonPrimitive, allowMotion: Boolean = false): Letter =
         (Letter.fromNameOrNull(value.content) ?: error("unknown letter")).also {
-            require(!it.requiresMotion) { "motion letters cannot be used in static lessons" }
+            require(allowMotion || !it.requiresMotion) { "motion letters cannot be used in static lessons" }
         }
 
     private fun JsonObject.string(name: String) = getValue(name).jsonPrimitive.content

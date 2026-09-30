@@ -9,7 +9,7 @@ import java.util.TimeZone
 data class MainMenuState(
     val loading: Boolean = true,
     val lettersComplete: Int = 0,
-    val lettersTotal: Int = Letter.staticLetters.size,
+    val lettersTotal: Int = Letter.entries.size,
     val wordsComplete: Int = 0,
     val wordsTotal: Int = 0,
     val streakDays: Int = 0,
@@ -30,7 +30,7 @@ fun mainMenuState(
     zone: TimeZone = TimeZone.getDefault(),
 ): MainMenuState {
     if (snapshot == null) return MainMenuState(loading = true, wordsTotal = wordGlosses.size, isPro = isPro)
-    val static = Letter.staticLetters.map { it.name }.toSet()
+    val static = Letter.entries.map { it.name }.toSet()
     // The page decides what shows as complete (it keeps "Undo completion" even after a camera match), so once it has
     // reported, its list is the count; before that, camera matches are the best we know.
     val complete = snapshot.alphabetCompleted

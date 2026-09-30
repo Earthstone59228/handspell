@@ -35,12 +35,12 @@ class MainMenuStateTest {
 
     @Test fun `the page's list decides letters, camera matches only before its first report`() {
         val state = mainMenuState(snapshot(day, 3), listOf("hello", "bye", "yes"), false, noon, utc)
-        assertEquals(2, state.lettersComplete) // A and C from the page; J is motion-only
+        assertEquals(3, state.lettersComplete) // A, C and J from the page
         assertEquals(1, mainMenuState(snapshot(day, 3).copy(alphabetCompleted = null), emptyList(), false, noon, utc)
             .lettersComplete) // only A has a camera match
         assertEquals(0, mainMenuState(snapshot(day, 3).copy(alphabetCompleted = emptySet()), emptyList(), false, noon, utc)
             .lettersComplete)
-        assertEquals(Letter.staticLetters.size, state.lettersTotal)
+        assertEquals(Letter.entries.size, state.lettersTotal)
         assertEquals(2, state.wordsComplete)
         assertEquals(3, state.wordsTotal)
     }

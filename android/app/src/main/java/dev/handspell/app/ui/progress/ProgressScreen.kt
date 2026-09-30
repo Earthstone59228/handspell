@@ -91,7 +91,7 @@ private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit,
     val practised = letters.count { it.attempts > 0 }
 
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-        StatTile("$practised/${Letter.staticLetters.size}", stringResource(R.string.progress_stat_letters), colors.label,
+        StatTile("$practised/${Letter.entries.size}", stringResource(R.string.progress_stat_letters), colors.label,
             Modifier.weight(1f))
         StatTile(matches.toString(), stringResource(R.string.progress_stat_matched), colors.label, Modifier.weight(1f))
     }

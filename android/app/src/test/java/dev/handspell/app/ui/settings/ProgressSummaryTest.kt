@@ -25,7 +25,7 @@ class ProgressSummaryTest {
     @Test fun recordedSummaryCountsAttemptsAndMatchesSeparately() {
         val progress = LetterProgress(Letter.A, attempts = 3, matches = 1,
             bestTimeToMatchMs = 1200, lastPractisedAt = 1)
-        assertEquals(ProgressSummary.Recorded(2, 1, Letter.staticLetters.size, 3, 1),
+        assertEquals(ProgressSummary.Recorded(2, 1, Letter.entries.size, 3, 1),
             snapshot(mapOf(Letter.A to progress)).toSummary())
     }
 }

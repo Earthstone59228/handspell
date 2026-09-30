@@ -43,7 +43,7 @@
       "properties": {
         "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
         "type": { "const": "drill" },
-        "letter": { "$ref": "#/$defs/letter" },
+        "letter": { "type": "string", "pattern": "^[A-Z]$", "description": "Static or motion ASL letter for an individual drill." },
         "prompt": { "type": "string", "minLength": 1, "maxLength": 80 },
         "description": {
           "description": "Original handshape wording. Must not be copied or closely paraphrased from Lifeprint/ASL University, whose terms forbid app use; see docs/research/data-and-asl-reference.md section 2.",

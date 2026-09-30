@@ -29,7 +29,7 @@ const val MIN_ATTEMPTS_FOR_RATE = 2
  * tried (A–Z), so a new learner is pointed somewhere useful.
  */
 fun insightsFor(snapshot: ProgressSnapshot?, nowMs: Long, zone: TimeZone = TimeZone.getDefault()): Insights {
-    val letters = snapshot?.letters?.values.orEmpty().filter { !it.letter.requiresMotion }
+    val letters = snapshot?.letters?.values.orEmpty()
     val weakest = letters.filter { it.attempts >= MIN_ATTEMPTS_FOR_RATE && it.matches < it.attempts }
         .map { LetterRate(it.letter, it.matches, it.attempts) }
         .sortedWith(compareBy<LetterRate> { it.rate }.thenByDescending { it.attempts }.thenBy { it.letter.name })
@@ -41,7 +41,7 @@ fun insightsFor(snapshot: ProgressSnapshot?, nowMs: Long, zone: TimeZone = TimeZ
     val timed = letters.sumOf { it.timedMatches }
     val average = if (timed == 0) null else letters.sumOf { it.totalMatchMs } / timed
     val tried = letters.filter { it.attempts > 0 }.map { it.letter }.toSet()
-    val untried = Letter.staticLetters.filter { it !in tried }
+    val untried = Letter.entries.filter { it !in tried }
     val suggestion = (weakest.map { it.letter } + untried).distinct().take(2)
     return Insights(
         weakest = weakest,

@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "packId": "drills-core",
-  "packVersion": 2,
+  "packVersion": 3,
   "kind": "drill",
   "tier": "free",
   "title": "The alphabet, one letter at a time",
-  "summary": "All 24 static letters, each with a plain-language handshape description and a nudge for its most common mix-up.",
+  "summary": "All 26 letters, with handshape descriptions and motion instructions for J and Z.",
   "releasedOn": "2026-09-13",
   "items": [
     {
@@ -79,6 +79,13 @@
       "prompt": "Show the letter I",
       "description": "Make a fist with your thumb across the front. Raise only your pinky straight up. Palm faces the camera.",
       "hintId": "hint_generic"
+    },
+    {
+      "id": "drill-j",
+      "letter": "J",
+      "prompt": "Sign J",
+      "description": "Start with your pinky extended and other fingers curled. Draw down, then hook back up with your pinky. Hold briefly at the end.",
+      "type": "drill"
     },
     {
       "id": "drill-k",
@@ -199,6 +206,13 @@
       "prompt": "Show the letter Y",
       "description": "Stretch your thumb and pinky out. Curl your middle three fingers into your palm. Palm faces the camera.",
       "hintId": "hint_generic"
+    },
+    {
+      "id": "drill-z",
+      "letter": "Z",
+      "prompt": "Sign Z",
+      "description": "Extend your index finger and curl the other fingers. Trace across, diagonally down and back, then across again. Hold briefly at the end.",
+      "type": "drill"
     }
   ]
 }

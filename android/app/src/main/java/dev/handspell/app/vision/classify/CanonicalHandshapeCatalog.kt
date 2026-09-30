@@ -15,7 +15,8 @@ class CanonicalHandshapeCatalog(private val assets: AssetManager) {
 
     suspend fun handshapeFor(letter: Letter): CanonicalHandshape? = withContext(Dispatchers.IO) {
         val poses = cached ?: load().also { cached = it }
-        poses[letter]
+        val startingLetter = when (letter) { Letter.J -> Letter.I; Letter.Z -> Letter.D; else -> letter }
+        poses[startingLetter]?.let { CanonicalHandshape(letter, it.landmarks) }
     }
 
     private fun load(): Map<Letter, CanonicalHandshape> = assets.open(KnnLetterClassifier.ASSET_NAME)

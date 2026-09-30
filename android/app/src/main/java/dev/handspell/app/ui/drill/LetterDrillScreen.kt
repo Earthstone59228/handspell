@@ -288,7 +288,7 @@ private fun ActiveDrill(
             ) {
                 FeedbackBadge(state.feedback)
                 Text(drill.description, style = MaterialTheme.typography.bodyMedium, color = LocalAslColors.current.labelSecondary)
-                if (drill.letter in setOf(Letter.R, Letter.T, Letter.U)) {
+                if (drill.letter in setOf(Letter.J, Letter.Z, Letter.R, Letter.T, Letter.U)) {
                     Text(stringResource(R.string.recognition_experimental_letter, drill.letter.display),
                         style = MaterialTheme.typography.bodySmall, color = LocalAslColors.current.labelSecondary)
                 }

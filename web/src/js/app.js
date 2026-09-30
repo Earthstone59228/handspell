@@ -5,9 +5,9 @@ import { installBackDrag } from './back-drag.js';
 document.querySelectorAll('.screen-back').forEach(installBackDrag);
 
 const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
-// One place to say which letters can be practised. J and Z need motion, which the classifier cannot judge yet;
-// add a letter here (or remove it) to grey it out. Wireframes come from ./handshapes.js (see scripts/gen-web-wireframes.py).
-const letterStatus = { J: 'motion', Z: 'motion' };
+// All 26 letters can be practised, including motion recognition for J and Z.
+// Wireframes come from ./handshapes.js (see scripts/gen-web-wireframes.py).
+const letterStatus = {};
 const isPracticable = letter => !letterStatus[letter];
 const practicable = letters.filter(isPracticable);
 const storageKey = 'sign-by-sign-progress-v1';

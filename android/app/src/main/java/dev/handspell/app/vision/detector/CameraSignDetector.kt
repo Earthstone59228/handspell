@@ -1,5 +1,7 @@
 package dev.handspell.app.vision.detector
 
+import dev.handspell.app.vision.motion.MotionLetterRecognizer
+import dev.handspell.app.vision.motion.MotionProgress
 import android.content.Context
 import android.os.SystemClock
 import androidx.camera.core.ImageAnalysis
@@ -71,6 +73,7 @@ class CameraSignDetector(
     private var landmarkerHelper: HandLandmarkerHelper? = null
 
     private var target: Letter? = null
+    private var motionRecognizer: MotionLetterRecognizer? = null
     @Volatile private var lastHandSeenMs = 0L
     @Volatile private var lowLightDismissed = false
 
@@ -104,6 +107,7 @@ class CameraSignDetector(
     override fun setTarget(target: Letter?) {
         synchronized(lock) {
             this.target = target
+            motionRecognizer = target?.takeIf { it.requiresMotion }?.let(::MotionLetterRecognizer)
             feedbackEngine.setTarget(target)
             feedbackState.value = SignFeedbackState.NoHand(target)
         }
@@ -117,6 +121,7 @@ class CameraSignDetector(
             landmarkerHelper = null
             val generation = sessions.claim(owner)
             feedbackEngine.reset()
+            motionRecognizer?.reset()
             feedbackState.value = SignFeedbackState.NoHand(target)
             overlayState.value = null
             thumbnailState.value = null
@@ -155,6 +160,7 @@ class CameraSignDetector(
             val old = landmarkerHelper
             landmarkerHelper = null
             feedbackEngine.reset()
+            motionRecognizer?.reset()
             feedbackState.value = SignFeedbackState.NoHand(target)
             overlayState.value = null
             thumbnailState.value = null
@@ -175,7 +181,8 @@ class CameraSignDetector(
             if (!sessions.isCurrent(token) || landmarkerHelper == null) return
             if (hands.isEmpty()) {
                 overlayState.value = null
-                feedbackState.value = feedbackEngine.onNoHand(SystemClock.uptimeMillis())
+                feedbackState.value = motionRecognizer?.let { motionFeedback(it.onFrame(null, SystemClock.uptimeMillis())) }
+                    ?: feedbackEngine.onNoHand(SystemClock.uptimeMillis())
                 return
             }
             val classifier = classifier ?: return
@@ -190,6 +197,10 @@ class CameraSignDetector(
                 imageHeight = hand.imageHeight,
                 timestampMs = hand.timestampMs,
             )
+            motionRecognizer?.let {
+                feedbackState.value = motionFeedback(it.onFrame(hand, hand.timestampMs))
+                return
+            }
             val normalized = normalizer.normalize(hand)
             if (normalized == null) {
                 feedbackState.value = feedbackEngine.onNoHand(hand.timestampMs)
@@ -197,6 +208,16 @@ class CameraSignDetector(
             }
             val classification = classifier.classify(normalized, hand.timestampMs)
             feedbackState.value = feedbackEngine.onFrame(classification)
+        }
+    }
+
+    private fun motionFeedback(progress: MotionProgress): SignFeedbackState {
+        val letter = requireNotNull(target)
+        return when (progress) {
+            MotionProgress.NoHand -> SignFeedbackState.NoHand(letter)
+            MotionProgress.WrongShape -> SignFeedbackState.NotRecognized(letter, 0f)
+            is MotionProgress.Tracing -> SignFeedbackState.Adjust(letter, 0f, null, progress.progress)
+            is MotionProgress.Matched -> SignFeedbackState.Match(letter, 1f - progress.distance, 0L)
         }
     }
 
