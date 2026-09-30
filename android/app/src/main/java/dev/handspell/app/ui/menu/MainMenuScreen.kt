@@ -58,7 +58,6 @@ fun MainMenuScreen(
         onBack = null,
         title = stringResource(R.string.app_name),
         body = stringResource(R.string.menu_hero_body),
-        topSpace = Spacing.xs,
         actions = {
             headerActions()
             HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), actions.onSettings)

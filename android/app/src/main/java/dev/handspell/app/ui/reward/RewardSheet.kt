@@ -68,7 +68,7 @@ private fun RewardContent(reward: Reward, onContinue: () -> Unit, proMention: (@
         Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.referenceGuide * 1.5f)
             .graphicsLayer { scaleX = scale.value; scaleY = scale.value },
         shape = RoundedCornerShape(AslShapes.extraLarge),
-        color = colors.card,
+        color = colors.tile,
     ) {
         Box(contentAlignment = Alignment.Center) {
             val letter = reward.subject.kind == RewardSubject.Kind.LETTER

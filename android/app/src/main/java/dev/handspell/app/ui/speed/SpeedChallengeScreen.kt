@@ -316,9 +316,8 @@ private fun RunningChallenge(
 
 @Composable
 private fun PausedChallenge(remainingSeconds: Int, onResume: () -> Unit, onBack: () -> Unit) {
-    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
-        ScreenHeader(stringResource(R.string.speed_challenge_title), onBack)
-        Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+    FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.speed_challenge_title), body = null) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
             Text(stringResource(R.string.speed_paused_body, remainingSeconds), style = MaterialTheme.typography.bodyLarge)
             AslButton(stringResource(R.string.speed_resume), onResume, Modifier.fillMaxWidth())
         }

@@ -62,6 +62,8 @@ import dev.handspell.app.ui.components.BackChevron
 import dev.handspell.app.ui.components.ProLockLabel
 import dev.handspell.app.ui.menu.HeaderIcon
 import dev.handspell.app.ui.pro.WordsProStrip
+import dev.handspell.app.ui.settings.FrostedHeaderContent
+import dev.handspell.app.ui.settings.FrostedHeaderScaffold
 import dev.handspell.app.ui.settings.SettingsGroupFooter
 import dev.handspell.app.ui.theme.AslPalette
 import dev.handspell.app.ui.theme.AslShapes
@@ -120,9 +122,23 @@ fun WordsMenuScreen(
     val selected = state.words.firstOrNull { it.gloss == selectedGloss }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    var headerHeight by remember { mutableIntStateOf(0) }
-    val headerDp = with(density) { headerHeight.toDp() }
-    Box(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
+    Box(Modifier.fillMaxSize()) {
+    FrostedHeaderScaffold(
+        header = {
+            FrostedHeaderContent(
+                onBack = onBack, title = stringResource(R.string.words_title),
+                actions = { HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), onSettings) },
+                below = {
+                    if (!state.loading) Text(
+                        wordsProgressLine(state.completeCount, state.openTotal), style = AslText.progressLine,
+                        color = colors.label.copy(alpha = 0.62f),
+                        modifier = Modifier.padding(start = Spacing.lg, top = Spacing.xs)
+                            .semantics { contentDescription = "${state.completeCount} of ${state.openTotal}" },
+                    )
+                },
+            )
+        },
+    ) { headerDp ->
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
@@ -160,25 +176,7 @@ fun WordsMenuScreen(
                 }
             }
         }
-        // Header over the list, like the alphabet's frosted .top-area.
-        Column(
-            Modifier.fillMaxWidth().onSizeChanged { headerHeight = it.height }
-                .background(colors.backgroundGrouped.copy(alpha = 0.94f)),
-        ) {
-            Row(Modifier.fillMaxWidth().padding(start = Spacing.xs, end = Spacing.sm, top = Spacing.xxs),
-                verticalAlignment = Alignment.CenterVertically) {
-                BackChevron(onBack)
-                Text(stringResource(R.string.words_title), style = AslText.largeTitle, color = colors.label,
-                    modifier = Modifier.weight(1f).semantics { heading() })
-                HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), onSettings)
-            }
-            if (!state.loading) Text(
-                wordsProgressLine(state.completeCount, state.openTotal), style = AslText.progressLine,
-                color = colors.label.copy(alpha = 0.62f),
-                modifier = Modifier.padding(start = Spacing.lg, top = Spacing.xs, bottom = Spacing.sm)
-                    .semantics { contentDescription = "${state.completeCount} of ${state.openTotal}" },
-            )
-        }
+    }
         AslSheet(visible = selected != null, onDismiss = { selectedGloss = null }) {
             if (selected != null) WordSheet(
                 word = selected,
@@ -233,7 +231,7 @@ private fun WordCard(
         Box(Modifier.align(Alignment.TopEnd)) {
             when {
                 locked -> ProLockLabel(colors.onCardSecondary)
-                complete -> Text(stringResource(R.string.words_card_complete), style = AslText.cardMeta, color = AslPalette.BlueText)
+                complete -> Text(stringResource(R.string.words_card_complete), style = AslText.cardMeta, color = colors.onCardAccent)
                 else -> Unit
             }
         }
@@ -266,7 +264,7 @@ private fun WordSheet(
 ) {
     val colors = LocalAslColors.current
     Box(
-        Modifier.size(Spacing.practiceTile).clip(RoundedCornerShape(AslShapes.tile)).background(colors.card),
+        Modifier.size(Spacing.practiceTile).clip(RoundedCornerShape(AslShapes.tile)).background(colors.tile),
         contentAlignment = Alignment.Center,
     ) {
         if (reference != null) WordReferenceView(reference, word.display, Modifier.fillMaxSize().padding(Spacing.xs))

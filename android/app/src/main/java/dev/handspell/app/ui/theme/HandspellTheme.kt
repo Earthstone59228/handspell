@@ -106,10 +106,17 @@ data class AslColors(
     val feedbackAdjust: Color,
     val feedbackNeutral: Color,
     val destructive: Color,
-    /** The alphabet menu's letter cards: an off-white card with dark text, raised against the dark ground. */
-    val card: Color = AslPalette.Paper,
-    val onCard: Color = AslPalette.Ink,
-    val onCardSecondary: Color = AslPalette.Ink.copy(alpha = 0.62f),
+    /** Menu and list cards (Home entries, Letters and Words rows): the same raised fill as [surface] in both modes. */
+    val card: Color,
+    val onCard: Color,
+    val onCardSecondary: Color,
+    /** "Complete" meta and other blue text on a [card]. */
+    val onCardAccent: Color,
+    /**
+     * Media tile: the big letter / word example in a sheet or reward. It stays light in the dark theme because the hand
+     * wireframe and figure are drawn for a light ground, like a photo mat. Web `.practice-letter`.
+     */
+    val tile: Color,
 )
 
 private val AslDarkColors = AslColors(
@@ -129,6 +136,11 @@ private val AslDarkColors = AslColors(
     feedbackAdjust = AslPalette.Paper,
     feedbackNeutral = AslPalette.Paper.copy(alpha = 0.62f),
     destructive = AslPalette.Paper,
+    card = AslPalette.Slate,
+    onCard = AslPalette.Paper,
+    onCardSecondary = AslPalette.Paper.copy(alpha = 0.62f),
+    onCardAccent = AslPalette.Blue,
+    tile = AslPalette.Paper,
 )
 
 /**
@@ -153,6 +165,8 @@ private val AslLightColors = AslColors(
     card = AslPalette.White,
     onCard = AslPalette.Ink,
     onCardSecondary = AslPalette.Ink.copy(alpha = 0.62f),
+    onCardAccent = AslPalette.BlueText,
+    tile = AslPalette.White,
 )
 
 val LocalAslColors = staticCompositionLocalOf { AslDarkColors }

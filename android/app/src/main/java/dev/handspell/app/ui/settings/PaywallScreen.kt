@@ -131,12 +131,8 @@ private fun PaywallScreen(
     lockedWord: String? = null,
 ) {
     val colors = LocalAslColors.current
-    Column(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
-      ScreenHeader(stringResource(R.string.paywall_title), onBack)
-      Column(
-          Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
-          verticalArrangement = Arrangement.spacedBy(Spacing.md),
-      ) {
+    FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.paywall_title), body = null) {
+      Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
         if (lockedWord != null) Text(stringResource(R.string.paywall_word_locked, lockedWord),
             style = MaterialTheme.typography.titleLarge, color = colors.label)
         when {

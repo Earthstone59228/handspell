@@ -41,13 +41,8 @@ fun LegalScreen(title: String, assetName: String, onBack: () -> Unit) {
         runCatching { context.assets.open("legal/$assetName").bufferedReader().use { it.readText() } }
             .getOrNull()?.let(::parseDocument)
     }
-    Column(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
-        ScreenHeader(title, onBack)
-        Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .padding(start = Spacing.md, end = Spacing.md, bottom = Spacing.xxl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md),
-        ) {
+    FrostedSettingsHero(onBack = onBack, title = title, body = null) {
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
             if (blocks == null) {
                 Text(stringResource(R.string.settings_legal_unavailable), style = MaterialTheme.typography.bodyLarge, color = colors.label)
             } else {
