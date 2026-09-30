@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -207,7 +208,7 @@ private fun MenuEntryCard(title: String, meta: String?, onClick: () -> Unit, mar
     ) {
         Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
             Box(Modifier.fillMaxWidth().height(TileRingSize), contentAlignment = Alignment.Center) {
-                Text(mark, style = AslText.title1, color = colors.labelTertiary,
+                Text(mark, style = AslText.title1.copy(fontSize = 46.sp, lineHeight = 52.sp), color = colors.labelTertiary,
                     modifier = Modifier.clearAndSetSemantics {})
             }
             Spacer(Modifier.height(TileRingGap))
