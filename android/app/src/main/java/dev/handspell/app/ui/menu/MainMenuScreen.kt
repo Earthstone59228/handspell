@@ -109,7 +109,6 @@ fun MainMenuScreen(
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 Spacer(Modifier.height(Spacing.xxxl))
                 Column(Modifier.appear().padding(horizontal = Spacing.xs).padding(bottom = Spacing.xxl)) {
-                    Text("Hi, signer.", style = AslText.largeTitle, color = colors.labelSecondary)
                     Text("What will you\nlearn today?", style = AslText.largeTitle, color = colors.label,
                         modifier = Modifier.semantics { heading() })
                 }
