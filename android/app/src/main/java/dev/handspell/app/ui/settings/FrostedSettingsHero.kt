@@ -39,7 +39,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import dev.handspell.app.R
-import dev.handspell.app.ui.components.BackChevron
+import dev.handspell.app.ui.components.HeaderBottomSpace
+import dev.handspell.app.ui.components.HeaderSubline
+import dev.handspell.app.ui.components.HeaderTitleRow
 import dev.handspell.app.ui.components.BackChevronStart
 import dev.handspell.app.ui.components.BackChevronTop
 import dev.handspell.app.ui.theme.LocalAslColors
@@ -78,26 +80,9 @@ internal fun FrostedSettingsHero(
             Modifier.fillMaxWidth().onSizeChanged { heroHeight = it.height }
                 .clipToBounds().frostedBackdrop(contentLayer).statusBarsPadding(),
         ) {
-            if (onBack != null) Row(
-                Modifier.fillMaxWidth().padding(start = BackChevronStart, end = Spacing.lg, top = BackChevronTop),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                BackChevron(onBack)
-                Text(title, style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.weight(1f).semantics { heading() })
-                actions?.invoke(this)
-            } else {
-                Spacer(Modifier.height(topSpace))
-                Row(Modifier.fillMaxWidth().padding(horizontal = Spacing.lg), verticalAlignment = Alignment.CenterVertically) {
-                    Text(title, style = MaterialTheme.typography.displaySmall,
-                        modifier = Modifier.weight(1f).semantics { heading() })
-                    actions?.invoke(this)
-                }
-            }
-            if (body != null) Text(body, style = MaterialTheme.typography.bodyMedium,
-                color = colors.labelSecondary,
-                modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.sm))
-            Spacer(Modifier.height(Spacing.xl))
+            HeaderTitleRow(title, onBack, actions = { actions?.invoke(this) })
+            if (body != null) HeaderSubline(body)
+            Spacer(Modifier.height(HeaderBottomSpace))
         }
     }
 }

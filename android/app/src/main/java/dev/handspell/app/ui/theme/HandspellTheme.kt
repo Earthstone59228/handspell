@@ -30,7 +30,7 @@ object Spacing {
     val xxl = 32.dp
     val xxxl = 40.dp
     val huge = 48.dp
-    val scrollFade: Dp = 76.dp
+    val scrollFade: Dp = 40.dp
     val progressRing: Dp = 76.dp
     val featureTile: Dp = 172.dp
     val letterTile: Dp = 64.dp

@@ -116,7 +116,7 @@ fun ProPackAccess(
     onRetry: () -> Unit,
 ) {
     val loading = status == EntitlementStatus.Loading || status == EntitlementStatus.Unknown
-    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
+    Column(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
         ScreenHeader(stringResource(R.string.settings_pro), onBack)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
             verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
@@ -147,13 +147,10 @@ fun ProPackAccess(
 
 @Composable
 private fun PackMessage(message: String, onBack: () -> Unit, onRetry: (() -> Unit)? = null, loading: Boolean = false) {
-    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
-        ScreenHeader(stringResource(R.string.home_pro_packs), onBack)
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
-            if (loading) CircularProgressIndicator(color = LocalAslColors.current.label)
-            Text(message, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
-            if (onRetry != null) AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth())
-        }
+    dev.handspell.app.ui.settings.FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.home_pro_packs), body = null) {
+        if (loading) CircularProgressIndicator(color = LocalAslColors.current.label)
+        Text(message, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        if (onRetry != null) AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth())
     }
 }
 
@@ -170,7 +167,7 @@ private fun StoryPack(pack: ContentPack, drills: List<PackItem.Drill>, detector:
         state.loadFailed -> { PackMessage(stringResource(R.string.pro_progress_load_failed), onBack, { loadAttempt++ }); return }
     }
     val step = steps.getOrNull(state.stepIndex)
-    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
+    Column(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
         ScreenHeader(pack.title, onBack, compact = step?.letters?.isNotEmpty() == true)
         if (step == null) {
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
@@ -253,7 +250,7 @@ private fun SpeedPack(pack: ContentPack, drills: List<PackItem.Drill>, detector:
         confirmButton = { TextButton(onClick = { exitDialog = false; onBack() }) { Text(stringResource(R.string.speed_end_round)) } },
         dismissButton = { TextButton(onClick = { exitDialog = false }) { Text(stringResource(R.string.speed_keep_playing)) } },
     )
-    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
+    Column(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
         ScreenHeader(round?.title ?: pack.title, back, compact = state.started && !state.finished)
         when {
             round == null -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),

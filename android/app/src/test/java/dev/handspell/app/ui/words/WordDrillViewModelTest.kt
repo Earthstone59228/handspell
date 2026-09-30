@@ -42,7 +42,7 @@ class WordDrillViewModelTest {
         val detector = FakeWordDetector()
         val store = RecordingStore()
         var clock = 1_000L
-        val model = WordDrillViewModel(detector, store) { clock }
+        val model = WordDrillViewModel(detector, store, kotlinx.coroutines.test.UnconfinedTestDispatcher(dispatcher.scheduler)) { clock }
         runCurrent()
         model.setWord(hello, listOf(hello, bye))
         assertEquals("hello", detector.currentTarget)
@@ -66,7 +66,7 @@ class WordDrillViewModelTest {
     @Test fun `a skip counts only after real signing`() = runTest(dispatcher) {
         val detector = FakeWordDetector()
         val store = RecordingStore()
-        val model = WordDrillViewModel(detector, store) { 0L }
+        val model = WordDrillViewModel(detector, store, kotlinx.coroutines.test.UnconfinedTestDispatcher(dispatcher.scheduler)) { 0L }
         runCurrent()
         model.setWord(hello, listOf(hello, bye))
         model.recordSkip()
@@ -82,7 +82,7 @@ class WordDrillViewModelTest {
 
     @Test fun `missing model is the unavailable state, not a crash`() = runTest(dispatcher) {
         val detector = FakeWordDetector(DetectorStatus.Failed(WORDS_UNAVAILABLE, null))
-        val model = WordDrillViewModel(detector, RecordingStore()) { 0L }
+        val model = WordDrillViewModel(detector, RecordingStore(), kotlinx.coroutines.test.UnconfinedTestDispatcher(dispatcher.scheduler)) { 0L }
         runCurrent()
         assertTrue(model.uiState.value.wordsUnavailable)
         assertFalse(WordDrillUiState(detectorStatus = DetectorStatus.Failed("error_landmarker_failed", null)).wordsUnavailable)

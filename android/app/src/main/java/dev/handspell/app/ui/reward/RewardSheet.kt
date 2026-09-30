@@ -47,12 +47,18 @@ import dev.handspell.app.ui.theme.Spacing
  * No sound; with reduce motion on nothing moves.
  */
 @Composable
-fun RewardSheet(reward: Reward?, onDismiss: () -> Unit, proMention: (@Composable (Reward) -> Unit)? = null) {
+fun RewardSheet(
+    reward: Reward?,
+    onDismiss: () -> Unit,
+    /** The Continue button; a tap on the backdrop or Back only dismisses. Defaults to dismissing. */
+    onContinue: () -> Unit = onDismiss,
+    proMention: (@Composable (Reward) -> Unit)? = null,
+) {
     // Keep the last reward while the sheet animates out.
     var shown by remember { mutableStateOf(reward) }
     if (reward != null) shown = reward
     AslSheet(visible = reward != null, onDismiss = onDismiss) {
-        shown?.let { RewardContent(it, onDismiss, proMention) }
+        shown?.let { RewardContent(it, onContinue, proMention) }
     }
 }
 

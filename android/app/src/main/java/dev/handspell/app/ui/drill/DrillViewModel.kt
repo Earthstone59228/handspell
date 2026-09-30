@@ -14,6 +14,8 @@ import android.os.SystemClock
 import dev.handspell.app.vision.DetectorStatus
 import dev.handspell.app.vision.SignDetector
 import dev.handspell.app.vision.classify.CanonicalHandshapeCatalog
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,6 +52,8 @@ class DrillViewModel(
     private val signDetector: SignDetector,
     private val loadCanonicalHandshape: suspend (Letter) -> CanonicalHandshape?,
     private val progressStore: ProgressStore,
+    /** Starting the detector loads the hand model, which is slow, so it runs off the main thread. */
+    private val startDispatcher: CoroutineDispatcher = Dispatchers.Default,
     private val monotonicTime: () -> Long = SystemClock::elapsedRealtime,
 ) : ViewModel() {
     private var startedAtMs = 0L
@@ -135,7 +139,7 @@ class DrillViewModel(
     }
 
     fun startDetector() {
-        if (mutableUiState.value.drill != null) signDetector.start(this)
+        if (mutableUiState.value.drill != null) viewModelScope.launch(startDispatcher) { signDetector.start(this@DrillViewModel) }
     }
 
     fun onCameraUnavailable() {
@@ -152,7 +156,7 @@ class DrillViewModel(
             cameraUnavailable = false,
             cameraSession = mutableUiState.value.cameraSession + 1,
         )
-        signDetector.start(this)
+        viewModelScope.launch(startDispatcher) { signDetector.start(this@DrillViewModel) }
     }
 
     suspend fun recordSkip() {

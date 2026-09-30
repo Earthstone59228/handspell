@@ -1,16 +1,18 @@
 package dev.handspell.app.ui.components
 
 import android.os.Build
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.layer.GraphicsLayer
@@ -60,31 +62,27 @@ internal fun Modifier.frostedBackdrop(contentLayer: GraphicsLayer): Modifier {
     }
 }
 
-/** Samples the matching part of a scrolling viewport and fades into its ground at either edge. */
+
+/**
+ * Fades scrolling content into the screen's single background, but only at an edge that has more content beyond it,
+ * so the last tile is never dimmed when everything already fits or the list is scrolled to its end.
+ */
 @Composable
-internal fun Modifier.scrollEdgeBackdrop(
-    contentLayer: GraphicsLayer,
-    sampleOffsetY: Float,
-    top: Boolean,
-    ground: Color,
-): Modifier {
-    val backdrop = rememberGraphicsLayer()
-    val radius = with(LocalDensity.current) { Spacing.lg.toPx() }
-    val supportsBlur = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    backdrop.renderEffect = if (supportsBlur) BlurEffect(radius, radius, TileMode.Clamp) else null
-    return drawWithContent {
-        if (supportsBlur) {
-            backdrop.record {
-                withTransform({ translate(top = -sampleOffsetY) }) { drawLayer(contentLayer) }
-            }
-            drawLayer(backdrop)
+internal fun Modifier.fadedScrollEdges(state: androidx.compose.foundation.ScrollState): Modifier {
+    val fadePx = with(LocalDensity.current) { Spacing.scrollFade.toPx() }
+    val top by animateFloatAsState(if (state.canScrollBackward) 1f else 0f, label = "fade top")
+    val bottom by animateFloatAsState(if (state.canScrollForward) 1f else 0f, label = "fade bottom")
+    return this.graphicsLayer(compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen)
+        .drawWithContent {
+            drawContent()
+            val fraction = (fadePx / size.height).coerceIn(0f, 0.25f)
+            drawRect(
+                Brush.verticalGradient(
+                    0f to Color.White.copy(alpha = 1f - top),
+                    fraction to Color.White,
+                    (1f - fraction) to Color.White,
+                    1f to Color.White.copy(alpha = 1f - bottom),
+                ), blendMode = BlendMode.DstIn,
+            )
         }
-        drawRect(
-            Brush.verticalGradient(
-                if (top) listOf(ground, ground.copy(alpha = 0f))
-                else listOf(ground.copy(alpha = 0f), ground),
-            ),
-        )
-        drawContent()
-    }
 }

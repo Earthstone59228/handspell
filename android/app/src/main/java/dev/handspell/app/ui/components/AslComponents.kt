@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -81,9 +83,56 @@ fun AslButtonPair(first: @Composable (Modifier) -> Unit, second: (@Composable (M
 // and the alphabet page moved by the same 12px (web/src/css/style.css .top-area / .screen-back).
 internal val BackChevronTop = 4.dp
 
+/** Space below every menu header's last line, so all screens start their content at the same distance. */
+internal val HeaderBottomSpace = Spacing.xl
+
 /**
- * Header shared by every secondary screen: the alphabet menu's single back chevron at top left, then a large,
- * tightly tracked title. [compact] puts both on one row for screens that need the height (the camera).
+ * The one title row of every menu screen: the back chevron, then a single-line large title, then optional icons.
+ * The chevron sits at the same spot everywhere, and a long title shrinks to fit instead of wrapping or clipping.
+ */
+@Composable
+internal fun HeaderTitleRow(
+    title: String,
+    onBack: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    Row(
+        modifier.fillMaxWidth().padding(start = BackChevronStart, end = Spacing.sm, top = BackChevronTop),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (onBack != null) BackChevron(onBack)
+        HeaderTitle(title, Modifier.weight(1f).padding(start = if (onBack == null) Spacing.sm else 0.dp))
+        actions()
+    }
+}
+
+/** The large title, one line; the size steps down until the whole title fits its space. */
+@Composable
+internal fun HeaderTitle(title: String, modifier: Modifier = Modifier) {
+    var scale by remember(title) { mutableStateOf(1f) }
+    val base = dev.handspell.app.ui.theme.AslText.largeTitle
+    Text(
+        title,
+        style = base.copy(fontSize = base.fontSize * scale, lineHeight = base.lineHeight * scale),
+        color = LocalAslColors.current.label,
+        maxLines = 1, softWrap = false,
+        onTextLayout = { if (it.hasVisualOverflow && scale > 0.55f) scale -= 0.06f },
+        modifier = modifier.semantics { heading() },
+    )
+}
+
+/** The line under a header's title (progress, or a one-sentence description): same inset and gap on every screen. */
+@Composable
+internal fun HeaderSubline(text: String, modifier: Modifier = Modifier, style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium) {
+    Text(text, style = style, color = LocalAslColors.current.labelSecondary,
+        modifier = modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.xs))
+}
+
+/**
+ * Header for the screens that manage their own scrolling below it (cameras, packs). Menu screens that scroll under a
+ * frosted header use FrostedSettingsHero, which draws the same [HeaderTitleRow]. [compact] gives the camera screens a
+ * smaller title so the picture keeps its height.
  */
 @Composable
 fun ScreenHeader(
@@ -95,28 +144,23 @@ fun ScreenHeader(
 ) {
     val colors = LocalAslColors.current
     Column(modifier.fillMaxWidth().statusBarsPadding()) {
-        Row(
-            // Same spot as the alphabet menu's back button (top 6, left 14, 44 box): centre 36 from the left, 28 down.
-            Modifier.fillMaxWidth().padding(start = BackChevronStart, end = Spacing.md, top = BackChevronTop),
+        if (compact) Row(
+            Modifier.fillMaxWidth().padding(start = BackChevronStart, end = Spacing.sm, top = BackChevronTop),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             if (onBack != null) BackChevron(onBack)
-            if (compact) Text(
+            Text(
                 title,
                 style = MaterialTheme.typography.titleLarge,
                 color = colors.label,
                 modifier = Modifier.weight(1f).padding(start = if (onBack == null) Spacing.md else 0.dp)
                     .semantics { heading() },
-            ) else Box(Modifier.weight(1f))
+            )
             actions()
+        } else {
+            HeaderTitleRow(title, onBack, actions = actions)
+            Spacer(Modifier.height(HeaderBottomSpace))
         }
-        if (!compact) Text(
-            title,
-            style = MaterialTheme.typography.displaySmall,
-            color = colors.label,
-            modifier = Modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.xxs, bottom = Spacing.md)
-                .semantics { heading() },
-        )
     }
 }
 
@@ -216,7 +260,7 @@ fun AslCard(
 ) {
     val colors = LocalAslColors.current
     androidx.compose.material3.Surface(
-        modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(cornerRadius)),
+        modifier = Modifier.clip(RoundedCornerShape(cornerRadius)).then(modifier).fillMaxWidth(),
         shape = RoundedCornerShape(cornerRadius),
         color = colors.surface,
         contentColor = colors.onSurface,

@@ -3,6 +3,10 @@
     <!-- Main menu -->
     <string name="menu_hero_body">Practice ASL fingerspelling and first words with your camera.</string>
     <string name="menu_open_paper">Open documents</string>
+    <string name="menu_plan_free">Free</string>
+    <string name="menu_plan_pro">Pro</string>
+    <string name="menu_plan_free_description">Free plan. Open Pro options</string>
+    <string name="menu_plan_pro_description">Pro plan. Open Pro options</string>
     <string name="menu_open_settings">Open settings</string>
     <string name="menu_theme_to_light">Switch to light appearance</string>
     <string name="menu_theme_to_dark">Switch to dark appearance</string>

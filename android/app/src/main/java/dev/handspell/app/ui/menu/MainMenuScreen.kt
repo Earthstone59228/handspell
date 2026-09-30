@@ -1,13 +1,9 @@
 package dev.handspell.app.ui.menu
 
 import androidx.compose.foundation.Canvas
+import dev.handspell.app.ui.components.fadedScrollEdges
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.graphics.rememberGraphicsLayer
-import androidx.compose.ui.layout.onSizeChanged
-import dev.handspell.app.ui.components.captureBackdrop
-import dev.handspell.app.ui.components.scrollEdgeBackdrop
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -65,6 +61,8 @@ data class MainMenuActions(
     val onSettings: () -> Unit,
     val onPaper: () -> Unit,
     val onSpeed: () -> Unit = {},
+    val onStories: () -> Unit = {},
+    /** The plan chip beside settings: opens the Pro menu for both Free and Pro. */
     val onPro: () -> Unit = {},
 )
 
@@ -79,28 +77,25 @@ fun MainMenuScreen(
     belowEntries: @Composable () -> Unit = {},
 ) {
     val colors = LocalAslColors.current
-    val contentLayer = rememberGraphicsLayer()
-    var paneHeight by remember { mutableIntStateOf(0) }
-    val fadePx = with(LocalDensity.current) { Spacing.scrollFade.toPx() }
     val tileHeight = with(LocalDensity.current) {
         Spacing.progressRing + Spacing.lg * 2 + AslText.title3.lineHeight.toDp() * 2 +
             AslText.footnote.lineHeight.toDp() * 2 + Spacing.xxs * 2
     }
-    Box(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
+    val scrollState = rememberScrollState()
+    Box(Modifier.fillMaxSize()) {
         Column(
-            Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = Spacing.lg).padding(bottom = Spacing.xl),
+            Modifier.fillMaxSize().statusBarsPadding().padding(bottom = Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = Spacing.lg), verticalAlignment = Alignment.CenterVertically) {
                 HeaderIcon(R.drawable.ic_paper, stringResource(R.string.menu_open_paper), actions.onPaper)
                 Spacer(Modifier.weight(1f))
-                Text("Pro", style = AslText.headline,
-                    modifier = Modifier.clip(RoundedCornerShape(AslShapes.tile))
-                        .clickable(role = Role.Button, onClick = actions.onPro).padding(Spacing.sm))
+                PlanChip(state.isPro, actions.onPro)
                 HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), actions.onSettings)
             }
-            Box(Modifier.weight(1f).fillMaxWidth().onSizeChanged { paneHeight = it.height }) {
-            Column(Modifier.fillMaxSize().captureBackdrop(contentLayer).verticalScroll(rememberScrollState()),
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+            Column(Modifier.fillMaxSize().fadedScrollEdges(scrollState).verticalScroll(scrollState)
+                .padding(horizontal = Spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 Spacer(Modifier.height(Spacing.xxxl))
                 Column(Modifier.padding(horizontal = Spacing.xs).padding(bottom = Spacing.xxl)) {
@@ -117,15 +112,13 @@ fun MainMenuScreen(
                 Row(Modifier.height(tileHeight), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     CompletionCard("Progress", state.lettersComplete + state.wordsComplete,
                         state.lettersTotal + state.wordsTotal, state.loading, actions.onProgress, Modifier.weight(1f))
-                    MenuEntryCard("Speed challenge", "Sign against the clock", actions.onSpeed, "◷", Modifier.weight(1f))
+                    MenuEntryCard("Stories", "Story lessons", actions.onStories, "✎", Modifier.weight(1f))
                 }
                 Spacer(Modifier.height(Spacing.xs))
                 belowEntries()
+                // Room to scroll the last row clear of the bottom fade.
+                Spacer(Modifier.height(Spacing.scrollFade))
             }
-            Box(Modifier.align(Alignment.TopCenter).fillMaxWidth().height(Spacing.scrollFade)
-                .scrollEdgeBackdrop(contentLayer, 0f, true, colors.backgroundGrouped))
-            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(Spacing.scrollFade)
-                .scrollEdgeBackdrop(contentLayer, paneHeight - fadePx, false, colors.backgroundGrouped))
             }
         }
 
@@ -163,6 +156,23 @@ private fun CompletionCard(title: String, complete: Int, total: Int, loading: Bo
             Text(if (loading) "Loading progress" else "$complete / $total complete",
                 style = AslText.footnote, color = colors.labelSecondary)
         }
+    }
+}
+
+/** "Free" or "Pro", in the header beside settings; a tap opens the Pro menu. */
+@Composable
+private fun PlanChip(isPro: Boolean, onClick: () -> Unit) {
+    val colors = LocalAslColors.current
+    val label = stringResource(if (isPro) R.string.menu_plan_pro else R.string.menu_plan_free)
+    val description = stringResource(if (isPro) R.string.menu_plan_pro_description else R.string.menu_plan_free_description)
+    val shape = RoundedCornerShape(AslShapes.tile)
+    Box(
+        Modifier.sizeIn(minHeight = Spacing.touchTarget).padding(vertical = Spacing.xxs).clip(shape)
+            .clickable(role = Role.Button, onClick = onClick).semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, style = AslText.headline, color = if (isPro) colors.accent else colors.labelSecondary,
+            modifier = Modifier.padding(horizontal = Spacing.sm).clearAndSetSemantics {})
     }
 }
 

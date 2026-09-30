@@ -1,6 +1,12 @@
 package dev.handspell.app.ui
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.Lifecycle
+import androidx.navigation.NavController
+import androidx.navigation.NavOptionsBuilder
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -137,7 +143,10 @@ fun HandspellApp(
     LaunchedEffect(entitlementGate) {
         entitlementGate.paywallRequests.collect { source ->
             if (source != PaywallSource.WORDS) paywallWord = null
-            navController.navigate(PAYWALL_ROUTE)
+            // A request is never dropped by the tap guard, but two requests never stack two paywalls.
+            if (navController.currentDestination?.route != PAYWALL_ROUTE) {
+                navController.navigate(PAYWALL_ROUTE) { launchSingleTop = true }
+            }
         }
     }
     val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(contentRepository, progressStore, entitlementGate))
@@ -147,13 +156,15 @@ fun HandspellApp(
     val leftHanded by preferences.leftHanded.collectAsStateWithLifecycle(initialValue = false)
     val entitlementStatus by entitlementGate.status.collectAsStateWithLifecycle()
     fun openPack(pack: ContentPack) {
-        routePackTap(pack, isPro, entitlementGate) { navController.navigate("$PACK_ROUTE/$it") }
+        routePackTap(pack, isPro, entitlementGate) { navController.safeNavigate("$PACK_ROUTE/$it") }
     }
     val context = LocalContext.current
     val words by produceState<List<WordEntry>?>(null, context) { value = WordCatalog.load(context.assets) }
     val wordReferences by produceState(emptyMap<String, dev.handspell.app.content.WordReference>(), context) {
         value = dev.handspell.app.content.WordReferences.load(context.assets)
     }
+    // The word model is slow to load; do it once, off the main thread, so opening Words or Speed never stalls a frame.
+    LaunchedEffect(Unit) { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { wordDetector() } }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
 
@@ -168,18 +179,24 @@ fun HandspellApp(
     // The alphabet is a WebView that draws under the status and navigation bars itself; every native screen
     // is inset here instead, so no native screen has to know about system bars.
     val isAlphabet = currentRoute == ALPHABET_ROUTE
+    val reduceMotion = dev.handspell.app.ui.theme.LocalReduceMotion.current
     val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     var reward by remember { mutableStateOf<Reward?>(null) }
+    // What the reward's Continue button does after closing it: a drill match moves on to the next letter or word.
+    var rewardContinue by remember { mutableStateOf<(() -> Unit)?>(null) }
     // "Not now" on a Pro mention hides every mention until the app is next started.
     var proMentionDismissed by rememberSaveable { mutableStateOf(false) }
     // Pro promotions, each dismissible for this session ("Not now").
     var menuProDismissed by rememberSaveable { mutableStateOf(false) }
     var showMenuPro by rememberSaveable { mutableStateOf(false) }
+    // The unprompted popup appears once per launch, not every time the menu comes back into view.
+    var menuProAutoShown by rememberSaveable { mutableStateOf(false) }
     var wordsProDismissed by rememberSaveable { mutableStateOf(false) }
     var rewardProLine by remember { mutableStateOf(false) }
     val proRewardLineDay by preferences.proRewardLineDay.collectAsStateWithLifecycle(initialValue = null)
     val proWordCount = words.orEmpty().count { it.tier == dev.handspell.app.content.Tier.PRO }
     fun showReward(subject: RewardSubject) {
+        rewardContinue = null
         val now = System.currentTimeMillis()
         val today = localPracticeDay(now)
         // Decided once when the reward opens, so recording the day doesn't hide the line while it is on screen.
@@ -212,18 +229,19 @@ fun HandspellApp(
             MainMenuScreen(
                 state = menuState,
                 actions = MainMenuActions(
-                    onLetters = { navController.navigate(ALPHABET_ROUTE) },
-                    onWords = { navController.navigate(WORDS_ROUTE) },
-                    onProgress = { navController.navigate(PROGRESS_ROUTE) },
-                    onSettings = { navController.navigate(SETTINGS_ROUTE) },
-                    onPaper = { navController.navigate(PAPER_ROUTE) },
-                    onSpeed = { navController.navigate(SPEED_ROUTE) },
-                    onPro = { if (isPro) navController.navigate(PRACTICE_ROUTE) else showMenuPro = true },
+                    onLetters = { navController.safeNavigate(ALPHABET_ROUTE) },
+                    onWords = { navController.safeNavigate(WORDS_ROUTE) },
+                    onProgress = { navController.safeNavigate(PROGRESS_ROUTE) },
+                    onSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
+                    onPaper = { navController.safeNavigate(PAPER_ROUTE) },
+                    onSpeed = { navController.safeNavigate(SPEED_ROUTE) },
+                    onPro = { showMenuPro = true },
+                    onStories = { if (isPro) navController.safeNavigate(PRACTICE_ROUTE) else showMenuPro = true },
                 ),
                 belowEntries = {
                     val quest = questProgress(progress, questDay)
                     if (progress != null) QuestCard(quest) {
-                        navController.navigate(when (quest.quest) {
+                        navController.safeNavigate(when (quest.quest) {
                             Quest.LETTERS -> ALPHABET_ROUTE
                             Quest.WORDS -> WORDS_ROUTE
                             Quest.SPEED_ROUND -> SPEED_ROUTE
@@ -231,20 +249,21 @@ fun HandspellApp(
                     }
                 },
             )
-            LaunchedEffect(isPro, menuProDismissed) {
-                if (!isPro && !menuProDismissed) {
-                    kotlinx.coroutines.delay(900)
-                    showMenuPro = true
-                }
+            val isProNow by androidx.compose.runtime.rememberUpdatedState(isPro)
+            LaunchedEffect(menuProDismissed, menuProAutoShown) {
+                if (menuProDismissed || menuProAutoShown) return@LaunchedEffect
+                // The plan is read again after the pause, so a Pro user whose status is still loading never sees it.
+                kotlinx.coroutines.delay(1200)
+                if (!isProNow) { menuProAutoShown = true; showMenuPro = true }
             }
             val trial by entitlementGate.demoTrial.collectAsStateWithLifecycle()
             dev.handspell.app.ui.components.AslSheet(
-                visible = showMenuPro && !isPro,
+                visible = showMenuPro,
                 onDismiss = { showMenuPro = false; menuProDismissed = true },
             ) {
                 Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
                     ProMenuCard(
-                        isPro = false, trialLabel = dev.handspell.app.ui.pro.demoTrialTitle(trial),
+                        isPro = isPro, trialLabel = dev.handspell.app.ui.pro.demoTrialTitle(trial),
                         proWordCount = proWordCount,
                         demoAvailable = trial == dev.handspell.app.billing.DemoTrialState.NotStarted,
                         dismissed = false,
@@ -257,7 +276,7 @@ fun HandspellApp(
                             scope.launch { entitlementGate.startDemoTrial() }
                         },
                         onDismiss = { showMenuPro = false; menuProDismissed = true },
-                        onOpenPacks = { showMenuPro = false; navController.navigate(PRACTICE_ROUTE) },
+                        onOpenPacks = { showMenuPro = false; navController.safeNavigate(PRACTICE_ROUTE) },
                     )
                 }
             }
@@ -274,7 +293,7 @@ fun HandspellApp(
                 progressStore = progressStore, snapshot = progress, isPro = isPro, references = wordReferences,
                 proMentionDismissed = proMentionDismissed, onDismissProMention = { proMentionDismissed = true },
                 onSeePro = { entitlementGate.requestPaywall(PaywallSource.SPEED_LIMIT) },
-                onBack = { navController.popBackStack() },
+                onBack = { navController.safePop() },
             )
         }
         composable(WORDS_ROUTE) {
@@ -282,8 +301,8 @@ fun HandspellApp(
             WordsMenuScreen(
                 state = WordsMenuState(loading = list == null, words = list.orEmpty(),
                     records = progress?.words.orEmpty(), isPro = isPro),
-                onBack = { navController.popBackStack() },
-                onPractice = { word -> navController.navigate("$WORD_DRILL_ROUTE/${word.gloss}") },
+                onBack = { navController.safePop() },
+                onPractice = { word -> navController.safeNavigate("$WORD_DRILL_ROUTE/${word.gloss}") },
                 onMarkComplete = { word, complete ->
                     if (complete) showReward(RewardSubject(RewardSubject.Kind.WORD, word.gloss, word.displayTitle))
                     scope.launch { progressStore.setWordMarkedComplete(word.gloss, complete) }
@@ -292,8 +311,8 @@ fun HandspellApp(
                 proStrip = !isPro && !wordsProDismissed && proWordCount > 0,
                 onDismissProStrip = { wordsProDismissed = true },
                 references = wordReferences,
-                onSettings = { navController.navigate(SETTINGS_ROUTE) },
-                onPaper = { navController.navigate(PAPER_ROUTE) },
+                onSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
+                onPaper = { navController.safeNavigate(PAPER_ROUTE) },
                 leftHanded = leftHanded,
             )
         }
@@ -305,10 +324,19 @@ fun HandspellApp(
             else WordDrillRoute(
                 word = word, words = practicable, detector = wordDetector(), progressStore = progressStore,
                 reference = wordReferences[word.gloss],
-                onBack = { navController.popBackStack() },
-                onMatched = { matched -> showReward(RewardSubject(RewardSubject.Kind.WORD, matched.gloss, matched.display)) },
+                onBack = { navController.safePop() },
+                onMatched = { matched ->
+                    showReward(RewardSubject(RewardSubject.Kind.WORD, matched.gloss, matched.display))
+                    val next = practicable.getOrNull((practicable.indexOfFirst { it.gloss == matched.gloss } + 1)
+                        .let { if (it >= practicable.size) 0 else it })
+                    if (next != null && next.gloss != matched.gloss) rewardContinue = {
+                        navController.safeNavigate("$WORD_DRILL_ROUTE/${next.gloss}") {
+                            popUpTo(entry.destination.route ?: "") { inclusive = true }
+                        }
+                    }
+                },
                 onNext = { next ->
-                    navController.navigate("$WORD_DRILL_ROUTE/${next.gloss}") {
+                    navController.safeNavigate("$WORD_DRILL_ROUTE/${next.gloss}") {
                         popUpTo(entry.destination.route ?: "") { inclusive = true }
                     }
                 },
@@ -316,7 +344,7 @@ fun HandspellApp(
         }
         composable(ALPHABET_ROUTE) {
             AlphabetScreen(
-                onExit = { navController.popBackStack() },
+                onExit = { navController.safePop() },
                 onMarkedComplete = { letter ->
                     showReward(RewardSubject(RewardSubject.Kind.LETTER, letter, letter))
                     scope.launch { progressStore.recordLetterMarked(letter) }
@@ -325,12 +353,12 @@ fun HandspellApp(
                     if (progress != null && letters != progress?.alphabetCompleted) scope.launch { progressStore.setAlphabetCompleted(letters) }
                 },
                 onPractice = { letter ->
-                    navController.navigate("$REQUESTED_DRILL_ROUTE/$letter")
+                    navController.safeNavigate("$REQUESTED_DRILL_ROUTE/$letter")
                 },
-                onSettings = { navController.navigate(SETTINGS_ROUTE) },
-                onPaper = { navController.navigate(PAPER_ROUTE) },
-                onNativePractice = { navController.navigate(PRACTICE_ROUTE) },
-                onProgress = { navController.navigate(PROGRESS_ROUTE) },
+                onSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
+                onPaper = { navController.safeNavigate(PAPER_ROUTE) },
+                onNativePractice = { navController.safeNavigate(PRACTICE_ROUTE) },
+                onProgress = { navController.safeNavigate(PROGRESS_ROUTE) },
                 progressSnapshot = progress,
                 leftHanded = leftHanded,
                 darkTheme = LocalDarkTheme.current,
@@ -342,14 +370,22 @@ fun HandspellApp(
         composable("$REQUESTED_DRILL_ROUTE/{letter}") { entry ->
             val letter = entry.arguments?.getString("letter").orEmpty()
             when {
-                homeState.isLoading -> Text(stringResource(R.string.content_loading))
-                homeState.error -> Column(
-                    modifier = Modifier.fillMaxSize().padding(dev.handspell.app.ui.theme.Spacing.md),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(stringResource(R.string.content_unavailable_body))
-                    AslButton(stringResource(R.string.retry), homeViewModel::reload, Modifier.fillMaxWidth())
+                homeState.isLoading -> Column(Modifier.fillMaxSize()) {
+                    dev.handspell.app.ui.components.ScreenHeader("", { navController.safePop() }, compact = true)
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(stringResource(R.string.content_loading), color = LocalAslColors.current.labelSecondary)
+                    }
+                }
+                homeState.error -> Column(Modifier.fillMaxSize()) {
+                    dev.handspell.app.ui.components.ScreenHeader("", { navController.safePop() }, compact = true)
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(dev.handspell.app.ui.theme.Spacing.md),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(stringResource(R.string.content_unavailable_body))
+                        AslButton(stringResource(R.string.retry), homeViewModel::reload, Modifier.fillMaxWidth())
+                    }
                 }
                 else -> {
                     val drill = homeState.drills.firstOrNull { it.letter.name == letter }
@@ -367,17 +403,17 @@ fun HandspellApp(
                 title = stringResource(R.string.letter_unavailable_soon, letter),
                 body = stringResource(R.string.letter_unavailable_body),
                 actionLabel = stringResource(R.string.back),
-                onAction = { navController.popBackStack() },
-                onBack = { navController.popBackStack() },
+                onAction = { navController.safePop() },
+                onBack = { navController.safePop() },
             )
         }
         composable(PRACTICE_ROUTE) {
             HomeScreen(
                 state = homeState,
-                onBack = { navController.popBackStack() },
-                onSelectDrill = { drill -> navController.navigate("$DRILL_ROUTE/${drill.id}") },
+                onBack = { navController.safePop() },
+                onSelectDrill = { drill -> navController.safeNavigate("$DRILL_ROUTE/${drill.id}") },
                 onRetry = homeViewModel::reload,
-                onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
+                onOpenSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
                 onOpenPack = ::openPack,
                 showProPacks = true,
             )
@@ -388,12 +424,12 @@ fun HandspellApp(
             if (drill == null) {
                 HomeScreen(
                     state = homeState,
-                    onSelectDrill = { selected -> navController.navigate("$DRILL_ROUTE/${selected.id}") },
+                    onSelectDrill = { selected -> navController.safeNavigate("$DRILL_ROUTE/${selected.id}") },
                     onRetry = homeViewModel::reload,
-                    onOpenSettings = { navController.navigate(SETTINGS_ROUTE) },
+                    onOpenSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
                     onOpenPack = ::openPack,
                     showProPacks = true,
-                    onBack = { navController.popBackStack() },
+                    onBack = { navController.safePop() },
                 )
             } else {
                 LetterDrillRoute(
@@ -402,10 +438,19 @@ fun HandspellApp(
                     signDetector = signDetector,
                     canonicalHandshapeCatalog = canonicalHandshapeCatalog,
                     progressStore = progressStore,
-                    onBack = { navController.popBackStack() },
-                    onCompleted = { letter -> showReward(RewardSubject(RewardSubject.Kind.LETTER, letter.name, letter.display)) },
+                    onBack = { navController.safePop() },
+                    onCompleted = { letter ->
+                        showReward(RewardSubject(RewardSubject.Kind.LETTER, letter.name, letter.display))
+                        val drills = homeState.drills
+                        val next = drills.getOrNull((drills.indexOfFirst { it.id == drill.id } + 1).let { if (it >= drills.size) 0 else it })
+                        if (next != null && next.id != drill.id) rewardContinue = {
+                            navController.safeNavigate("$DRILL_ROUTE/${next.id}") {
+                                popUpTo(entry.destination.route ?: "") { inclusive = true }
+                            }
+                        }
+                    },
                     onSkip = { next ->
-                        navController.navigate("$DRILL_ROUTE/${next.id}") {
+                        navController.safeNavigate("$DRILL_ROUTE/${next.id}") {
                             popUpTo(entry.destination.route ?: "") { inclusive = true }
                         }
                     },
@@ -419,28 +464,28 @@ fun HandspellApp(
                 clearAlphabetData = AlphabetStorage::clear,
                 entitlementGate = entitlementGate,
                 // INTERIM entry to the Story and speed packs (owner has not decided where they live).
-                onOpenPacks = { navController.navigate(PRACTICE_ROUTE) },
+                onOpenPacks = { navController.safeNavigate(PRACTICE_ROUTE) },
                 classifierModelId = signDetector.classifierModelId,
                 buildInfo = BuildInfo(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
-                onBack = { navController.popBackStack() },
+                onBack = { navController.safePop() },
                 onOpenCapture = onOpenCapture,
-                onOpenDocuments = { navController.navigate(PAPER_ROUTE) },
-                onOpenAbout = { navController.navigate(ABOUT_ROUTE) },
+                onOpenDocuments = { navController.safeNavigate(PAPER_ROUTE) },
+                onOpenAbout = { navController.safeNavigate(ABOUT_ROUTE) },
             )
         }
         composable(ABOUT_ROUTE) {
             dev.handspell.app.ui.settings.AboutScreen(
                 classifierModelId = signDetector.classifierModelId,
                 buildInfo = BuildInfo(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
-                onBack = { navController.popBackStack() },
+                onBack = { navController.safePop() },
                 onOpenCapture = onOpenCapture,
             )
         }
         composable(PROGRESS_ROUTE) {
             ProgressRoute(progressStore,
-                onBack = { navController.popBackStack() },
-                onPractice = { navController.popBackStack() },
-                onSettings = { navController.navigate(SETTINGS_ROUTE) },
+                onBack = { navController.safePop() },
+                onPractice = { navController.safePop() },
+                onSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
                 isPro = isPro,
                 onSeePro = { entitlementGate.requestPaywall(PaywallSource.PROGRESS_DETAIL) },
             )
@@ -449,12 +494,12 @@ fun HandspellApp(
             val packId = entry.arguments?.getString("packId")
             if (packId != null && isPro) ProPackRoute(
                 packId, contentRepository, homeState.drills, signDetector, canonicalHandshapeCatalog,
-                progressStore, onBack = { navController.popBackStack() },
+                progressStore, onBack = { navController.safePop() },
                 contentLoading = homeState.isLoading, onRetryContent = homeViewModel::reload,
             ) else ProPackAccess(
                 status = entitlementStatus,
                 billingConfigured = entitlementGate.billingConfigured,
-                onBack = { navController.popBackStack() },
+                onBack = { navController.safePop() },
                 onPaywall = {
                     val kind = homeState.packs.firstOrNull { it.packId == packId }?.kind
                     entitlementGate.requestPaywall(if (kind == PackKind.SPEED) PaywallSource.SPEED_CHALLENGE else PaywallSource.STORY_LESSON)
@@ -463,41 +508,45 @@ fun HandspellApp(
             )
         }
         composable(LICENSES_ROUTE) {
-            LegalScreen(stringResource(R.string.paper_notices), "NOTICE.txt") { navController.popBackStack() }
+            LegalScreen(stringResource(R.string.paper_notices), "NOTICE.txt") { navController.safePop() }
         }
         composable(PRIVACY_ROUTE) {
-            LegalScreen(stringResource(R.string.settings_privacy_notice), "PRIVACY.md") { navController.popBackStack() }
+            LegalScreen(stringResource(R.string.settings_privacy_notice), "PRIVACY.md") { navController.safePop() }
         }
         composable(PAPER_ROUTE) {
             PaperScreen(
-                onBack = { navController.popBackStack() },
-                onPrivacy = { navController.navigate(PRIVACY_ROUTE) },
-                onLicense = { navController.navigate(MIT_LICENSE_ROUTE) },
-                onNotices = { navController.navigate(LICENSES_ROUTE) },
-                onModelLicense = { navController.navigate(MODEL_LICENSE_ROUTE) },
-                onCapacitorCoreLicense = { navController.navigate(CAPACITOR_CORE_LICENSE_ROUTE) },
-                onCapacitorSplashLicense = { navController.navigate(CAPACITOR_SPLASH_LICENSE_ROUTE) },
+                onBack = { navController.safePop() },
+                onPrivacy = { navController.safeNavigate(PRIVACY_ROUTE) },
+                onLicense = { navController.safeNavigate(MIT_LICENSE_ROUTE) },
+                onNotices = { navController.safeNavigate(LICENSES_ROUTE) },
+                onModelLicense = { navController.safeNavigate(MODEL_LICENSE_ROUTE) },
+                onCapacitorCoreLicense = { navController.safeNavigate(CAPACITOR_CORE_LICENSE_ROUTE) },
+                onCapacitorSplashLicense = { navController.safeNavigate(CAPACITOR_SPLASH_LICENSE_ROUTE) },
             )
         }
         composable(MIT_LICENSE_ROUTE) {
-            LegalScreen(stringResource(R.string.paper_mit_license), "LICENSE.txt") { navController.popBackStack() }
+            LegalScreen(stringResource(R.string.paper_mit_license), "LICENSE.txt") { navController.safePop() }
         }
         composable(MODEL_LICENSE_ROUTE) {
-            LegalScreen(stringResource(R.string.paper_model_license), "MODEL_LICENSE.txt") { navController.popBackStack() }
+            LegalScreen(stringResource(R.string.paper_model_license), "MODEL_LICENSE.txt") { navController.safePop() }
         }
         composable(CAPACITOR_CORE_LICENSE_ROUTE) {
-            LegalScreen(stringResource(R.string.paper_capacitor_core_license), "CAPACITOR_CORE_LICENSE.txt") { navController.popBackStack() }
+            LegalScreen(stringResource(R.string.paper_capacitor_core_license), "CAPACITOR_CORE_LICENSE.txt") { navController.safePop() }
         }
         composable(CAPACITOR_SPLASH_LICENSE_ROUTE) {
-            LegalScreen(stringResource(R.string.paper_capacitor_splash_license), "CAPACITOR_SPLASH_LICENSE.txt") { navController.popBackStack() }
+            LegalScreen(stringResource(R.string.paper_capacitor_splash_license), "CAPACITOR_SPLASH_LICENSE.txt") { navController.safePop() }
         }
         composable(PAYWALL_ROUTE) {
-            PaywallRoute(entitlementGate, homeState.packs, onBack = { paywallWord = null; navController.popBackStack() },
+            PaywallRoute(entitlementGate, homeState.packs, onBack = { paywallWord = null; navController.safePop() },
                 lockedWord = paywallWord)
         }
     }
     // Above every screen, the alphabet WebView included; a tap on Continue or the backdrop closes it.
-    RewardSheet(reward, onDismiss = { reward = null }, proMention = { _ ->
+    RewardSheet(reward, onDismiss = { reward = null; rewardContinue = null }, onContinue = {
+        val go = rewardContinue
+        reward = null; rewardContinue = null
+        go?.invoke()
+    }, proMention = { _ ->
         if (rewardProLine && !isPro && !proMentionDismissed) ProMention(
             text = if (proWordCount > 0) pluralStringResource(R.plurals.pro_reward_line, proWordCount, proWordCount)
             else stringResource(R.string.pro_reward_line_plain),
@@ -516,4 +565,20 @@ internal fun routePackTap(
     if (pack.tier == Tier.PRO && !isPro && gate.billingConfigured) {
         gate.requestPaywall(if (pack.kind == PackKind.SPEED) PaywallSource.SPEED_CHALLENGE else PaywallSource.STORY_LESSON)
     } else navigate(pack.packId)
+}
+
+/** True while this entry is fully on screen; taps that arrive mid-transition are ignored instead of stacking. */
+private fun NavController.isSettled(): Boolean =
+    currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED
+
+/** Navigates once per tap: ignored mid-transition or when the destination is already on top. */
+private fun NavController.safeNavigate(route: String, builder: NavOptionsBuilder.() -> Unit = {}) {
+    if (!isSettled() || currentDestination?.route == route) return
+    navigate(route) { launchSingleTop = true; builder() }
+}
+
+/** Pops once per tap, and never pops the menu itself (which would leave a blank, empty back stack). */
+private fun NavController.safePop() {
+    if (!isSettled() || previousBackStackEntry == null) return
+    popBackStack()
 }

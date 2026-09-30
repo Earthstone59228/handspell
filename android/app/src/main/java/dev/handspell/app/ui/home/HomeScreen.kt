@@ -23,6 +23,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -116,7 +117,7 @@ private fun PracticeCatalogue(state: HomeUiState, onSelectDrill: (PackItem.Drill
         items(proPacks, key = { it.packId }, span = { GridItemSpan(maxLineSpan) }) { pack ->
             Surface(
                 modifier = Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
-                    .clickable(role = Role.Button) { onOpenPack(pack) },
+                    .clip(RoundedCornerShape(AslShapes.large)).clickable(role = Role.Button) { onOpenPack(pack) },
                 shape = RoundedCornerShape(AslShapes.large), color = LocalAslColors.current.surface,
                 contentColor = LocalAslColors.current.onSurface,
             ) {
@@ -142,7 +143,7 @@ private fun FeaturedLetter(
     val description = stringResource(R.string.home_continue_description, drill.letter.display)
     Surface(
         modifier.fillMaxWidth().sizeIn(minHeight = Spacing.referenceGuide)
-            .clickable(role = Role.Button) { onSelectDrill(drill) }
+            .clip(RoundedCornerShape(AslShapes.large)).clickable(role = Role.Button) { onSelectDrill(drill) }
             .semantics { contentDescription = description },
         shape = RoundedCornerShape(AslShapes.large),
         color = colors.accent,
@@ -171,7 +172,7 @@ private fun LetterTile(drill: PackItem.Drill, attempts: Int, onSelectDrill: (Pac
     val description = stringResource(R.string.letter_tile_progress_description, drill.letter.display, attempts)
     Surface(
         modifier = Modifier.fillMaxWidth().sizeIn(minWidth = Spacing.touchTarget, minHeight = Spacing.letterTile)
-            .clickable(role = Role.Button) { onSelectDrill(drill) }
+            .clip(RoundedCornerShape(AslShapes.large)).clickable(role = Role.Button) { onSelectDrill(drill) }
             .semantics { contentDescription = description },
         shape = RoundedCornerShape(AslShapes.large),
         color = colors.surface,

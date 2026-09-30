@@ -418,7 +418,12 @@ window.aslHandleBack = () => {
   return true;
 };
 window.addEventListener('aslNativeBack', () => { window.aslHandleBack(); });
+// One press leaves once; a fast second tap must not pop the menu behind it as well.
+let leaving = false;
 document.querySelector('#alphabet-back').addEventListener('click', () => {
+  if (leaving) return;
+  leaving = true;
+  setTimeout(() => { leaving = false; }, 700);
   if (native?.exitMenu) native.exitMenu();
   else history.back();
 });
@@ -536,4 +541,19 @@ syncNativeStreak();
 syncHandedness();
 drawGlass();
 window.addEventListener('resize', () => { updateWave(); drawGlass(); });
+// The page is rebuilt each time a native screen closes, so the list position is kept for a few minutes.
+const scrollKey = 'sign-by-sign-scroll-v1';
+try {
+  const saved = JSON.parse(sessionStorage.getItem(scrollKey) || localStorage.getItem(scrollKey));
+  // Only when a native screen has just closed over the page; a fresh open starts at the top.
+  if (native?.restoreScroll?.() && saved && Date.now() - saved.at < 10 * 60 * 1000) scroller.scrollTop = saved.top;
+} catch { /* start at the top */ }
+let scrollSave = 0;
+scroller.addEventListener('scroll', () => {
+  if (scrollSave) return;
+  scrollSave = setTimeout(() => {
+    scrollSave = 0;
+    try { localStorage.setItem(scrollKey, JSON.stringify({ top: scroller.scrollTop, at: Date.now() })); } catch { /* optional */ }
+  }, 250);
+}, { passive: true });
 SplashScreen.hide().catch(() => {});

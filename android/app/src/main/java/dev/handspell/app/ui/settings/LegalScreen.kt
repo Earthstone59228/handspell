@@ -41,32 +41,25 @@ fun LegalScreen(title: String, assetName: String, onBack: () -> Unit) {
         runCatching { context.assets.open("legal/$assetName").bufferedReader().use { it.readText() } }
             .getOrNull()?.let(::parseDocument)
     }
-    Column(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
-        ScreenHeader(title, onBack)
-        Column(
-            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-                .padding(start = Spacing.md, end = Spacing.md, bottom = Spacing.xxl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md),
-        ) {
-            if (blocks == null) {
-                Text(stringResource(R.string.settings_legal_unavailable), style = MaterialTheme.typography.bodyLarge, color = colors.label)
-            } else {
-                val sections = blocks.toSections()
-                sections.forEach { section ->
-                    if (section.heading == null) {
-                        // Text before the first heading (e.g. the notice's date line) reads as a subtitle.
-                        DocumentBlocks(section.blocks, onCard = false)
-                    } else {
-                        Text(
-                            section.heading,
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = colors.label,
-                            modifier = Modifier.padding(start = Spacing.xs, top = Spacing.sm).semantics { heading() },
-                        )
-                        AslCard { Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                            DocumentBlocks(section.blocks, onCard = true)
-                        } }
-                    }
+    FrostedSettingsHero(onBack = onBack, title = title, body = null) {
+        if (blocks == null) {
+            Text(stringResource(R.string.settings_legal_unavailable), style = MaterialTheme.typography.bodyLarge, color = colors.label)
+        } else {
+            val sections = blocks.toSections()
+            sections.forEach { section ->
+                if (section.heading == null) {
+                    // Text before the first heading (e.g. the notice's date line) reads as a subtitle.
+                    DocumentBlocks(section.blocks, onCard = false)
+                } else {
+                    Text(
+                        section.heading,
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = colors.label,
+                        modifier = Modifier.padding(start = Spacing.xs, top = Spacing.sm).semantics { heading() },
+                    )
+                    AslCard { Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                        DocumentBlocks(section.blocks, onCard = true)
+                    } }
                 }
             }
         }

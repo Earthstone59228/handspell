@@ -71,17 +71,7 @@ fun AlphabetScreen(
     var isLoading by remember { mutableStateOf(true) }
     var loadFailed by remember { mutableStateOf(false) }
     var pageReady by remember { mutableStateOf(false) }
-    val hasBundle = remember(context) {
-        runCatching {
-            val html = context.assets.open("web/index.html").bufferedReader().use { it.readText() }
-            val linkedAssets = Regex("(?:src|href)=\"\\./(assets/[^\"]+)\"")
-                .findAll(html).map { it.groupValues[1] }.toList()
-            linkedAssets.isNotEmpty() && (linkedAssets + "phone-stand-animation.html").all { path ->
-                context.assets.open("web/$path").use { }
-                true
-            }
-        }.getOrDefault(false)
-    }
+    val hasBundle = remember(context) { bundleAvailable(context) }
     if (!hasBundle) {
         AlphabetUnavailable(onNativePractice, modifier)
         return
@@ -161,12 +151,24 @@ fun AlphabetScreen(
             loadUrl(ALPHABET_URL)
         }
     }
+    // One back press at a time: while the page is still answering, further presses are ignored, so a fast double
+    // press cannot leave the alphabet twice.
+    var backPending by remember { mutableStateOf(false) }
+    val leave = { returningFromNative = false; onExit() }
     BackHandler {
-        if (loadFailed || !pageReady) onExit()
+        if (backPending) return@BackHandler
+        if (loadFailed || !pageReady) leave()
         // The page closes its topmost sheet or screen and says whether it did; with nothing open, back leaves.
-        else webView.evaluateJavascript(
-            "(() => { const f = window.aslHandleBack; if (f) return f(); window.dispatchEvent(new Event('aslNativeBack')); return true; })()",
-        ) { handled -> if (handled == "false") onExit() }
+        // Anything but a definite "true" (including a script error, which answers "null") leaves rather than trapping.
+        else {
+            backPending = true
+            webView.evaluateJavascript(
+                "(() => { const f = window.aslHandleBack; if (f) return f(); window.dispatchEvent(new Event('aslNativeBack')); return true; })()",
+            ) { handled ->
+                backPending = false
+                if (handled != "true") leave()
+            }
+        }
     }
     Box(modifier.fillMaxSize()) {
         if (loadFailed) AlphabetUnavailable(onNativePractice, Modifier.fillMaxSize())
@@ -189,9 +191,22 @@ fun AlphabetScreen(
     LaunchedEffect(pageReady, cameraMatches, progressSnapshot, leftHanded, darkTheme) {
         if (pageReady) webView.evaluateJavascript("window.dispatchEvent(new Event('aslNativeProgress'))", null)
     }
-    DisposableEffect(webView) {
+    // The page's timers and animations stop while the app is in the background.
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(webView, lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            when (event) {
+                androidx.lifecycle.Lifecycle.Event.ON_PAUSE -> webView.onPause()
+                androidx.lifecycle.Lifecycle.Event.ON_RESUME -> webView.onResume()
+                else -> Unit
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
             webView.removeJavascriptInterface("HandspellBridge")
+            // destroy() must not run while the view is still attached.
+            (webView.parent as? android.view.ViewGroup)?.removeView(webView)
             webView.destroy()
         }
     }
@@ -246,7 +261,11 @@ class AlphabetBridge(
 
     /** The header's back chevron. */
     @JavascriptInterface
-    fun exitMenu() { dispatch(onExit) }
+    fun exitMenu() { returningFromNative = false; dispatch(onExit) }
+
+    /** True when the page is being rebuilt after a native screen (Settings, Documents, a drill) closed over it. */
+    @JavascriptInterface
+    fun restoreScroll(): Boolean = returningFromNative
 
     /** `{"A":2,"B":1}`: letters the camera has confirmed, with how many times. Read by the page on load/resume. */
     @JavascriptInterface
@@ -269,20 +288,38 @@ class AlphabetBridge(
 
     @JavascriptInterface
     fun openPractice(letter: String) {
-        if (letter.length == 1 && letter[0] in 'A'..'Z') dispatch { onPractice(letter) }
+        if (letter.length == 1 && letter[0] in 'A'..'Z') { returningFromNative = true; dispatch { onPractice(letter) } }
     }
 
     @JavascriptInterface
-    fun openSettings() { dispatch(onSettings) }
+    fun openSettings() { returningFromNative = true; dispatch(onSettings) }
 
     @JavascriptInterface
-    fun openPaper() { dispatch(onPaper) }
+    fun openPaper() { returningFromNative = true; dispatch(onPaper) }
 
     @JavascriptInterface
-    fun openProgress() { dispatch(onProgress) }
+    fun openProgress() { returningFromNative = true; dispatch(onProgress) }
 
-    private fun dispatch(action: () -> Unit) = android.os.Handler(android.os.Looper.getMainLooper()).post(action)
+    private fun dispatch(action: () -> Unit) { mainHandler.post(action) }
+
+    private val mainHandler = android.os.Handler(android.os.Looper.getMainLooper())
 }
+
+/** Whether the bundled page and every asset it links exist. The answer cannot change while the app runs, so it is read once. */
+/** Set when the alphabet hands over to a native screen; cleared when the learner leaves the alphabet for the menu. */
+@Volatile private var returningFromNative = false
+
+@Volatile private var bundleChecked: Boolean? = null
+
+private fun bundleAvailable(context: android.content.Context): Boolean = bundleChecked ?: runCatching {
+    val html = context.assets.open("web/index.html").bufferedReader().use { it.readText() }
+    val linkedAssets = Regex("(?:src|href)=\"\\./(assets/[^\"]+)\"")
+        .findAll(html).map { it.groupValues[1] }.toList()
+    linkedAssets.isNotEmpty() && (linkedAssets + "phone-stand-animation.html").all { path ->
+        context.assets.open("web/$path").use { }
+        true
+    }
+}.getOrDefault(false).also { bundleChecked = it }
 
 private val BRIDGE_SCRIPT = """
     (() => {

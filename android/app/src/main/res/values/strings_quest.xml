@@ -14,7 +14,7 @@
     <string name="quest_done">Done</string>
     <string name="quest_go_letters">Go to letters</string>
     <string name="quest_go_words">Go to words</string>
-    <string name="quest_go_speed">Go to the speed challenge</string>
+    <string name="quest_go_speed">Go to speed challenge</string>
     <string name="quest_complete_title">Today’s quest is done</string>
     <string name="quest_complete_tile">Quest done</string>
 </resources>

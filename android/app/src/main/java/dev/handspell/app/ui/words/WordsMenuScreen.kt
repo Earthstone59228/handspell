@@ -3,6 +3,9 @@ package dev.handspell.app.ui.words
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.rememberGraphicsLayer
+import dev.handspell.app.ui.components.HeaderBottomSpace
+import dev.handspell.app.ui.components.HeaderSubline
+import dev.handspell.app.ui.components.HeaderTitleRow
 import dev.handspell.app.ui.components.captureBackdrop
 import dev.handspell.app.ui.components.frostedBackdrop
 import dev.handspell.app.ui.components.selectionOutline
@@ -18,6 +21,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -161,20 +165,15 @@ fun WordsMenuScreen(
             Modifier.fillMaxWidth().onSizeChanged { headerHeight = it.height }
                 .clipToBounds().frostedBackdrop(contentLayer).statusBarsPadding(),
         ) {
-            Row(Modifier.fillMaxWidth().padding(start = Spacing.xs, end = Spacing.sm, top = Spacing.xxs),
-                verticalAlignment = Alignment.CenterVertically) {
-                BackChevron(onBack)
-                Text(stringResource(R.string.words_title), style = AslText.largeTitle, color = colors.label,
-                    modifier = Modifier.weight(1f).semantics { heading() })
+            HeaderTitleRow(stringResource(R.string.words_title), onBack) {
                 HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), onSettings)
                 HeaderIcon(R.drawable.ic_paper, stringResource(R.string.menu_open_paper), onPaper)
             }
-            if (!state.loading) Text(
+            if (!state.loading) HeaderSubline(
                 wordsProgressLine(state.completeCount, state.openTotal), style = AslText.progressLine,
-                color = colors.label.copy(alpha = 0.62f),
-                modifier = Modifier.padding(start = Spacing.lg, top = Spacing.xs, bottom = Spacing.xl)
-                    .semantics { contentDescription = "${state.completeCount} of ${state.openTotal}" },
+                modifier = Modifier.semantics { contentDescription = "${state.completeCount} of ${state.openTotal}" },
             )
+            Spacer(Modifier.height(HeaderBottomSpace))
         }
         AslSheet(visible = selected != null, onDismiss = { selectedGloss = null }) {
             if (selected != null) WordSheet(

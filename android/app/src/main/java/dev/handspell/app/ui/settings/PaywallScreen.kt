@@ -183,8 +183,8 @@ private fun PaywallScreen(
                             if (index > 0) SettingsDivider()
                             Column(
                                 Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
-                                    .selectable(selected = selectedId == item.id, role = Role.RadioButton) { onSelect(item.id) }
                                     .selectionOutline(selectedId == item.id)
+                                    .selectable(selected = selectedId == item.id, role = Role.RadioButton) { onSelect(item.id) }
                                     .padding(Spacing.md),
                                 verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
                             ) {

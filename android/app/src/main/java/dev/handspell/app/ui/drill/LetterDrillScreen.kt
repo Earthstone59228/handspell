@@ -116,7 +116,6 @@ fun LetterDrillRoute(
         state = if (state.sessionKey == sessionKey) state else DrillUiState(),
         onBack = onBack,
         onSkip = { next -> scope.launch { viewModel.recordSkip(); onSkip(next) } },
-        onContinue = { next -> if (onMatch != null) onMatch() else onSkip(next) },
         onMatch = onMatch,
         modifier = modifier,
         thumbnails = viewModel.previewThumbnail,
@@ -133,7 +132,6 @@ private fun LetterDrillScreen(
     state: DrillUiState,
     onBack: () -> Unit,
     onSkip: (PackItem.Drill) -> Unit,
-    onContinue: (PackItem.Drill) -> Unit,
     onMatch: (() -> Unit)?,
     modifier: Modifier,
     thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>,
@@ -183,7 +181,7 @@ private fun LetterDrillScreen(
             state.isLoading || state.drill == null -> DrillLoading()
             else -> {
                 LaunchedEffect(state.drill.id) { onStartDetector() }
-                ActiveDrill(state, thumbnails, onSkip, onContinue, onRetry, onCameraUnavailable, onDismissLowLight)
+                ActiveDrill(state, thumbnails, onSkip, onRetry, onCameraUnavailable, onDismissLowLight)
             }
         }
     }
@@ -219,7 +217,6 @@ private fun ActiveDrill(
     state: DrillUiState,
     thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>,
     onSkip: (PackItem.Drill) -> Unit,
-    onContinue: (PackItem.Drill) -> Unit,
     onRetry: () -> Unit,
     onCameraUnavailable: () -> Unit,
     onDismissLowLight: () -> Unit,
@@ -297,14 +294,7 @@ private fun ActiveDrill(
                 }
                 val next = state.drills.nextAfter(drill)
                 if (next != null) {
-                    if (state.matched) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                            AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.weight(1f))
-                            AslButton(stringResource(R.string.continue_letter), { onContinue(next) }, Modifier.weight(1f))
-                        }
-                    } else {
-                        AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.fillMaxWidth())
-                    }
+                    AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.fillMaxWidth())
                 }
             }
             Spacer(Modifier.height(Spacing.md))

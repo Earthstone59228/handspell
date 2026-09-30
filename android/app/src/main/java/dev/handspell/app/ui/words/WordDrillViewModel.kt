@@ -47,6 +47,8 @@ internal const val WORDS_UNAVAILABLE = "error_words_unavailable"
 class WordDrillViewModel(
     private val detector: WordDetector,
     private val progressStore: ProgressStore,
+    /** Starting the detector loads the hand model, which is slow, so it runs off the main thread. */
+    private val startDispatcher: kotlinx.coroutines.CoroutineDispatcher = kotlinx.coroutines.Dispatchers.Default,
     private val monotonicTime: () -> Long = SystemClock::elapsedRealtime,
 ) : ViewModel() {
     private var startedAtMs = 0L
@@ -112,7 +114,7 @@ class WordDrillViewModel(
     }
 
     fun startDetector() {
-        if (mutableUiState.value.word != null) detector.start(this)
+        if (mutableUiState.value.word != null) viewModelScope.launch(startDispatcher) { detector.start(this@WordDrillViewModel) }
     }
 
     fun onCameraUnavailable() = mutableUiState.update { it.copy(cameraUnavailable = true) }
@@ -122,7 +124,7 @@ class WordDrillViewModel(
         detector.stop(this)
         detector.setTarget(word.gloss)
         mutableUiState.update { it.copy(cameraUnavailable = false, cameraSession = it.cameraSession + 1) }
-        detector.start(this)
+        viewModelScope.launch(startDispatcher) { detector.start(this@WordDrillViewModel) }
     }
 
     /** A skip after real signing is an unmatched attempt; a skip with no hand shown records nothing. */

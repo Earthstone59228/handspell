@@ -32,7 +32,9 @@ class MainActivity : ComponentActivity() {
         )
         val container = (application as HandspellApplication).container
         setContent {
-            val themeMode by container.appPreferencesStore.themeMode.collectAsStateWithLifecycle(initialValue = ThemeMode.SYSTEM)
+            // Null until the saved appearance has loaded, so the app never flashes the wrong theme first.
+            val loadedTheme by container.appPreferencesStore.themeMode.collectAsStateWithLifecycle(initialValue = null)
+            val themeMode = loadedTheme ?: return@setContent
             val dark = resolveDark(themeMode, isSystemInDarkTheme())
             // Status and navigation bar icons follow the appearance: light icons on the dark ground, dark on light.
             LaunchedEffect(dark) {

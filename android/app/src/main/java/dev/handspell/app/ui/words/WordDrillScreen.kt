@@ -102,7 +102,6 @@ fun WordDrillRoute(
         state = if (state.sessionKey == sessionKey) state else WordDrillUiState(),
         onBack = onBack,
         onSkip = { next -> scope.launch { viewModel.recordSkip(); onNext(next) } },
-        onContinue = onNext,
         onStartDetector = viewModel::startDetector,
         onRetry = viewModel::retryDetector,
         onCameraUnavailable = viewModel::onCameraUnavailable,
@@ -118,7 +117,6 @@ private fun WordDrillScreen(
     state: WordDrillUiState,
     onBack: () -> Unit,
     onSkip: (WordEntry) -> Unit,
-    onContinue: (WordEntry) -> Unit,
     onStartDetector: () -> Unit,
     onRetry: () -> Unit,
     onCameraUnavailable: () -> Unit,
@@ -188,7 +186,7 @@ private fun WordDrillScreen(
                 }
                 AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth().padding(top = Spacing.md))
             }
-            else -> ActiveWordDrill(state, word, reference, thumbnails, onSkip, onContinue, onCameraUnavailable)
+            else -> ActiveWordDrill(state, word, reference, thumbnails, onSkip, onCameraUnavailable)
         }
     }
 }
@@ -200,7 +198,6 @@ private fun ActiveWordDrill(
     reference: WordReference?,
     thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>?,
     onSkip: (WordEntry) -> Unit,
-    onContinue: (WordEntry) -> Unit,
     onCameraUnavailable: () -> Unit,
 ) {
     val colors = LocalAslColors.current
@@ -241,10 +238,7 @@ private fun ActiveWordDrill(
             word.tip?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary) }
             val next = nextWord(state.words, word)
             if (next != null) {
-                if (state.matched) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.weight(1f))
-                    AslButton(stringResource(R.string.continue_letter), { onContinue(next) }, Modifier.weight(1f))
-                } else AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.fillMaxWidth())
+                AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.fillMaxWidth())
             }
         }
         Spacer(Modifier.height(Spacing.md))

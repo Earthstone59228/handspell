@@ -39,7 +39,7 @@ class DrillViewModelTest {
     @Test fun matchStaysCompletedAfterNoHandAndResetsForNextDrill() = runTest(dispatcher) {
         val detector = ControlledDetector()
         val progress = RecordingProgressStore()
-        val model = DrillViewModel(detector, { null }, progress, monotonicTime = { 1000L })
+        val model = DrillViewModel(detector, { null }, progress, startDispatcher = kotlinx.coroutines.test.UnconfinedTestDispatcher(dispatcher.scheduler), monotonicTime = { 1000L })
         val a = PackItem.Drill("a", Letter.A, "A", "A", null)
         val b = PackItem.Drill("b", Letter.B, "B", "B", null)
         runCurrent()
@@ -73,8 +73,8 @@ class DrillViewModelTest {
 
     @Test fun oldViewModelClearCannotStopNewOwnersDetectorOrThumbnail() = runTest(dispatcher) {
         val detector = ControlledDetector()
-        val old = DrillViewModel(detector, { null }, RecordingProgressStore(), monotonicTime = { 1000L })
-        val next = DrillViewModel(detector, { null }, RecordingProgressStore(), monotonicTime = { 1000L })
+        val old = DrillViewModel(detector, { null }, RecordingProgressStore(), startDispatcher = kotlinx.coroutines.test.UnconfinedTestDispatcher(dispatcher.scheduler), monotonicTime = { 1000L })
+        val next = DrillViewModel(detector, { null }, RecordingProgressStore(), startDispatcher = kotlinx.coroutines.test.UnconfinedTestDispatcher(dispatcher.scheduler), monotonicTime = { 1000L })
         val oldStore = ViewModelStore().apply { put("old", old) }
         val a = PackItem.Drill("a", Letter.A, "A", "A", null)
         val b = PackItem.Drill("b", Letter.B, "B", "B", null)
