@@ -173,7 +173,7 @@ fun HandspellApp(
     LaunchedEffect(progress) { gate = resolveGate(gate, progress?.onboardingCompleted) }
     when (gate) {
         RootGate.Loading -> Box(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped))
-        RootGate.Onboarding -> OnboardingRoute(progressStore, preferences) { gate = RootGate.Menu }
+        RootGate.Onboarding -> OnboardingRoute(progressStore, preferences, canonicalHandshapeCatalog) { gate = RootGate.Menu }
         RootGate.Menu -> {
 
     // The alphabet is a WebView that draws under the status and navigation bars itself; every native screen
@@ -233,7 +233,6 @@ fun HandspellApp(
                     onWords = { navController.safeNavigate(WORDS_ROUTE) },
                     onProgress = { navController.safeNavigate(PROGRESS_ROUTE) },
                     onSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
-                    onPaper = { navController.safeNavigate(PAPER_ROUTE) },
                     onSpeed = { navController.safeNavigate(SPEED_ROUTE) },
                     onPro = { showMenuPro = true },
                     onStories = { if (isPro) navController.safeNavigate(PRACTICE_ROUTE) else showMenuPro = true },
@@ -461,7 +460,7 @@ fun HandspellApp(
             SettingsRoute(
                 preferences = preferences,
                 progressStore = progressStore,
-                clearAlphabetData = AlphabetStorage::clear,
+                clearAlphabetData = { AlphabetStorage.clear(context) },
                 entitlementGate = entitlementGate,
                 // INTERIM entry to the Story and speed packs (owner has not decided where they live).
                 onOpenPacks = { navController.safeNavigate(PRACTICE_ROUTE) },

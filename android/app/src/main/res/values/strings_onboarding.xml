@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- First-run introduction: three short steps. -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_skip_description">Skip the introduction</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_step_of">Step %1$d of %2$d</string>
+    <string name="onboarding_eyebrow_1">1 of 3 · Welcome</string>
+    <string name="onboarding_eyebrow_2">2 of 3 · Set up</string>
+    <string name="onboarding_eyebrow_3">3 of 3 · Privacy</string>
+    <string name="onboarding_p1_title">Fingerspell with your camera</string>
+    <string name="onboarding_p1_body">Sign a letter and get live feedback, one letter at a time.</string>
+    <string name="onboarding_p2_title">Set up your phone</string>
+    <string name="onboarding_p2_body">Prop it up so your hand fits in view.</string>
+    <string name="onboarding_p3_title">Private by design</string>
+    <string name="onboarding_p3_body">Your camera never leaves this phone.</string>
+    <string name="onboarding_tip_distance">Arm\'s length</string>
+    <string name="onboarding_tip_frame">Hand in frame</string>
+    <string name="onboarding_tip_light">Good light</string>
+    <string name="onboarding_hand_question">Which hand do you sign with?</string>
+    <string name="onboarding_right_hand">Right</string>
+    <string name="onboarding_left_hand_short">Left</string>
+    <string name="onboarding_practice_note">Handspell is a practice aid. It doesn\'t grade your signing.</string>
+    <string name="onboarding_visual_hand">A hand changing shape from one letter to the next</string>
+    <string name="onboarding_visual_phone">A phone propped up facing a hand, with light on it</string>
+    <string name="onboarding_visual_privacy">A phone camera with a lock: the picture stays on the phone</string>
+</resources>

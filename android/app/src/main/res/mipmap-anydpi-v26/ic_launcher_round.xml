@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Adaptive icon: the white speech-bubble glyph (transparent PNG, sized inside the 66dp safe zone) over the logo's
+     dark. The previous version used the finished, non-square logo PNG as the foreground, which Android stretched to
+     the whole canvas and cropped with the mask. The same glyph doubles as the themed (monochrome) layer. -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@android:color/white" />
-    <foreground android:drawable="@drawable/handspell_logo" />
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@drawable/handspell_glyph" />
+    <monochrome android:drawable="@drawable/handspell_glyph" />
 </adaptive-icon>

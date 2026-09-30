@@ -53,13 +53,15 @@ import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 
+/** Extra space between a tile's ring (or glyph) and its title. */
+private val TileRingGap = Spacing.md
+
 /** Callbacks of the main menu, grouped so the screen signature stays readable. */
 data class MainMenuActions(
     val onLetters: () -> Unit,
     val onWords: () -> Unit,
     val onProgress: () -> Unit,
     val onSettings: () -> Unit,
-    val onPaper: () -> Unit,
     val onSpeed: () -> Unit = {},
     val onStories: () -> Unit = {},
     /** The plan chip beside settings: opens the Pro menu for both Free and Pro. */
@@ -78,7 +80,7 @@ fun MainMenuScreen(
 ) {
     val colors = LocalAslColors.current
     val tileHeight = with(LocalDensity.current) {
-        Spacing.progressRing + Spacing.lg * 2 + AslText.title3.lineHeight.toDp() * 2 +
+        Spacing.progressRing + TileRingGap + Spacing.lg * 2 + AslText.title3.lineHeight.toDp() * 2 +
             AslText.footnote.lineHeight.toDp() * 2 + Spacing.xxs * 2
     }
     val scrollState = rememberScrollState()
@@ -88,7 +90,6 @@ fun MainMenuScreen(
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             Row(Modifier.fillMaxWidth().padding(horizontal = Spacing.lg), verticalAlignment = Alignment.CenterVertically) {
-                HeaderIcon(R.drawable.ic_paper, stringResource(R.string.menu_open_paper), actions.onPaper)
                 Spacer(Modifier.weight(1f))
                 PlanChip(state.isPro, actions.onPro)
                 HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), actions.onSettings)
@@ -138,6 +139,7 @@ private fun CompletionCard(title: String, complete: Int, total: Int, loading: Bo
         border = androidx.compose.foundation.BorderStroke(Spacing.hairline, colors.separator),
     ) {
         Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Box(Modifier.size(Spacing.progressRing), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize().clearAndSetSemantics {}) {
                     val stroke = size.width * 0.08f
@@ -151,6 +153,8 @@ private fun CompletionCard(title: String, complete: Int, total: Int, loading: Bo
                 Text("${(fraction * 100).toInt()}%", style = AslText.headline, color = colors.label,
                     modifier = Modifier.clearAndSetSemantics {})
             }
+            }
+            Spacer(Modifier.height(TileRingGap))
             Text(title, style = AslText.title3, color = colors.label,
                 modifier = Modifier.height(with(LocalDensity.current) { AslText.title3.lineHeight.toDp() * 2 }), maxLines = 2)
             Text(if (loading) "Loading progress" else "$complete / $total complete",
@@ -202,10 +206,11 @@ private fun MenuEntryCard(title: String, meta: String?, onClick: () -> Unit, mar
         border = androidx.compose.foundation.BorderStroke(Spacing.hairline, colors.separator),
     ) {
         Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-            Box(Modifier.size(Spacing.progressRing), contentAlignment = Alignment.CenterStart) {
+            Box(Modifier.fillMaxWidth().height(Spacing.progressRing), contentAlignment = Alignment.Center) {
                 Text(mark, style = AslText.title1, color = colors.labelTertiary,
                     modifier = Modifier.clearAndSetSemantics {})
             }
+            Spacer(Modifier.height(TileRingGap))
             Text(title, style = AslText.title3,
                 modifier = Modifier.height(with(LocalDensity.current) { AslText.title3.lineHeight.toDp() * 2 }), maxLines = 2)
             if (meta != null) Text(meta, style = AslText.footnote, color = colors.labelSecondary, maxLines = 2)

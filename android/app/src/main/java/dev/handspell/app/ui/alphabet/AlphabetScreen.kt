@@ -259,6 +259,10 @@ class AlphabetBridge(
         dispatch { onCompleted(letters) }
     }
 
+    /** Changes after each "Delete practice data"; the page wipes its saved state when it differs from the one it saw. */
+    @JavascriptInterface
+    fun resetToken(): String = AlphabetStorage.resetToken(context)
+
     /** The header's back chevron. */
     @JavascriptInterface
     fun exitMenu() { returningFromNative = false; dispatch(onExit) }

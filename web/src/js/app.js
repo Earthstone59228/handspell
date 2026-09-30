@@ -30,6 +30,22 @@ let scrubbing = false;
 let scrubPointerId = null;
 let previousFocus = null;
 
+// "Delete practice data" in Settings changes the native reset token. If it differs from the one this page last saw, the
+// page's own saved state (checkmarks, native-match acknowledgements, list position) is wiped before anything reads it.
+// A page with no token yet just adopts the current one, so existing progress survives the update that added this.
+(function applyNativeReset() {
+  try {
+    const token = native?.resetToken?.();
+    if (!token) return;
+    const seen = localStorage.getItem('sign-by-sign-reset-token-v1');
+    if (seen !== null && seen !== token) {
+      ['sign-by-sign-progress-v1', 'sign-by-sign-native-ack-v1', 'sign-by-sign-scroll-v1']
+        .forEach(key => localStorage.removeItem(key));
+    }
+    if (seen !== token) localStorage.setItem('sign-by-sign-reset-token-v1', token);
+  } catch { /* the page still works, it just cannot tell that a reset happened */ }
+})();
+
 function readProgress() {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey));

@@ -97,13 +97,6 @@
     <string name="debug_capture_open">Open calibration capture</string>
     <string name="home_description">Practice ASL fingerspelling with live feedback from your front camera.</string>
     <string name="practice_title">Practice</string>
-    <string name="onboarding_title">Welcome to Handspell</string>
-    <string name="onboarding_practice_title">A practice aid</string>
-    <string name="onboarding_practice_body">Use live handshape feedback to practice ASL fingerspelling. Handspell does not certify or grade your signing.</string>
-    <string name="onboarding_hold_title">How to hold your phone</string>
-    <string name="onboarding_hold_body">Hold it at arm\'s length, keep your hand in the frame, and use good light.</string>
-    <string name="onboarding_left_hand">I sign with my left hand</string>
-    <string name="onboarding_camera_title">Your camera stays on your phone</string>
     <string name="onboarding_continue">Get started</string>
     <string name="home_pro_packs">Story and speed packs</string>
     <string name="home_pro_label">Pro</string>
@@ -199,9 +192,6 @@
     <string name="progress_stat_matched">matched</string>
     <string name="progress_summary">Summary</string>
     <string name="progress_letter_row">%1$s, %2$s</string>
-    <string name="onboarding_hero_body">Practice ASL fingerspelling with your camera.</string>
-    <string name="onboarding_before_you_start">Before you start</string>
-    <string name="onboarding_layout">Layout</string>
     <string name="settings_open_packs">Open story and speed packs</string>
     <string name="paywall_store_billing">Store purchases require a configured RevenueCat key and available subscription plans. The demo trial works without store billing.</string>
 </resources>
