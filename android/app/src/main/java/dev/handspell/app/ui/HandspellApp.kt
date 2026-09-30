@@ -355,9 +355,8 @@ fun HandspellApp(
         }
         composable("$UNAVAILABLE_ROUTE/{letter}") { entry ->
             val letter = entry.arguments?.getString("letter").orEmpty()
-            val needsMotion = dev.handspell.app.core.model.Letter.fromNameOrNull(letter)?.requiresMotion == true
             SetupScreen(
-                title = stringResource(if (needsMotion) R.string.letter_unavailable_motion else R.string.letter_unavailable_soon, letter),
+                title = stringResource(R.string.letter_unavailable_soon, letter),
                 body = stringResource(R.string.letter_unavailable_body),
                 actionLabel = stringResource(R.string.back),
                 onAction = { navController.popBackStack() },

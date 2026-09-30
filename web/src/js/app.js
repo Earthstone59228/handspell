@@ -90,6 +90,12 @@ function signArt(letter) {
     return `<span class="sign-placeholder" data-sign-letter="${letter}" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M13 22v-9h9m20 0h9v9M13 42v9h9m20 0h9v-9"/><circle cx="32" cy="32" r="4"/></svg></span>`;
   }
   const dots = shape.dots.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.7"/>`).join('');
+  if (shape.motion) {
+    const [x, y] = shape.origin;
+    const animation = matchMedia('(prefers-reduced-motion: reduce)').matches ? ''
+      : `<animateMotion path="${shape.motion}" dur="3.5s" repeatCount="indefinite" keyPoints="0;1;1" keyTimes="0;0.8;1" calcMode="linear"/>`;
+    return `<span class="sign-placeholder wireframe" data-sign-letter="${letter}" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="${shape.motion}" transform="translate(${x} ${y})" stroke-dasharray="2 3" opacity=".5"/><path d="${shape.arrow}"/><g>${animation}<g transform="${shape.transform}" stroke-width="3"><path d="${shape.d}"/>${dots}</g></g></svg></span>`;
+  }
   return `<span class="sign-placeholder wireframe" data-sign-letter="${letter}" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="${shape.d}"/>${dots}</svg></span>`;
 }
 
