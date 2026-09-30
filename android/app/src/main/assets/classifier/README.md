@@ -1,15 +1,17 @@
 # Classifier assets
 
-Two files live here, and **neither is ever written by hand**:
+These files live here, and **none is ever written by hand**:
 
 | File | Produced by | Read by |
 |---|---|---|
 | `references-v1.csv` | `training/scripts/build_references.py` or `training/scripts/import_aslyset.py` | `vision/classify/KnnLetterClassifier.kt` |
 | `mlp-v1.bin` (+ `mlp-v1.json`) | `training/scripts/export_weights.py` | `vision/classify/MlpWeights.kt` |
+| `words-v3.bin` (+ `.json`): 12 free words + "other" | `training/scripts/train_words_conv.py` (ISLR landmarks, CC BY 4.0) | `vision/words/WordNet.kt` |
+| `words-pro-v3.bin` (+ `.json`): 24 Pro words + "other" | `training/scripts/train_words_conv.py` | `vision/words/WordNet.kt` |
 
-Both encode the normalisation spec version in their own bytes (`# spec_version=1` in the CSV, an
+The letter files encode the normalisation spec version in their own bytes (`# spec_version=1` in the CSV, an
 int32 in the HSML header) and the loaders refuse anything that does not match
-`NormalizedHand.SPEC_VERSION`. Editing a float by hand would pass that check and silently move an
+`NormalizedHand.SPEC_VERSION`; the word files carry the HSCN container's own spec version and CRC32 (`training/handspell/words_net.py`). Editing a float by hand would pass that check and silently move an
 exemplar, so don't: re-run the script and commit its output.
 
 ## Rebuilding the reference set

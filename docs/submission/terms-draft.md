@@ -8,7 +8,7 @@
 
 Handspell is a student hackathon app for practicing ASL fingerspelling. It is a practice aid, not an ASL authority, teacher, or certification tool. Recognition can be wrong. J and Z are disabled because they require motion, and recognition for R, T, and U is experimental.
 
-The free app offers camera drills for static letters, alphabet checkmarks, and local progress. Optional Pro access adds story packs and timed speed rounds. You need to grant camera permission to use camera drills. Practice content is bundled with the app; there is no account or backend.
+The free app offers camera drills for static letters, 12 word signs (taught one-handed), alphabet and word checkmarks, a daily quest, a daily speed challenge and local progress. Optional Pro access adds story packs, unlimited speed challenges, 24 more word signs and progress insights. A separate 3-day demo trial of the free-trial flow runs locally on your phone; it is not a store trial and never becomes a purchase. You need to grant camera permission to use camera drills. Practice content is bundled with the app; there is no account or backend.
 
 ## Pro and test purchases
 

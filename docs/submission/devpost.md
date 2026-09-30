@@ -30,4 +30,4 @@ We would like to explore motion recognition for J and Z and measuring word signs
 
 ## Built with
 
-Kotlin, Jetpack Compose, CameraX, MediaPipe Hand Landmarker, Ionic, RevenueCat SDK and Test Store, bundled JSON content, and public ASLYset data.
+Kotlin, Jetpack Compose, CameraX, MediaPipe Hand and Pose Landmarkers, Ionic, RevenueCat SDK and Test Store, bundled JSON content, public ASLYset data, and Google's ISLR landmark data (CC BY 4.0, via PopSign).

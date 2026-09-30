@@ -24,8 +24,30 @@ reference illustrations retain CC BY 4.0 terms as described below. Third-party c
    https://github.com/google/material-design-icons
    Used as individual vector drawables: "local_fire_department" (Rounded), the streak mark.
 
-RevenueCat SDK (com.revenuecat.purchases:purchases) is licensed under the MIT License.
-https://github.com/RevenueCat/purchases-android
+RevenueCat SDK (com.revenuecat.purchases:purchases 10.21.1), https://github.com/RevenueCat/purchases-android
+Full license text, from the upstream repository at that version:
+
+    MIT License
+
+    Copyright (c) 2018 RevenueCat, Inc.
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
 
 The bundled alphabet includes Capacitor core and Capacitor splash-screen web code, both under the
 MIT License. Their full license texts are available in the app's Documents screen.
@@ -46,3 +68,28 @@ The existing team-recorded A–D exemplars remain in the combined reference set.
 The original images are not bundled with the app. No endorsement by the dataset creator is implied.
 ASLYset-derived vectors and illustrations are supplied under CC BY 4.0, independently of the
 application code's MIT license. Provenance and checksums: training/data/aslyset/provenance.json.
+
+MediaPipe Pose Landmarker (lite) model
+
+pose_landmarker_lite.task (c) Google LLC, licensed under the Apache License 2.0, obtained from
+https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task
+Unmodified from the upstream download. Used only to find the nose and shoulders that word recognition measures hand
+positions against.
+
+Word-sign model training data: Google Isolated Sign Language Recognition (Kaggle "asl-signs")
+
+Google, "Google - Isolated Sign Language Recognition", Kaggle competition data (2023),
+https://www.kaggle.com/competitions/asl-signs. License: Creative Commons Attribution 4.0 International (CC BY 4.0),
+https://creativecommons.org/licenses/by/4.0/. The data was created for PopSign (https://www.popsign.org/), a project
+of the Center on Access Technology at the Rochester Institute of Technology's National Technical Institute for the
+Deaf (NTID) with Google and the Georgia Institute of Technology; the signs were collected by the Deaf Professional
+Arts Network. It is MediaPipe Holistic landmark sequences (no images or video) of 250 ASL signs by 21 signers in the
+released training set.
+
+Changes by Handspell: from the landmark sequences of 36 signs (the 12 free words in `classifier/words-v3.bin` and the 24
+Pro words in `classifier/words-pro-v3.bin`) plus about 50 unrelated signs used as an "other" class, Handspell kept only
+the dominant-hand, nose and shoulder points, computed its own features, and trained the two word-recognition networks.
+The example animations in `content/word-refs.json` are drawn from individual sequences of that data, shown as hand
+wireframes with a generic face outline. The landmark files are not bundled with the app. No endorsement by Google,
+PopSign, NTID, Georgia Tech, the Deaf Professional Arts Network or the signers is implied. The trained weights and the
+example animations are supplied under CC BY 4.0, independently of the application code's MIT license.

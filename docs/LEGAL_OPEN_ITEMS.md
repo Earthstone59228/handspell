@@ -1,7 +1,9 @@
 # Legal details awaiting the project owner
 
-As of 2026-09-24, the app's Documents screen bundles the existing privacy notice, the project MIT
-license, and third-party license notices. A Terms of Service document has not been drafted or bundled.
+As of 2026-09-30, the app's Documents screen bundles the privacy notice (revised 2026-09-30), the project MIT
+license, and third-party license notices. A Terms of Use draft exists (`docs/submission/terms-draft.md`) but is not
+final or bundled, because it needs the operator, contact and governing-law choices below. See
+`docs/audits/legal-rubric-audit-2026-09-30.md` for the open findings.
 The owner asked to leave the following details as explicit placeholders in project documentation:
 
 - Responsible person, team, or legal entity: **[owner to provide]**
