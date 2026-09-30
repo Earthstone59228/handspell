@@ -50,7 +50,7 @@ Note: `sdkmanager` now prints a deprecation notice and delegates to a newer
 Single source of truth: `env.sh` at the repo root (sourceable, idempotent):
 
 ```bash
-source /mnt/drive/Work/Project/Shipaton/env.sh
+source /mnt/drive/Work/Project/Shipaton/handspell/env.sh
 ```
 
 It exports:

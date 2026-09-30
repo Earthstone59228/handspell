@@ -1,6 +1,6 @@
 # Shipaton dev environment: Java (Android Studio's bundled JBR) + Android SDK.
 # Safe to source multiple times (idempotent PATH handling).
-# Usage: source /mnt/drive/Work/Project/Shipaton/env.sh
+# Usage: source /mnt/drive/Work/Project/Shipaton/handspell/env.sh
 
 export JAVA_HOME="/opt/android-studio/jbr"
 export ANDROID_HOME="$HOME/Android/Sdk"
