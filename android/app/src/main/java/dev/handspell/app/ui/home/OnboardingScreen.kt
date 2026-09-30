@@ -232,8 +232,9 @@ private fun HandChoice(leftHanded: Boolean, onLeftHanded: (Boolean) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         Text(stringResource(R.string.onboarding_hand_question), style = AslText.subhead, color = colors.labelSecondary)
         Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            HandOption(stringResource(R.string.onboarding_right_hand), !leftHanded, Modifier.weight(1f)) { onLeftHanded(false) }
+            // Left on the left and Right on the right, like the hands themselves.
             HandOption(stringResource(R.string.onboarding_left_hand_short), leftHanded, Modifier.weight(1f)) { onLeftHanded(true) }
+            HandOption(stringResource(R.string.onboarding_right_hand), !leftHanded, Modifier.weight(1f)) { onLeftHanded(false) }
         }
         Text(stringResource(R.string.onboarding_practice_note), style = AslText.footnote, color = colors.labelTertiary,
             modifier = Modifier.padding(top = Spacing.xs))

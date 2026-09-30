@@ -42,6 +42,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -55,6 +56,9 @@ import dev.handspell.app.ui.theme.Spacing
 
 /** Extra space between a tile's ring (or glyph) and its title. */
 private val TileRingGap = Spacing.md
+
+/** The progress ring (and the Stories glyph box) on each home tile. */
+private val TileRingSize = 68.dp
 
 /** Callbacks of the main menu, grouped so the screen signature stays readable. */
 data class MainMenuActions(
@@ -79,10 +83,6 @@ fun MainMenuScreen(
     belowEntries: @Composable () -> Unit = {},
 ) {
     val colors = LocalAslColors.current
-    val tileHeight = with(LocalDensity.current) {
-        Spacing.progressRing + TileRingGap + Spacing.lg * 2 + AslText.title3.lineHeight.toDp() * 2 +
-            AslText.footnote.lineHeight.toDp() * 2 + Spacing.xxs * 2
-    }
     val scrollState = rememberScrollState()
     Box(Modifier.fillMaxSize()) {
         Column(
@@ -104,13 +104,13 @@ fun MainMenuScreen(
                     Text("What will you\nlearn today?", style = AslText.largeTitle, color = colors.label,
                         modifier = Modifier.semantics { heading() })
                 }
-                Row(Modifier.height(tileHeight), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     CompletionCard("Letters", state.lettersComplete, state.lettersTotal,
                         state.loading, actions.onLetters, Modifier.weight(1f))
                     CompletionCard("Words", state.wordsComplete, state.wordsTotal,
                         state.loading, actions.onWords, Modifier.weight(1f))
                 }
-                Row(Modifier.height(tileHeight), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     CompletionCard("Progress", state.lettersComplete + state.wordsComplete,
                         state.lettersTotal + state.wordsTotal, state.loading, actions.onProgress, Modifier.weight(1f))
                     MenuEntryCard("Stories", "Story lessons", actions.onStories, "✎", Modifier.weight(1f))
@@ -132,7 +132,7 @@ private fun CompletionCard(title: String, complete: Int, total: Int, loading: Bo
     val colors = LocalAslColors.current
     val fraction = if (total > 0) (complete.toFloat() / total).coerceIn(0f, 1f) else 0f
     Surface(
-        modifier.fillMaxWidth().fillMaxHeight().sizeIn(minHeight = Spacing.featureTile).clip(RoundedCornerShape(AslShapes.extraLarge))
+        modifier.fillMaxWidth().fillMaxHeight().clip(RoundedCornerShape(AslShapes.extraLarge))
             .clickable(role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { contentDescription = "$title, $complete of $total signs complete" },
         shape = RoundedCornerShape(AslShapes.extraLarge), color = colors.surface.copy(alpha = if (LocalDarkTheme.current) 0.65f else 0.92f),
@@ -140,7 +140,7 @@ private fun CompletionCard(title: String, complete: Int, total: Int, loading: Bo
     ) {
         Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Box(Modifier.size(Spacing.progressRing), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(TileRingSize), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize().clearAndSetSemantics {}) {
                     val stroke = size.width * 0.08f
                     val inset = stroke / 2
@@ -156,7 +156,7 @@ private fun CompletionCard(title: String, complete: Int, total: Int, loading: Bo
             }
             Spacer(Modifier.height(TileRingGap))
             Text(title, style = AslText.title3, color = colors.label,
-                modifier = Modifier.height(with(LocalDensity.current) { AslText.title3.lineHeight.toDp() * 2 }), maxLines = 2)
+                maxLines = 2)
             Text(if (loading) "Loading progress" else "$complete / $total complete",
                 style = AslText.footnote, color = colors.labelSecondary)
         }
@@ -198,7 +198,7 @@ internal fun HeaderIcon(icon: Int, description: String, onClick: () -> Unit) {
 private fun MenuEntryCard(title: String, meta: String?, onClick: () -> Unit, mark: String, modifier: Modifier) {
     val colors = LocalAslColors.current
     Surface(
-        modifier.fillMaxWidth().fillMaxHeight().sizeIn(minHeight = Spacing.featureTile)
+        modifier.fillMaxWidth().fillMaxHeight()
             .clip(RoundedCornerShape(AslShapes.extraLarge)).clickable(role = Role.Button, onClick = onClick),
         shape = RoundedCornerShape(AslShapes.extraLarge),
         color = colors.surface.copy(alpha = if (LocalDarkTheme.current) 0.65f else 0.92f),
@@ -206,13 +206,13 @@ private fun MenuEntryCard(title: String, meta: String?, onClick: () -> Unit, mar
         border = androidx.compose.foundation.BorderStroke(Spacing.hairline, colors.separator),
     ) {
         Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-            Box(Modifier.fillMaxWidth().height(Spacing.progressRing), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxWidth().height(TileRingSize), contentAlignment = Alignment.Center) {
                 Text(mark, style = AslText.title1, color = colors.labelTertiary,
                     modifier = Modifier.clearAndSetSemantics {})
             }
             Spacer(Modifier.height(TileRingGap))
             Text(title, style = AslText.title3,
-                modifier = Modifier.height(with(LocalDensity.current) { AslText.title3.lineHeight.toDp() * 2 }), maxLines = 2)
+                maxLines = 2)
             if (meta != null) Text(meta, style = AslText.footnote, color = colors.labelSecondary, maxLines = 2)
         }
     }
