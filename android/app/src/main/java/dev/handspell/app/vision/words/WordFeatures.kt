@@ -68,6 +68,7 @@ object WordFeatures {
         val wristA = Array(n) { doubleArrayOf(Double.NaN, Double.NaN) }
         for (f in 0 until n) {
             for (s in 0..1) {
+                if (s == 1) continue // dominant hand only: the training data never has a second hand
                 val h = slots[s]
                 val pts = frames[f].hands[h] ?: continue
                 val wx = pts[0].toDouble()

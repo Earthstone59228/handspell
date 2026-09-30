@@ -11,7 +11,8 @@ Input is one sign attempt as F frames:
 Steps:
   0. Crop the frames to the active span: from the first frame that has a hand to the last one. Clips and live windows
      carry rest frames before and after the sign; cropping makes both look alike. Fewer than MIN_FRAMES left = None.
-  1. Slot A = the hand present in the most frames (ties: the larger total wrist travel). Slot B = the other one.
+  1. Slot A = the hand present in the most frames (ties: the larger total wrist travel). Slot B = the other one, whose
+     features are then left at zero: the training data (ISLR) is signed with one hand, so the model only ever sees slot A.
   2. Body frame for the whole sample: origin = median nose, scale = median shoulder distance (min 0.05).
   3. Per frame and slot, if present, 55 floats: the 21 points relative to that hand's wrist divided by hand size
      (wrist to middle-finger MCP distance, min 1e-3) = 42; the wrist and the index fingertip relative to the origin
@@ -89,6 +90,7 @@ def sequence_features(hands: np.ndarray, pose: np.ndarray) -> np.ndarray | None:
             if s == 0:
                 wrist_a[f] = (wrist - origin) / scale
 
+    per_frame[:, 1, :] = 0  # dominant hand only: the training data (one-handed signing) never has a second hand
     idx = np.rint(np.linspace(0, frames - 1, STEPS)).astype(int)
     steps = per_frame[idx]
     track = wrist_a[idx]
