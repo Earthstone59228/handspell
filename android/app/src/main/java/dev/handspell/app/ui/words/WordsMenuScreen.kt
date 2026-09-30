@@ -93,20 +93,9 @@ data class WordsMenuState(
 fun wordsProgressLine(complete: Int, total: Int): String = "$complete / $total"
 
 /**
- * The A–Z rail's entries: each initial present in [words], A to Z, with the list position of the first word starting
- * with it (the list itself is in catalogue order, free words first).
- */
-fun wordInitials(words: List<WordEntry>): List<Pair<Char, Int>> =
-    words.mapIndexedNotNull { index, word -> word.display.firstOrNull()?.uppercaseChar()?.let { it to index } }
-        .filter { it.first in 'A'..'Z' }
-        .groupBy({ it.first }, { it.second })
-        .map { (initial, positions) -> initial to positions.min() }
-        .sortedBy { it.first }
-
-/**
  * The words menu, built as the alphabet page is: a frosted header (back, bold title, settings and documents icons,
  * "N / M"), the off-white cards (word on the left, index or "complete" top right, the hand wireframe in the bordered
- * slot bottom right), and the A–Z rail on the right (left in left-handed layout). A tap opens the practice sheet; a
+ * slot bottom right). A tap opens the practice sheet; a
  * Pro word keeps the neutral lock and asks for the paywall.
  */
 @Composable
@@ -132,13 +121,11 @@ fun WordsMenuScreen(
     val scope = rememberCoroutineScope()
     var headerHeight by remember { mutableIntStateOf(0) }
     val headerDp = with(density) { headerHeight.toDp() }
-    val gutterStart = if (leftHanded) Spacing.indexGutter else Spacing.lg
-    val gutterEnd = if (leftHanded) Spacing.lg else Spacing.indexGutter
     Box(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = gutterStart, end = gutterEnd, top = headerDp + Spacing.xs, bottom = Spacing.xl),
+            contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, top = headerDp + Spacing.xs, bottom = Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             when {
@@ -182,14 +169,6 @@ fun WordsMenuScreen(
                     .semantics { contentDescription = "${state.completeOfAll} of ${state.words.size}" },
             )
         }
-        val initials = remember(state.words) { wordInitials(state.words) }
-        if (initials.size > 1) IndexRail(
-            initials,
-            Modifier.align(if (leftHanded) Alignment.TopStart else Alignment.TopEnd)
-                .padding(top = headerDp + Spacing.xs, bottom = Spacing.md, start = Spacing.xs, end = Spacing.xs),
-        ) { position ->
-            scope.launch { if (reduceMotion) listState.scrollToItem(position) else listState.animateScrollToItem(position) }
-        }
         AslSheet(visible = selected != null, onDismiss = { selectedGloss = null }) {
             if (selected != null) WordSheet(
                 word = selected,
@@ -199,30 +178,6 @@ fun WordsMenuScreen(
                 onPractice = { selectedGloss = null; onPractice(selected) },
                 onMarkComplete = { complete -> selectedGloss = null; onMarkComplete(selected, complete) },
             )
-        }
-    }
-}
-
-/** The alphabet's index pill: one small initial per row; a tap jumps to the first word with it. */
-@Composable
-private fun IndexRail(initials: List<Pair<Char, Int>>, modifier: Modifier, onJump: (Int) -> Unit) {
-    val colors = LocalAslColors.current
-    val shape = RoundedCornerShape(AslShapes.thumb)
-    Column(
-        modifier.width(Spacing.indexRail).clip(shape).background(colors.backgroundGrouped)
-            .border(Spacing.hairline, colors.separator, shape).padding(vertical = Spacing.xxs),
-    ) {
-        initials.forEach { (initial, position) ->
-            val description = stringResource(R.string.words_jump_to, initial.toString())
-            Box(
-                Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.xl)
-                    .clickable(role = Role.Button) { onJump(position) }
-                    .semantics { contentDescription = description },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(initial.toString(), style = AslText.indexGlyph, color = colors.label.copy(alpha = 0.65f),
-                    modifier = Modifier.clearAndSetSemantics {})
-            }
         }
     }
 }

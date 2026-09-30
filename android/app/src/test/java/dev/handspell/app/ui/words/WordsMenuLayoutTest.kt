@@ -10,12 +10,6 @@ import org.junit.Test
 class WordsMenuLayoutTest {
     private fun w(gloss: String, display: String = gloss, tier: Tier = Tier.FREE) = WordEntry(gloss, display, tier)
 
-    @Test fun `rail lists each initial once, A to Z, pointing at its first word`() {
-        val words = listOf(w("hello"), w("bye"), w("thankyou", "thank you"), w("happy"), w("home"), w("bird", tier = Tier.PRO))
-        assertEquals(listOf('B' to 1, 'H' to 0, 'T' to 2), wordInitials(words))
-        assertEquals(emptyList<Pair<Char, Int>>(), wordInitials(emptyList()))
-    }
-
     @Test fun `progress line counts completed over every listed word`() {
         val state = WordsMenuState(
             loading = false,

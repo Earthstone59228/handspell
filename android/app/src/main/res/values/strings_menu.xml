@@ -21,7 +21,6 @@
 
     <!-- Words menu -->
     <string name="words_title">Words</string>
-    <string name="words_jump_to">Jump to words starting with %1$s</string>
     <string name="words_empty">No words are bundled with this build.</string>
     <string name="words_footer">Words are checked on this phone, like letters. Mark complete is your own record.</string>
     <string name="words_card_description">Practise the word %1$s</string>

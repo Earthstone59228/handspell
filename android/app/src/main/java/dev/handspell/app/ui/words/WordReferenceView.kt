@@ -74,8 +74,8 @@ fun handBounds(hand: FloatArray): FloatArray {
 }
 
 /**
- * The example of a word: a faint face-and-shoulders outline (head oval, two eyes, a nose tick, a mouth, a shoulder
- * curve) so the hand's position reads against the body, and the signing hand's skeleton in the accent colour on top.
+ * The example of a word: a faint front-view figure (WordFigure.kt) so the hand's position reads against the head and
+ * body, and the signing hand's skeleton in the accent colour on top.
  * It loops at the data's frame rate with a short hold on the first frame. With reduce motion on it shows one still
  * frame and a small Play control that plays the sign once.
  */
@@ -85,7 +85,7 @@ fun WordReferenceView(
     word: String,
     modifier: Modifier = Modifier,
     handColor: Color = LocalAslColors.current.accent,
-    mutedColor: Color = AslPalette.Mist,
+    mutedColor: Color = AslPalette.FigureGrey,
 ) {
     val reduceMotion = LocalReduceMotion.current
     val frames = reference.frames
@@ -114,7 +114,7 @@ fun WordReferenceView(
         Canvas(Modifier.fillMaxSize()) {
             // Thin lines scale down with small views (the drill card) so the outline never outweighs the hand.
             val scale = (size.width / with(density) { Spacing.practiceTile.toPx() }).coerceIn(0.5f, 1f)
-            drawFaceOutline(reference, mutedColor, outline * scale)
+            drawWordFigure(reference, mutedColor, outline * scale)
             frames.getOrNull(index)?.forEach { hand ->
                 if (hand != null) drawHand(hand, handColor, handStroke * scale, joint * scale) { x, y ->
                     Offset(x * size.width, y * size.height)
@@ -163,42 +163,6 @@ private fun DrawScope.drawHand(hand: FloatArray, color: Color, stroke: Float, jo
         drawLine(color, p(connection.start()), p(connection.end()), stroke, StrokeCap.Round)
     }
     for (i in 0 until 21) drawCircle(color, joint, p(i))
-}
-
-/** Head oval with eyes, nose tick and mouth, and a neck-and-shoulders curve, from the reference's body anchors. */
-private fun DrawScope.drawFaceOutline(reference: WordReference, color: Color, stroke: Float) {
-    val w = size.width
-    val h = size.height
-    val body = reference.body
-    val nose = Offset(body[0] * w, body[1] * h)
-    val rx = reference.head[0] * w
-    val ry = reference.head[1] * h
-    val line = Stroke(stroke, cap = StrokeCap.Round)
-    drawOval(color, topLeft = Offset(nose.x - rx, nose.y - ry), size = Size(rx * 2, ry * 2), style = line)
-    val eyeY = nose.y - 0.35f * ry
-    drawCircle(color, stroke * 1.3f, Offset(nose.x - 0.4f * rx, eyeY))
-    drawCircle(color, stroke * 1.3f, Offset(nose.x + 0.4f * rx, eyeY))
-    drawLine(color, Offset(nose.x, nose.y - 0.12f * ry), Offset(nose.x, nose.y + 0.06f * ry), stroke, StrokeCap.Round)
-    val mouthY = nose.y + 0.45f * ry
-    val mouth = Path().apply {
-        moveTo(nose.x - 0.28f * rx, mouthY)
-        quadraticTo(nose.x, mouthY + 0.14f * ry, nose.x + 0.28f * rx, mouthY)
-    }
-    drawPath(mouth, color, style = line)
-    // Neck from under the chin, flowing out into rounded shoulders.
-    val left = Offset(body[2] * w, body[3] * h)
-    val right = Offset(body[4] * w, body[5] * h)
-    val chin = nose.y + ry
-    val neck = 0.38f * rx
-    val shoulders = Path().apply {
-        moveTo(left.x - 0.06f * w, left.y + 0.14f * h)
-        cubicTo(left.x - 0.02f * w, left.y, nose.x - neck * 1.6f, left.y - 0.01f * h, nose.x - neck, chin + 0.05f * h)
-        lineTo(nose.x - neck, chin)
-        moveTo(nose.x + neck, chin)
-        lineTo(nose.x + neck, chin + 0.05f * h)
-        cubicTo(nose.x + neck * 1.6f, right.y - 0.01f * h, right.x + 0.02f * w, right.y, right.x + 0.06f * w, right.y + 0.14f * h)
-    }
-    drawPath(shoulders, color, style = line)
 }
 
 private val FACE_STROKE = 1.5.dp

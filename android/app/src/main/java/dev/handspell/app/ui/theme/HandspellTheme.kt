@@ -44,8 +44,6 @@ object Spacing {
     /** The practice sheet's big tile (web `.practice-letter`). */
     val practiceTile: Dp = 174.dp
     /** Width of the A–Z index rail (web `.alphabet-index`) and the list's gutter beside it. */
-    val indexRail: Dp = 31.dp
-    val indexGutter: Dp = 66.dp
 }
 
 object AslShapes {
@@ -84,6 +82,8 @@ object AslPalette {
     val MetaGrey = Color(0xFF66666B)
     /** The faint face-and-shoulders outline behind a word example on a light tile. */
     val Mist = Color(0xFFC7C7CC)
+    /** The word figure's line on the light tile: a little darker than Mist so it reads without competing with the hand. */
+    val FigureGrey = Color(0xFFB4B4BB)
 }
 
 data class AslColors(

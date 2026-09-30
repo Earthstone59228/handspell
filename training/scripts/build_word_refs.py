@@ -30,8 +30,8 @@ from handspell import words_features as wf  # noqa: E402
 FRAMES = 20
 FPS = 10
 MAX_GAP = 4
-SHOULDER_WIDTH = 0.64
-NOSE_AT = np.array([0.5, 0.22])
+SHOULDER_WIDTH = 0.60
+NOSE_AT = np.array([0.5, 0.31])
 EDGE = 0.03
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT.parent / "android/app/src/main/assets/content/word-refs.json"
