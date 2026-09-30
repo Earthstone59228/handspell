@@ -139,6 +139,20 @@ private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit,
 @Composable
 private fun InsightsGroup(insights: Insights, isPro: Boolean, onSeePro: () -> Unit) {
     val colors = LocalAslColors.current
+    if (!isPro) {
+        // Free users get one teaser row instead of five locked ones.
+        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            SettingsGroupHeader(stringResource(R.string.insights_title))
+            SettingsGroup {
+                Column {
+                    SettingsInfoRow(stringResource(R.string.insights_teaser_title), stringResource(R.string.insights_teaser_body))
+                    SettingsDivider()
+                    SettingsActionRow(stringResource(R.string.settings_see_pro), onClick = onSeePro)
+                }
+            }
+        }
+        return
+    }
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.insights_title))
         SettingsGroup {

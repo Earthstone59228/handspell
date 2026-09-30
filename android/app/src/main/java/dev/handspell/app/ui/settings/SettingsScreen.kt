@@ -253,15 +253,11 @@ private fun SubscriptionGroup(
                 }
             }
         }
+        // One short line here; the demo, Test Store and cancellation details live on the Pro screen.
         when (demoTrial) {
-            DemoTrialState.NotStarted -> if (state.subscription == SubscriptionUi.FREE)
-                SettingsGroupFooter(stringResource(R.string.demo_trial_offer_body))
             is DemoTrialState.Active -> SettingsGroupFooter(stringResource(R.string.demo_trial_active_body))
             is DemoTrialState.Ended -> SettingsGroupFooter(stringResource(R.string.demo_trial_ended_body))
-        }
-        if (state.billingConfigured) {
-            SettingsGroupFooter(stringResource(R.string.settings_test_store_footer))
-            SettingsGroupFooter(stringResource(R.string.settings_cancel_subscription))
+            DemoTrialState.NotStarted -> if (state.billingConfigured) SettingsGroupFooter(stringResource(R.string.settings_test_store_footer))
         }
         val restoreResult = when (state.restore) {
             RestoreUi.IDLE -> null

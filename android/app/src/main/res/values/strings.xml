@@ -63,7 +63,7 @@
     <string name="settings_restored">Purchases restored.</string>
     <string name="settings_nothing_to_restore">Nothing to restore.</string>
     <string name="settings_restore_failed">Couldn’t reach the store. Try again.</string>
-    <string name="settings_test_store_footer">Purchases in this build run through RevenueCat’s Test Store. Nothing is charged and no real money changes hands.</string>
+    <string name="settings_test_store_footer">Purchases here use RevenueCat’s Test Store: nothing is charged. Cancel details are on the Pro screen.</string>
     <string name="settings_cancel_subscription">To cancel a real subscription, open Google Play → Payments and subscriptions → Subscriptions.</string>
     <string name="settings_privacy">Privacy</string>
     <string name="settings_model_title">Recognition model</string>
@@ -79,6 +79,9 @@
     <string name="paywall_test_store">Test Store purchase. No money is charged.</string>
     <string name="paywall_annual_saving">Save %1$d%% compared with monthly billing</string>
     <string name="paywall_value">Practise with story lessons and speed challenges as new packs arrive.</string>
+    <string name="paywall_word_locked">“%1$s” is included with Pro</string>
+    <string name="insights_teaser_title">Pro insights</string>
+    <string name="insights_teaser_body">Your lowest match rates, what to practise next, this week at a glance, average match time and your best speed score.</string>
     <string name="paywall_free">All 26 letter drills stay free.</string>
     <string name="paywall_loading">Checking available plans…</string>
     <string name="paywall_empty">No plans are available right now. Try again later.</string>

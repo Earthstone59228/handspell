@@ -48,7 +48,7 @@ import dev.handspell.app.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
 @Composable
-fun PaywallRoute(gate: EntitlementGate, packs: List<ContentPack>, onBack: () -> Unit) {
+fun PaywallRoute(gate: EntitlementGate, packs: List<ContentPack>, onBack: () -> Unit, lockedWord: String? = null) {
     val activity = LocalActivity.current
     val scope = rememberCoroutineScope()
     var packages by remember { mutableStateOf<List<PaywallPackage>?>(null) }
@@ -107,6 +107,7 @@ fun PaywallRoute(gate: EntitlementGate, packs: List<ContentPack>, onBack: () -> 
         demoTrial = demoTrial,
         isPro = isPro,
         onStartDemoTrial = { scope.launch { gate.startDemoTrial(); onBack() } },
+        lockedWord = lockedWord,
     )
 }
 
@@ -127,6 +128,7 @@ private fun PaywallScreen(
     demoTrial: DemoTrialState = DemoTrialState.NotStarted,
     isPro: Boolean = false,
     onStartDemoTrial: () -> Unit = {},
+    lockedWord: String? = null,
 ) {
     val colors = LocalAslColors.current
     Column(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
@@ -135,19 +137,8 @@ private fun PaywallScreen(
           Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
           verticalArrangement = Arrangement.spacedBy(Spacing.md),
       ) {
-        if (packs.isNotEmpty()) SettingsGroup {
-            Column {
-                packs.forEachIndexed { index, pack ->
-                    if (index > 0) SettingsDivider()
-                    SettingsInfoRow(pack.title, pack.summary)
-                }
-            }
-        } else Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge)
-        dev.handspell.app.ui.pro.ProComparison()
-        // A real Pro user (not on the demo) has nothing to try.
-        DemoTrialGroup(demoTrial, isRealPro = isPro && demoTrial !is DemoTrialState.Active, onStart = onStartDemoTrial)
-        Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
-        Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
+        if (lockedWord != null) Text(stringResource(R.string.paywall_word_locked, lockedWord),
+            style = MaterialTheme.typography.titleLarge, color = colors.label)
         when {
             error -> {
                 Text(stringResource(R.string.paywall_load_failed), style = MaterialTheme.typography.bodyLarge)
@@ -202,6 +193,19 @@ private fun PaywallScreen(
             }
         }
         if (working) Text(stringResource(R.string.pro_billing_working), style = MaterialTheme.typography.bodyLarge)
+        if (packs.isNotEmpty()) SettingsGroup {
+            Column {
+                packs.forEachIndexed { index, pack ->
+                    if (index > 0) SettingsDivider()
+                    SettingsInfoRow(pack.title, pack.summary)
+                }
+            }
+        } else Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge)
+        dev.handspell.app.ui.pro.ProComparison()
+        // A real Pro user (not on the demo) has nothing to try.
+        DemoTrialGroup(demoTrial, isRealPro = isPro && demoTrial !is DemoTrialState.Active, onStart = onStartDemoTrial)
+        Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
+        Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
         AslButton(stringResource(R.string.settings_restore), onRestore, Modifier.fillMaxWidth(),
             style = AslButtonStyle.Secondary, enabled = !working)
         Text(stringResource(R.string.settings_cancel_subscription), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)

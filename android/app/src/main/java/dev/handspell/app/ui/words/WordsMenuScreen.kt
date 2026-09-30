@@ -110,7 +110,7 @@ fun WordsMenuScreen(
     onDismissProStrip: () -> Unit = {},
     references: Map<String, WordReference> = emptyMap(),
     onSettings: () -> Unit = {},
-    onPaper: () -> Unit = {},
+    onSeePro: () -> Unit = {},
     leftHanded: Boolean = false,
 ) {
     val colors = LocalAslColors.current
@@ -154,7 +154,7 @@ fun WordsMenuScreen(
                     if (proStrip && locked.isNotEmpty()) item {
                         WordsProStrip(
                             proWordCount = locked.size, examples = locked.take(3).map { it.display },
-                            onSeePro = { onLocked(locked.first()) }, onDismiss = onDismissProStrip,
+                            onSeePro = onSeePro, onDismiss = onDismissProStrip,
                         )
                     }
                 }
@@ -171,7 +171,6 @@ fun WordsMenuScreen(
                 Text(stringResource(R.string.words_title), style = AslText.largeTitle, color = colors.label,
                     modifier = Modifier.weight(1f).semantics { heading() })
                 HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), onSettings)
-                HeaderIcon(R.drawable.ic_paper, stringResource(R.string.menu_open_paper), onPaper)
             }
             if (!state.loading) Text(
                 wordsProgressLine(state.completeCount, state.openTotal), style = AslText.progressLine,
@@ -235,7 +234,7 @@ private fun WordCard(
             when {
                 locked -> ProLockLabel(colors.onCardSecondary)
                 complete -> Text(stringResource(R.string.words_card_complete), style = AslText.cardMeta, color = AslPalette.BlueText)
-                else -> Text((index + 1).toString().padStart(2, '0'), style = AslText.cardMeta, color = AslPalette.MetaGrey)
+                else -> Unit
             }
         }
         val thumbShape = RoundedCornerShape(AslShapes.thumb)

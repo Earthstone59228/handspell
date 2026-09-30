@@ -40,7 +40,6 @@ data class MainMenuActions(
     val onWords: () -> Unit,
     val onProgress: () -> Unit,
     val onSettings: () -> Unit,
-    val onPaper: () -> Unit,
 )
 
 /**
@@ -62,7 +61,6 @@ fun MainMenuScreen(
         topSpace = Spacing.xs,
         actions = {
             headerActions()
-            HeaderIcon(R.drawable.ic_paper, stringResource(R.string.menu_open_paper), actions.onPaper)
             HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), actions.onSettings)
         },
     ) {

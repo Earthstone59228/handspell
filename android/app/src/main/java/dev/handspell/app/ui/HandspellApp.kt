@@ -133,8 +133,13 @@ fun HandspellApp(
 ) {
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
+    // The locked word that opened the paywall, so the paywall can say why it appeared; cleared on leaving it.
+    var paywallWord by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(entitlementGate) {
-        entitlementGate.paywallRequests.collect { navController.navigate(PAYWALL_ROUTE) }
+        entitlementGate.paywallRequests.collect { source ->
+            if (source != PaywallSource.WORDS) paywallWord = null
+            navController.navigate(PAYWALL_ROUTE)
+        }
     }
     val homeViewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(contentRepository, progressStore, entitlementGate))
     val homeState by homeViewModel.uiState.collectAsStateWithLifecycle()
@@ -219,7 +224,6 @@ fun HandspellApp(
                     onWords = { navController.navigate(WORDS_ROUTE) },
                     onProgress = { navController.navigate(PROGRESS_ROUTE) },
                     onSettings = { navController.navigate(SETTINGS_ROUTE) },
-                    onPaper = { navController.navigate(PAPER_ROUTE) },
                 ),
                 belowEntries = {
                     val quest = questProgress(progress, questDay)
@@ -281,13 +285,13 @@ fun HandspellApp(
                     if (complete) showReward(RewardSubject(RewardSubject.Kind.WORD, word.gloss, word.display))
                     scope.launch { progressStore.setWordMarkedComplete(word.gloss, complete) }
                 },
-                onLocked = { entitlementGate.requestPaywall(PaywallSource.WORDS) },
+                onLocked = { word -> paywallWord = word.display; entitlementGate.requestPaywall(PaywallSource.WORDS) },
                 proStrip = !isPro && !wordsProDismissed && proWordCount > 0,
                 onDismissProStrip = { wordsProDismissed = true },
+                onSeePro = { paywallWord = null; entitlementGate.requestPaywall(PaywallSource.WORDS) },
                 references = wordReferences,
                 onSettings = { navController.navigate(SETTINGS_ROUTE) },
-                onPaper = { navController.navigate(PAPER_ROUTE) },
-                leftHanded = leftHanded,
+                                leftHanded = leftHanded,
             )
         }
         composable("$WORD_DRILL_ROUTE/{gloss}") { entry ->
@@ -485,7 +489,8 @@ fun HandspellApp(
             LegalScreen(stringResource(R.string.paper_capacitor_splash_license), "CAPACITOR_SPLASH_LICENSE.txt") { navController.popBackStack() }
         }
         composable(PAYWALL_ROUTE) {
-            PaywallRoute(entitlementGate, homeState.packs) { navController.popBackStack() }
+            PaywallRoute(entitlementGate, homeState.packs, onBack = { paywallWord = null; navController.popBackStack() },
+                lockedWord = paywallWord)
         }
     }
     // Above every screen, the alphabet WebView included; a tap on Continue or the backdrop closes it.
