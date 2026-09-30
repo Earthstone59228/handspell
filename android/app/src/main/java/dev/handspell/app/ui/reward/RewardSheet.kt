@@ -67,8 +67,8 @@ private fun RewardContent(reward: Reward, onContinue: () -> Unit, proMention: (@
     Surface(
         Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.referenceGuide * 1.5f)
             .graphicsLayer { scaleX = scale.value; scaleY = scale.value },
-        shape = RoundedCornerShape(AslShapes.extraLarge),
-        color = colors.tile,
+        shape = RoundedCornerShape(dev.handspell.app.ui.theme.LocalInsetCornerRadius.current ?: AslShapes.extraLarge),
+        color = colors.card,
     ) {
         Box(contentAlignment = Alignment.Center) {
             val letter = reward.subject.kind == RewardSubject.Kind.LETTER

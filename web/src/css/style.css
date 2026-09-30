@@ -1,10 +1,4 @@
 :root {
-  /* Card tokens: mirror LocalAslColors card / onCard / onCardSecondary / onCardAccent in HandspellTheme.kt. */
-  --card:#2C2C2E;
-  --on-card:#F5F5F7;
-  --on-card-2:#F5F5F79E;
-  --on-card-accent:#007AFF;
-  --card-line:#F5F5F724;
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
   color:#F5F5F7;
   background:#1D1D1F;
@@ -195,8 +189,8 @@ html.left-handed .letter-list {
   padding:12px 19px;
   border:0;
   border-radius:20px;
-  background:var(--card);
-  color:var(--on-card);
+  background:#F5F5F7;
+  color:#1D1D1F;
   text-align:left;
   cursor:pointer;
   scroll-margin-top:8px;
@@ -225,10 +219,10 @@ html.left-handed .letter-list {
   font-size:11px;
   font-weight:650;
   letter-spacing:.5px;
-  color:var(--on-card-2)
+  color:#66666B
 }
 .letter-card.done .card-meta {
-  color:var(--on-card-accent)
+  color:#005FCC
 }
 .letter-card.unavailable {
   cursor:default;
@@ -248,9 +242,9 @@ html.left-handed .letter-list {
   place-items:center;
   width:58px;
   height:58px;
-  border:1px solid var(--card-line);
+  border:1px solid #1D1D1F24;
   border-radius:13px;
-  color:var(--on-card);
+  color:#1D1D1F;
   opacity:.45
 }
 .sign-placeholder.wireframe {
@@ -439,48 +433,10 @@ html.left-handed .index-surface {
   color:#F5F5F7
 }
 .complete-button {
-  background:var(--card);
-  color:var(--on-card)
-}
-.letter-text {
-  position:absolute;
-  width:1px;
-  height:1px;
-  overflow:hidden;
-  clip-path:inset(50%)
-}
-.undo-link {
-  min-height:48px;
-  margin-top:8px;
-  padding:0 16px;
-  border:0;
-  background:none;
-  color:inherit;
-  font-size:15px;
-  font-weight:500;
-  opacity:.7;
-  cursor:pointer
-}
-.undo-link:focus-visible {
-  outline:2px solid #007AFF;
-  outline-offset:3px
-}
-.practice-letter .sign-placeholder:not(.wireframe) {
+  background:#F5F5F7;
   color:#1D1D1F
 }
-.practice-letter .sign-placeholder,.practice-letter .sign-placeholder.wireframe {
-  position:static;
-  display:grid;
-  width:auto;
-  height:auto;
-  border:0
-}
-.practice-letter .sign-placeholder.wireframe svg {
-  width:128px;
-  height:128px;
-  stroke-width:1.5
-}
-.sheet-actions[hidden],.sheet-actions [hidden],.undo-link[hidden],.undo-button[hidden],.practice-status[hidden] {
+.sheet-actions[hidden],.sheet-actions [hidden],.undo-button[hidden],.practice-status[hidden] {
   display:none
 }
 .practice-status {
@@ -679,11 +635,6 @@ html.left-handed .index-surface {
 /* Light appearance: the same four colours swapped (Paper ground, Ink text, white cards, Blue for actions), set from the
    app's Theme setting through the bridge. Nothing new is introduced; tints are these colours at lower opacity. */
 html.theme-light {
-  --card:#FFFFFF;
-  --on-card:#1D1D1F;
-  --on-card-2:#1D1D1F9E;
-  --on-card-accent:#005FCC;
-  --card-line:#1D1D1F24;
   color-scheme:light
 }
 html.theme-light,html.theme-light body {
@@ -745,4 +696,94 @@ html.theme-light .complete-button {
 }
 html.theme-light .setup-confirm:focus-visible {
   outline-color:#1D1D1F
+}
+
+/* Revamp: atmospheric surfaces and translucent, softly rounded cards. */
+.app-shell {
+  background:radial-gradient(ellipse at 0% 0%,#344653 0,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,#263b49 0,transparent 55%),#1D1D1F;
+}
+.top-area {background:#1D1D1FB8; padding-bottom:24px}
+h1 {font-size:clamp(34px,9vw,42px); letter-spacing:-1.7px}
+.letter-card {border-radius:28px; box-shadow:0 2px 8px #00000008}
+.practice-sheet {border-radius:34px 34px 0 0}
+.practice-button,.complete-button,.setup-confirm {border-radius:28px}
+html.theme-light,html.theme-light body {background:#F6F8FB}
+html.theme-light .app-shell,html.theme-light .setup-screen,html.theme-light .utility-screen {
+  background:radial-gradient(ellipse at 0% 0%,#DCEAF4 0,transparent 55%),
+    radial-gradient(ellipse at 100% 100%,#DCECF0 0,transparent 55%),#F6F8FB;
+}
+html.theme-light .top-area {background:#F6F8FBB8}
+html.theme-light .letter-card {
+  background:linear-gradient(135deg,#FFFFFFDB,#F1F7FCB8);
+  box-shadow:inset 0 0 0 1px #FFFFFFA6,0 3px 9px #29354206;
+}
+html.theme-light .letter-card.selected {box-shadow:inset 0 0 0 2px #007AFF99}
+html.theme-light .practice-sheet {background:#F6F8FBF2; border-color:#FFFFFFB3}
+html.theme-light .practice-letter {background:linear-gradient(135deg,#FFFFFF,#DFEDF6)}
+
+/* Feather the frosted header into the scrolling surface instead of ending at a hard edge. */
+.top-area,html.theme-light .top-area {
+  background:transparent;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  isolation:isolate;
+}
+.top-area::before {
+  content:"";
+  position:absolute;
+  inset:0 0 -24px;
+  z-index:-1;
+  pointer-events:none;
+  background:#1D1D1F60;
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+  mask-image:linear-gradient(#000 calc(100% - 24px),transparent);
+  -webkit-mask-image:linear-gradient(#000 calc(100% - 24px),transparent);
+}
+html.theme-light .top-area::before {background:#F6F8FB60}
+.header-back,.screen-back {touch-action:none; border-radius:50%}
+.header-icon {border-radius:50%}
+
+/* Clearer light surfaces with a restrained blue atmosphere. */
+html.theme-light .letter-card {
+  background:linear-gradient(135deg,#FFFFFFF5,#F7FAFDED);
+  box-shadow:inset 0 0 0 1px #CBD5E15C,0 4px 16px #20364D08;
+}
+html.theme-light .index-surface {fill:#FFFFFFF2;stroke:#CBD5E180}
+html.theme-light .progress-line {color:#526176}
+
+/* Concentric nested corners: inner radius = outer radius - actual edge inset. */
+:root {
+  --card-radius:28px;
+  --card-inset:16px;
+  --sheet-radius:48px;
+  --sheet-inset:20px;
+  --surface-border:1px;
+}
+.letter-card {border-radius:var(--card-radius);padding:var(--card-inset)}
+.sign-placeholder {
+  right:var(--card-inset);
+  bottom:var(--card-inset);
+  height:52px;
+  border-radius:max(0px,calc(var(--card-radius) - var(--card-inset)));
+}
+.practice-sheet {
+  border-radius:var(--sheet-radius) var(--sheet-radius) 0 0;
+  /* The border adds one pixel: compensate so the measured outer-edge inset stays 20px. */
+  padding:calc(var(--sheet-inset) - var(--surface-border));
+  padding-bottom:calc(var(--safe-bottom, env(safe-area-inset-bottom, 0px)) + var(--sheet-inset));
+}
+.practice-sheet .practice-button,.practice-sheet .complete-button {
+  border-radius:max(0px,calc(var(--sheet-radius) - var(--sheet-inset)));
+}
+
+.letter-card.selected,html.theme-light .letter-card.selected {
+  box-shadow:inset 0 0 0 2px #007AFF;
+}
+.letter-card:focus-visible,.index-cell:focus-visible,.nav-control:focus-visible,
+.complete-button:focus-visible,.practice-button:focus-visible {
+  outline:2px solid #007AFF;
+  outline-offset:-2px;
+  border-radius:inherit;
 }

@@ -2,10 +2,10 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import { wireframes } from './handshapes.js';
 import { installBackDrag } from './back-drag.js';
 
-document.querySelectorAll('.screen-back').forEach(installBackDrag);
+document.querySelectorAll('.screen-back, .header-back').forEach(installBackDrag);
 
 const letters = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'];
-// All 26 letters can be practised, including motion recognition for J and Z.
+// All 26 letters can be practiced, including motion recognition for J and Z.
 // Wireframes come from ./handshapes.js (see scripts/gen-web-wireframes.py).
 const letterStatus = {};
 const isPracticable = letter => !letterStatus[letter];
@@ -80,7 +80,7 @@ function renderCards() {
 
 function cardMeta(letter, done) {
   if (!isPracticable(letter)) return 'needs motion';
-  return done ? 'complete' : '';
+  return done ? 'complete' : String(letters.indexOf(letter) + 1).padStart(2, '0');
 }
 
 function signArt(letter) {
@@ -294,9 +294,7 @@ function openPractice(letter) {
   showSetupAfterClose = false;
   selectedLetter = letter;
   previousFocus = document.activeElement;
-  // The handshape guide, larger, as on the list card; the bare letter only when no wireframe exists.
-  const art = document.querySelector('#practice-letter');
-  if (wireframes[letter]) art.innerHTML = `${signArt(letter)}<span class="letter-text">${letter}</span>`; // the letter text stays: the app reads it to open the camera drill else art.textContent = letter;
+  document.querySelector('#practice-letter').textContent = letter;
   document.querySelector('#practice-title').textContent = `Letter ${letter}`;
   // A complete letter stays fully practicable: Practice is always offered; only the second action changes.
   const completed = progress.completed.includes(letter);
@@ -344,6 +342,8 @@ modal.querySelector('.practice-sheet').addEventListener('transitionend', event =
 
 document.querySelector('#close-practice').addEventListener('click', closePractice);
 function openUtility(name, trigger) {
+  if (name === 'Paper' && native?.openPaper) { native.openPaper(); return; }
+  if (name === 'Settings' && native?.openSettings) { native.openSettings(); return; }
   utilityTrigger = trigger;
   utility.setAttribute('aria-label', name);
   utility.hidden = false;
@@ -356,6 +356,7 @@ function closeUtility() {
   utilityTrigger?.focus();
 }
 document.querySelector('#open-settings').addEventListener('click', event => openUtility('Settings', event.currentTarget));
+document.querySelector('#open-paper').addEventListener('click', event => openUtility('Paper', event.currentTarget));
 document.querySelector('#utility-back').addEventListener('click', closeUtility);
 function closeSetup() {
   setup.hidden = true;
@@ -500,7 +501,7 @@ function syncNativeStreak() {
   chip.classList.toggle('pending', !streak.today);
   chip.textContent = streak.today
     ? `${streak.current}-day streak`
-    : `${streak.current}-day streak · practise today to keep it`;
+    : `${streak.current}-day streak · practice today to keep it`;
   chip.setAttribute('aria-label', `${streak.current}-day streak`);
 }
 window.addEventListener('aslNativeProgress', syncNativeStreak);

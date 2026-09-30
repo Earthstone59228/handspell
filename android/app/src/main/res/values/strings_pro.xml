@@ -10,7 +10,7 @@
     <string name="compare_included">Included</string>
     <string name="compare_not_included">—</string>
     <string name="compare_not_included_spoken">not included</string>
-    <string name="compare_letters">26 letter drills</string>
+    <string name="compare_letters">24 letter drills</string>
     <string name="compare_words">First 12 words</string>
     <string name="compare_speed">Speed challenge</string>
     <string name="compare_speed_free">1 a day</string>
@@ -23,14 +23,14 @@
     <string name="pro_mention_not_now">Not now</string>
 
     <!-- Round 2 -->
-    <string name="pro_card_title">More to practise with Pro</string>
+    <string name="pro_card_title">More to practice with Pro</string>
     <plurals name="pro_point_words">
         <item quantity="one">%1$d more word sign</item>
         <item quantity="other">%1$d more word signs</item>
     </plurals>
     <string name="pro_point_speed">Unlimited speed challenges</string>
     <string name="pro_point_packs">Three story lessons and three timed speed packs</string>
-    <string name="pro_point_insights">Progress insights: your weakest letters and what to practise next</string>
+    <string name="pro_point_insights">Progress insights: your weakest letters and what to practice next</string>
     <string name="pro_card_see">See what’s in Pro</string>
     <string name="pro_card_demo">Try Pro free for 3 days (demo)</string>
     <string name="pro_card_demo_note">A demo of the free-trial flow in this build. Nothing is bought or charged, and it ends by itself.</string>

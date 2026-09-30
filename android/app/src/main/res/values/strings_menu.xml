@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Main menu -->
-    <string name="menu_hero_body">Practise ASL fingerspelling and first words with your camera.</string>
+    <string name="menu_hero_body">Practice ASL fingerspelling and first words with your camera.</string>
     <string name="menu_open_paper">Open documents</string>
     <string name="menu_open_settings">Open settings</string>
     <string name="menu_theme_to_light">Switch to light appearance</string>
@@ -15,25 +15,24 @@
         <item quantity="other">%1$d-day streak</item>
     </plurals>
     <string name="menu_streak_none">No streak yet</string>
-    <string name="menu_progress_start">%1$s. Practise a letter or a word to start one.</string>
+    <string name="menu_progress_start">%1$s. Practice a letter or a word to start one.</string>
     <string name="menu_progress_today_done">%1$s. Today counts.</string>
-    <string name="menu_progress_today_pending">%1$s. Practise today to keep it.</string>
+    <string name="menu_progress_today_pending">%1$s. Practice today to keep it.</string>
 
     <!-- Words menu -->
     <string name="words_title">Words</string>
     <string name="words_empty">No words are bundled with this build.</string>
     <string name="words_footer">Words are checked on this phone, like letters. Mark complete is your own record.</string>
-    <string name="words_card_description">Practise the word %1$s</string>
-    <string name="words_card_complete_description">Practise the word %1$s, complete</string>
+    <string name="words_card_description">Practice the word %1$s</string>
+    <string name="words_card_complete_description">Practice the word %1$s, complete</string>
     <string name="words_card_locked_description">%1$s, included with Pro</string>
     <string name="words_card_complete">complete</string>
-    <string name="words_pro_header">Included with Pro</string>
     <string name="words_sheet_title">%1$s</string>
     <string name="words_sheet_title_complete">%1$s · complete</string>
     <string name="words_practice">Practice</string>
     <string name="mark_complete">Mark complete</string>
     <string name="mark_complete_undo">Undo completion</string>
-    <string name="mark_complete_undo_short">Mark as not done</string>
+    <string name="mark_complete_undo_short">Undo</string>
 
     <!-- Word drill -->
     <string name="word_drill_title">Word practice</string>

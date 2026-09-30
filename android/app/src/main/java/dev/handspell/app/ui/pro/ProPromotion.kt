@@ -23,7 +23,6 @@ import androidx.compose.ui.semantics.heading
 import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.ui.components.AslButtonStyle
 import dev.handspell.app.ui.components.AslCard
-import dev.handspell.app.ui.components.AslTextButton
 import dev.handspell.app.ui.settings.SettingsActionRow
 import dev.handspell.app.ui.settings.SettingsDivider
 import dev.handspell.app.ui.settings.SettingsGroup
@@ -63,7 +62,7 @@ fun ProMenuCard(
         }
         return
     }
-    AslCard {
+    AslCard(contentInset = Spacing.lg) {
         Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
             Text(stringResource(R.string.settings_pro).uppercase(), style = MaterialTheme.typography.labelSmall,
                 color = colors.accent)
@@ -81,8 +80,8 @@ fun ProMenuCard(
                 Text(stringResource(R.string.pro_card_demo_note), style = MaterialTheme.typography.labelMedium,
                     color = colors.onSurfaceSecondary)
             }
-            // Dismiss lives inside the card as a quiet text action, not as a navigation-looking row below it.
-            AslTextButton(stringResource(R.string.pro_mention_not_now), onDismiss, Modifier.align(Alignment.CenterHorizontally))
+            AslButton(stringResource(R.string.pro_mention_not_now), onDismiss,
+                Modifier.fillMaxWidth(), style = AslButtonStyle.Secondary)
         }
     }
 }

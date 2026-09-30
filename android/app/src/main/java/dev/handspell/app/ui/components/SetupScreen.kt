@@ -6,6 +6,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,7 +55,7 @@ fun SetupScreen(
     onBack: (() -> Unit)? = null,
 ) {
     val colors = LocalAslColors.current
-    Box(modifier.fillMaxSize().background(colors.backgroundGrouped)) {
+    Box(modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
         Column(
             Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = Spacing.xl, vertical = Spacing.xxxl * 2),
             verticalArrangement = Arrangement.spacedBy(Spacing.xxl - 2.dp, Alignment.CenterVertically),
@@ -80,7 +81,7 @@ fun SetupScreen(
         }
         if (onBack != null) BackChevron(
             onBack,
-            Modifier.align(Alignment.TopStart).padding(start = BackChevronStart, top = BackChevronTop),
+            Modifier.align(Alignment.TopStart).statusBarsPadding().padding(start = BackChevronStart, top = BackChevronTop),
         )
     }
 }

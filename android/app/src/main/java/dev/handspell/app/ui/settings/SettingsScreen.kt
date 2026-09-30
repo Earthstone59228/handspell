@@ -1,5 +1,7 @@
 package dev.handspell.app.ui.settings
 
+import dev.handspell.app.ui.components.selectionOutline
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -136,13 +138,15 @@ fun SettingsScreen(
                         Modifier.fillMaxWidth().padding(top = Spacing.xs),
                         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                     ) {
-                        AslButton(stringResource(R.string.settings_cancel), onDismissClear, Modifier.fillMaxWidth())
+                        AslButton(stringResource(R.string.settings_cancel), onDismissClear, Modifier.fillMaxWidth(),
+                            cornerRadius = AslShapes.dialogButton)
                         AslButton(
                             stringResource(R.string.settings_delete_data), onConfirmClear,
                             Modifier.fillMaxWidth().border(
-                                Spacing.hairline, colors.separator, RoundedCornerShape(AslShapes.button),
+                                Spacing.hairline, colors.separator, RoundedCornerShape(AslShapes.dialogButton),
                             ),
                             style = AslButtonStyle.Secondary,
+                            cornerRadius = AslShapes.dialogButton,
                         )
                     }
                 }
@@ -167,6 +171,7 @@ private fun AppearanceGroup(mode: ThemeMode, onSetTheme: (ThemeMode) -> Unit, le
                     if (index > 0) SettingsDivider()
                     Row(
                         Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
+                            .selectionOutline(mode == option)
                             .selectable(selected = mode == option, role = Role.RadioButton) { onSetTheme(option) }
                             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,
@@ -253,11 +258,15 @@ private fun SubscriptionGroup(
                 }
             }
         }
-        // One short line here; the demo, Test Store and cancellation details live on the Pro screen.
         when (demoTrial) {
+            DemoTrialState.NotStarted -> if (state.subscription == SubscriptionUi.FREE)
+                SettingsGroupFooter(stringResource(R.string.demo_trial_offer_body))
             is DemoTrialState.Active -> SettingsGroupFooter(stringResource(R.string.demo_trial_active_body))
             is DemoTrialState.Ended -> SettingsGroupFooter(stringResource(R.string.demo_trial_ended_body))
-            DemoTrialState.NotStarted -> if (state.billingConfigured) SettingsGroupFooter(stringResource(R.string.settings_test_store_footer))
+        }
+        if (state.billingConfigured) {
+            SettingsGroupFooter(stringResource(if (dev.handspell.app.BuildConfig.REVENUECAT_API_KEY.startsWith("test_")) R.string.settings_test_store_footer else R.string.paywall_store_billing))
+            SettingsGroupFooter(stringResource(R.string.settings_cancel_subscription))
         }
         val restoreResult = when (state.restore) {
             RestoreUi.IDLE -> null

@@ -58,12 +58,11 @@ class RevenueCatEntitlementGate(context: Context, apiKey: String) : EntitlementG
                 }
 
                 override fun onError(error: PurchasesError) {
-                    if (continuation.isActive) continuation.resume(Result.failure(IllegalStateException(error.message)))
+                    if (continuation.isActive) continuation.resume(Result.failure(IllegalStateException("${error.code}: ${error.message}")))
                 }
             })
         }
         result.onSuccess(::applyInfo).onFailure {
-            isPro.value = false
             status.value = EntitlementStatus.Unavailable(it)
         }
     }
@@ -76,7 +75,7 @@ class RevenueCatEntitlementGate(context: Context, apiKey: String) : EntitlementG
                 }
 
                 override fun onError(error: PurchasesError) {
-                    if (continuation.isActive) continuation.resume(Result.failure(IllegalStateException(error.message)))
+                    if (continuation.isActive) continuation.resume(Result.failure(IllegalStateException("${error.code}: ${error.message}")))
                 }
             })
         }
@@ -87,9 +86,8 @@ class RevenueCatEntitlementGate(context: Context, apiKey: String) : EntitlementG
                 else RestoreResult.NOTHING_TO_RESTORE
             },
             onFailure = {
-                isPro.value = false
                 status.value = EntitlementStatus.Unavailable(it)
-                RestoreResult.FAILED
+                throw it
             },
         )
     }
@@ -102,7 +100,7 @@ class RevenueCatEntitlementGate(context: Context, apiKey: String) : EntitlementG
                 }
 
                 override fun onError(error: PurchasesError) {
-                    if (continuation.isActive) continuation.resume(Result.failure(IllegalStateException(error.message)))
+                    if (continuation.isActive) continuation.resume(Result.failure(IllegalStateException("${error.code}: ${error.message}")))
                 }
             })
         }.getOrThrow()
@@ -125,7 +123,7 @@ class RevenueCatEntitlementGate(context: Context, apiKey: String) : EntitlementG
     }
 
     override suspend fun purchase(packageId: String, activity: Activity): PurchaseResult {
-        val item = availablePackages[packageId] ?: return PurchaseResult.FAILED
+        val item = availablePackages[packageId] ?: error("Selected subscription is no longer available. Reload plans and try again.")
         return suspendCancellableCoroutine { continuation ->
             purchases.purchase(PurchaseParams.Builder(activity, item).build(), object : PurchaseCallback {
                 override fun onCompleted(storeTransaction: StoreTransaction, customerInfo: CustomerInfo) {
@@ -137,9 +135,10 @@ class RevenueCatEntitlementGate(context: Context, apiKey: String) : EntitlementG
                 }
 
                 override fun onError(error: PurchasesError, userCancelled: Boolean) {
-                    if (continuation.isActive) continuation.resume(
-                        if (userCancelled) PurchaseResult.CANCELLED else PurchaseResult.FAILED,
-                    )
+                    if (continuation.isActive) {
+                        if (userCancelled) continuation.resume(PurchaseResult.CANCELLED)
+                        else continuation.resumeWith(Result.failure(IllegalStateException("${error.code}: ${error.message}")))
+                    }
                 }
             })
         }

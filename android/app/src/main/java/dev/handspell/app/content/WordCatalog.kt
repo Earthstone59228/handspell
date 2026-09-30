@@ -8,7 +8,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /** One word sign the Words menu lists. [gloss] is the model's label; [display] is what the learner reads. */
-data class WordEntry(val gloss: String, val display: String, val tier: Tier, val tip: String? = null)
+data class WordEntry(val gloss: String, val display: String, val tier: Tier, val tip: String? = null) {
+    /** Presentation label; the catalog and model identifiers retain their original spelling. */
+    val displayTitle: String get() = display.split(" ").joinToString(" ") { word ->
+        word.replaceFirstChar { it.titlecase() }
+    }
+}
 
 /**
  * `assets/content/words.json`: `{"version":2,"words":[{"gloss","display","tier"}]}`. Data-driven so Pro words can be

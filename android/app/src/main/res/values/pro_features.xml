@@ -30,5 +30,5 @@
     <string name="speed_end_round">Leave round</string>
     <string name="speed_exit_title">Leave this round?</string>
     <string name="speed_exit_body">This round is unfinished. Its score will not be saved.</string>
-    <string name="speed_keep_playing">Keep practising</string>
+    <string name="speed_keep_playing">Keep practicing</string>
 </resources>

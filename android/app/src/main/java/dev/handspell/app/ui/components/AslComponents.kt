@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -47,6 +49,9 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selectableGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import dev.handspell.app.ui.theme.LocalInsetCornerRadius
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.unit.dp
 import dev.handspell.app.R
 import dev.handspell.app.ui.theme.AslShapes
@@ -89,7 +94,7 @@ fun ScreenHeader(
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     val colors = LocalAslColors.current
-    Column(modifier.fillMaxWidth().background(colors.backgroundGrouped)) {
+    Column(modifier.fillMaxWidth().statusBarsPadding()) {
         Row(
             // Same spot as the alphabet menu's back button (top 6, left 14, 44 box): centre 36 from the left, 28 down.
             Modifier.fillMaxWidth().padding(start = BackChevronStart, end = Spacing.md, top = BackChevronTop),
@@ -170,6 +175,7 @@ fun AslButton(
     contentDescription: String? = null,
     /** Keep the label on one line (side-by-side buttons); wrapping is still allowed at large font scales. */
     singleLine: Boolean = false,
+    cornerRadius: Dp = LocalInsetCornerRadius.current ?: AslShapes.button,
 ) {
     val colors = LocalAslColors.current
     val container = when (style) {
@@ -187,7 +193,7 @@ fun AslButton(
         enabled = enabled,
         modifier = modifier.sizeIn(minHeight = Spacing.primaryButton)
             .then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
-        shape = RoundedCornerShape(AslShapes.button),
+        shape = RoundedCornerShape(cornerRadius),
         colors = ButtonDefaults.buttonColors(
             containerColor = container, contentColor = content,
             disabledContainerColor = container.copy(alpha = 0.4f), disabledContentColor = content.copy(alpha = 0.7f),
@@ -200,36 +206,25 @@ fun AslButton(
     }
 }
 
-/** Low-emphasis action: plain text, no fill. For dismiss/skip/undo actions that must not compete with the primary. */
-@Composable
-fun AslTextButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    color: Color = LocalAslColors.current.labelSecondary,
-    contentDescription: String? = null,
-) {
-    androidx.compose.material3.TextButton(
-        onClick = onClick,
-        modifier = modifier.sizeIn(minHeight = Spacing.touchTarget)
-            .then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
-        colors = ButtonDefaults.textButtonColors(contentColor = color),
-    ) {
-        Text(text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium,
-            modifier = if (contentDescription != null) Modifier.clearAndSetSemantics {} else Modifier)
-    }
-}
-
 /** Rounded lighter-grey card with white text. */
 @Composable
-fun AslCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun AslCard(
+    modifier: Modifier = Modifier,
+    contentInset: Dp? = null,
+    cornerRadius: Dp = LocalInsetCornerRadius.current ?: AslShapes.large,
+    content: @Composable () -> Unit,
+) {
     val colors = LocalAslColors.current
     androidx.compose.material3.Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(AslShapes.large),
+        modifier = modifier.fillMaxWidth().clip(RoundedCornerShape(cornerRadius)),
+        shape = RoundedCornerShape(cornerRadius),
         color = colors.surface,
         contentColor = colors.onSurface,
-        content = content,
+        content = {
+            CompositionLocalProvider(LocalInsetCornerRadius provides contentInset?.let { AslShapes.inner(cornerRadius, it) }) {
+                content()
+            }
+        },
     )
 }
 
@@ -255,6 +250,7 @@ fun AslTabBar(labels: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit,
             val selected = index == selectedIndex
             Column(
                 Modifier.weight(1f).sizeIn(minHeight = Spacing.huge)
+                    .selectionOutline(selected)
                     .selectable(selected = selected, role = Role.Tab) { onSelect(index) },
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,

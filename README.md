@@ -28,7 +28,7 @@ no money changes hands.
 - **Today's quest** on the home screen, and an optional daily streak reminder (off by default, made on the phone,
   nothing sent).
 - **Setup help:** a "lean your phone" step and a camera-permission explainer before the first drill.
-- **Settings:** System / Light / Dark theme (also a quick toggle on the home screen), left-handed layout (moves the
+- **Settings:** System / Light / Dark theme, left-handed layout (moves the
   scrubber; recognition already mirrors left hands), reminders, delete practice data, and the privacy and license
   documents.
 
@@ -68,7 +68,7 @@ Hand landmarking and classification run on the phone. Camera frames are never sa
 There is no backend, account, analytics or crash reporter. The only network traffic is RevenueCat's
 entitlement check. Progress lives in local storage, and Settings deletes it. Details: `docs/PRIVACY.md` and
 `docs/ARCHITECTURE.md` §10. Owner details still needed for the final notice and Terms are in
-`docs/LEGAL_OPEN_ITEMS.md`; operator, contact and jurisdiction are `[owner to provide]`.
+`docs/LEGAL_OPEN_ITEMS.md`. Project contact: [Earthstone59228](https://github.com/Earthstone59228/handspell/issues).
 
 ## How it is built
 
@@ -90,14 +90,14 @@ cd android
 ./gradlew :app:installDebug                                          # to a connected device
 ```
 
-The web menu source is `web/`. After changing it:
+The compiled web menu is tracked in `android/app/src/main/assets/web/`, so Android builds do not need Node.js. The web menu source is `web/`. After changing it:
 
 ```bash
 cd web && npm ci && npm run build -- --base=./
 cd .. && scripts/sync-ionic-frontend.sh web/dist
 ```
 
-### RevenueCat Test Store key
+### RevenueCat public API keys
 
 The key is read from `android/local.properties` (gitignored), never from source:
 
@@ -105,6 +105,8 @@ The key is read from `android/local.properties` (gitignored), never from source:
 cp android/local.properties.example android/local.properties
 # set revenuecat.apiKey to your Test Store key (RevenueCat dashboard → Apps and providers → Test Store)
 ```
+
+For Google Play billing, use an Android public `goog_` key with matching RevenueCat products, offering and `pro` entitlement. Set `revenuecat.releaseApiKey` for release builds; it falls back to `revenuecat.apiKey` when that key is not a Test Store key. Test Store keys are omitted from release builds so demo mode remains usable. Never use a secret key or Apple `appl_` key in this Android app.
 
 Leaving it blank still builds and runs; Pro purchases are then reported as unavailable. Test Store
 purchases only work in debuggable builds. See [`docs/research/revenuecat.md`](docs/research/revenuecat.md).

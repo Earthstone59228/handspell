@@ -53,7 +53,7 @@ fun OnboardingScreen(leftHanded: Boolean, onLeftHanded: (Boolean) -> Unit, onCon
         onBack = null,
         title = stringResource(R.string.onboarding_title),
         body = stringResource(R.string.onboarding_hero_body),
-        modifier = Modifier.statusBarsPadding().navigationBarsPadding(),
+        modifier = Modifier.navigationBarsPadding(),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
             SettingsGroupHeader(stringResource(R.string.onboarding_before_you_start))

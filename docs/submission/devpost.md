@@ -6,7 +6,7 @@ Practicing ASL fingerspelling alone leaves a learner without someone to check a 
 
 ## What it does
 
-Handspell is an Android ASL fingerspelling trainer. A main menu leads to a free alphabet menu (camera drills for all 24 static letters) or to word signs (12 free words). Progress is saved on the device, with a streak screen, a daily quest, a completion reward, a Progress screen, a left-handed layout and a short first-run introduction. Recognition runs on the phone; there is no backend. J and Z are disabled because they require motion. Pro adds 3 story packs, 3 timed speed rounds, unlimited speed challenges (one a day is free), 24 more word signs and progress insights. Pro access is gated through RevenueCat, and the paywall only opens after a tap on a locked pack or on Settings. Purchases use the RevenueCat Test Store and are simulated; this is not a live paid subscription.
+Handspell is an Android ASL fingerspelling trainer. A main menu leads to a free alphabet menu (camera drills for all 26 letters) or to word signs (12 free words). Progress is saved on the device, with a streak screen, a daily quest, a completion reward, a Progress screen, a left-handed layout and a short first-run introduction. Recognition runs on the phone; there is no backend. J and Z use experimental motion recognition. Pro adds 3 story packs, 3 timed speed rounds, unlimited speed challenges (one a day is free), 24 more word signs and progress insights. Pro access is gated through RevenueCat, and the paywall only opens after a tap on a locked pack or on Settings. Purchases use the RevenueCat Test Store and are simulated; this is not a live paid subscription.
 
 ## How we built it
 
@@ -14,11 +14,11 @@ The Android app uses Kotlin, Jetpack Compose, CameraX, and MediaPipe Hand Landma
 
 ## Challenges
 
-Handshapes vary by signer and hand. We normalize landmarks to the wrist origin and palm scale, and mirror left hands, so the classifier receives a consistent representation. A match in one frame can flicker, so we added temporal smoothing and hold-to-confirm. Static poses cannot represent the motion needed for J and Z, so those letters remain disabled. Recognition for R, T, and U is weaker, and the app flags them as experimental.
+Handshapes vary by signer and hand. We normalize landmarks to the wrist origin and palm scale, and mirror left hands, so the classifier receives a consistent representation. A match in one frame can flicker, so we added temporal smoothing and hold-to-confirm. J and Z use a separate fingertip-path recognizer and remain experimental. Recognition for R, T, and U is weaker, and the app flags them as experimental.
 
 ## Accomplishments
 
-We have free camera drills for 24 static letters and Pro story and speed packs behind the paywall. Recognition reached about 92.5% macro F1 on held-out signers in still images, using public ASLYset data and 98 team-recorded A–D exemplars. Word recognition, a small on-device network, scores 0.84 top-1 on held-out signers in landmark data (not yet measured on the phone). The project passes 200 JVM and 75 Python tests; lint reports 0 errors.
+We have free camera drills for all 26 letters and Pro story and speed packs behind the paywall. Recognition reached about 92.5% macro F1 on held-out signers in still images, using public ASLYset data and 98 team-recorded A–D exemplars. Word recognition, a small on-device network, scores 0.84 top-1 on held-out signers in landmark data (not yet measured on the phone). The project passes 200 JVM and 75 Python tests; lint reports 0 errors.
 
 ## What we learned
 

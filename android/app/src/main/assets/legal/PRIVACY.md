@@ -2,8 +2,8 @@
 
 Revised 2026-09-30. Handspell is a student hackathon project (Next Gen), not a company product.
 
-- Responsible person or team: **[owner to provide]**
-- Privacy and support contact: **[owner to provide]**
+- Responsible person or team: **Earthstone59228 (project maintainer)**
+- Privacy and support contact: **https://github.com/Earthstone59228/handspell/issues**
 
 ## Short version
 
@@ -63,8 +63,7 @@ as its purchase and entitlement provider and handles end-user requests through t
 The app's network configuration disables unencrypted traffic. Apart from RevenueCat, the app makes no
 network calls of its own: there are no ads, analytics or content downloads, because lesson content
 ships inside the app. Deleting practice data on the phone does not ask RevenueCat to delete anything.
-To make a privacy request about information held by RevenueCat, use the contact above once it is
-filled in **[owner to provide]**. Where RevenueCat keeps information, for how long and under which
+To make a privacy request about information held by RevenueCat, use the contact above at https://github.com/Earthstone59228/handspell/issues (do not post receipts or personal data publicly; request a private channel). Where RevenueCat keeps information, for how long and under which
 transfer terms is set by RevenueCat's own policy and agreements, not by this notice.
 
 ## Test Store and the demo trial
@@ -95,7 +94,7 @@ The app does not request a microphone, location, contacts, storage access or an 
 Handspell is not directed at children under 13. It has no account and does not ask for a name or
 email. RevenueCat receives the app-specific user identifier and the device and purchase information
 described above; camera frames and practice progress stay on this phone. The intended audience and
-markets are **[owner to provide]**.
+markets are limited to the current Android hackathon prototype; wider distribution requires review.
 
 ## Changes to this notice
 

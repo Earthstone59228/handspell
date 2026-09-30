@@ -1,17 +1,6 @@
-# Legal details awaiting the project owner
+# Legal review before wider distribution
 
-As of 2026-09-30, the app's Documents screen bundles the privacy notice (revised 2026-09-30), the project MIT
-license, and third-party license notices. A Terms of Use draft exists (`docs/submission/terms-draft.md`) but is not
-final or bundled, because it needs the operator, contact and governing-law choices below. See
-`docs/audits/legal-rubric-audit-2026-09-30.md` for the open findings.
-The owner asked to leave the following details as explicit placeholders in project documentation:
+Project maintainer: Earthstone59228, identified in the submission video script.
+Support and privacy contact: https://github.com/Earthstone59228/handspell/issues. Do not post personal purchase details publicly; request a private channel.
 
-- Responsible person, team, or legal entity: **[owner to provide]**
-- Monitored privacy and support contact: **[owner to provide]**
-- Jurisdiction for Terms of Service: **[owner to provide]**
-- Retention and deletion terms for RevenueCat-held data: **[owner to confirm with RevenueCat]**
-
-The privacy notice currently identifies Handspell as a student hackathon project. It does not claim
-that these unresolved details are settled. Before distribution beyond the current prototype, use the
-owner's details to complete and review the privacy notice and Terms; then add the final Terms to the
-Documents screen. Do not fill these fields with invented names, addresses, or policy commitments.
+The bundled privacy notice describes the Android hackathon prototype. The prototype Terms notice is in `docs/submission/terms-draft.md`. Before wider distribution or real-money billing, the maintainer must review operator identity, jurisdiction, private privacy-request handling and RevenueCat retention/deletion agreements. No retention period or governing jurisdiction is invented here.

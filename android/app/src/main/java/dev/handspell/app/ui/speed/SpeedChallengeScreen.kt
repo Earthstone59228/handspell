@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import dev.handspell.app.ui.components.selectionOutline
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -223,7 +224,7 @@ private fun ChallengeIntro(
                 Text(stringResource(R.string.speed_used_reset, hours, minutes), style = MaterialTheme.typography.bodyLarge,
                     color = colors.labelSecondary)
             }
-            dev.handspell.app.ui.components.AslCard {
+            dev.handspell.app.ui.components.AslCard(contentInset = Spacing.lg) {
                 Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     Text(stringResource(R.string.speed_used_pro_title), style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
                     Text(stringResource(R.string.speed_access_pro_note), style = MaterialTheme.typography.bodyMedium,
@@ -248,6 +249,7 @@ private fun ModeRow(title: String, best: Int?, selected: Boolean, enabled: Boole
     val alpha = if (enabled) 1f else 0.4f
     Row(
         Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
+            .selectionOutline(selected)
             .selectable(selected = selected, enabled = enabled, role = Role.RadioButton, onClick = onSelect)
             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
@@ -282,7 +284,7 @@ private fun RunningChallenge(
     onBack: () -> Unit,
 ) {
     val colors = LocalAslColors.current
-    Column(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
+    Column(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
         ScreenHeader(stringResource(R.string.speed_challenge_title), onBack, compact = true)
         Row(Modifier.fillMaxWidth().padding(horizontal = Spacing.md), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.speed_live, remainingSeconds, score), style = MaterialTheme.typography.bodyLarge,
@@ -316,8 +318,9 @@ private fun RunningChallenge(
 
 @Composable
 private fun PausedChallenge(remainingSeconds: Int, onResume: () -> Unit, onBack: () -> Unit) {
-    FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.speed_challenge_title), body = null) {
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
+        ScreenHeader(stringResource(R.string.speed_challenge_title), onBack)
+        Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
             Text(stringResource(R.string.speed_paused_body, remainingSeconds), style = MaterialTheme.typography.bodyLarge)
             AslButton(stringResource(R.string.speed_resume), onResume, Modifier.fillMaxWidth())
         }

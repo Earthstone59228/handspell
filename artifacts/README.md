@@ -2,8 +2,8 @@
 
 [Download Handspell APK](https://github.com/Earthstone59228/handspell/raw/refs/heads/main/artifacts/handspell-debug.apk)
 
-This is the debug APK built from app source commit `9186953`, verified with 224 passing JVM tests and Android lint, and installed on the test phone. It includes the J/Z recognition audit fixes and motion guides. J/Z recognition remains experimental. Purchases use RevenueCat Test Store with no real charge.
+This debug APK contains the frontend revamp, on-device letter and word recognition, and the Pro paywall. It was built after 225 passing JVM tests and Android lint. The bundled build has no RevenueCat API key, so judges can use the visible 3-day local demo trial without entering payment details. To test RevenueCat Test Store purchases, build with a public Test Store key in `android/local.properties`.
 
-Install with `adb install -r handspell-debug.apk`, or open the downloaded APK on Android and allow installation from the download app when prompted. The `-r` option retains existing app data when the installed signing certificate matches.
+Install with `adb install -r handspell-debug.apk`, or open the downloaded APK on Android. The `-r` option retains app data when the installed signing certificate matches.
 
 Verify the download from this directory with `sha256sum -c handspell-debug.apk.sha256`.

@@ -16,7 +16,7 @@ class WordsMenuLayoutTest {
             words = listOf(w("hello"), w("bye"), w("cat", tier = Tier.PRO)),
             records = mapOf("hello" to WordRecord("hello", matches = 1), "cat" to WordRecord("cat", markedComplete = true)),
         )
-        assertEquals("1 / 2", wordsProgressLine(state.completeCount, state.openTotal)) // free: the locked Pro word is left out
+        assertEquals("1 / 2", wordsProgressLine(state.completeCount, state.openTotal))
         val pro = state.copy(isPro = true)
         assertEquals("2 / 3", wordsProgressLine(pro.completeCount, pro.openTotal))
     }

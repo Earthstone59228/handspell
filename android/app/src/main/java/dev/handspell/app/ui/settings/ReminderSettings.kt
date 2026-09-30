@@ -1,5 +1,7 @@
 package dev.handspell.app.ui.settings
 
+import dev.handspell.app.ui.components.selectionOutline
+
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -121,6 +123,7 @@ internal fun ReminderGroup(controller: ReminderController) {
                     SettingsDivider()
                     Row(
                         Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
+                            .selectionOutline(controller.slot == slot)
                             .selectable(selected = controller.slot == slot, role = Role.RadioButton) { controller.onSlot(slot) }
                             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
                         verticalAlignment = Alignment.CenterVertically,

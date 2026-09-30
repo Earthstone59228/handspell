@@ -30,7 +30,7 @@ Run this on the S25 Ultra only. Mark each item Pass or Fail; on Fail, write what
 | # | Check | Pass when | Result | Notes |
 | --- | --- | --- | --- | --- |
 | 3.1 | All letters reachable | A to Z are all listed and scrollable; the scrubber jumps to a chosen letter | | |
-| 3.2 | J and Z disabled | J and Z are visibly disabled and do not open a drill | | |
+| 3.2 | J and Z motion drills | J and Z open experimental motion drills with tracing guidance | | |
 | 3.3 | The 24 others open | Spot-check A, D, L, Y, and every letter you have time for: each opens a drill for that letter | | |
 | 3.4 | Overlay alignment | In portrait, the hand landmarks sit on your real hand within about a finger's width, and follow it without lag | | |
 | 3.5 | Mirror | The preview is mirrored (moving your right hand moves the hand on the right side of the screen) | | |

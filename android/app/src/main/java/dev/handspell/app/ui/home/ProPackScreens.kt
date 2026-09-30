@@ -58,7 +58,6 @@ import dev.handspell.app.ui.components.AslButtonStyle
 import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.components.ScreenHeader
 import dev.handspell.app.ui.drill.LetterDrillRoute
-import dev.handspell.app.ui.settings.FrostedSettingsHero
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 import dev.handspell.app.vision.SignDetector
@@ -117,12 +116,14 @@ fun ProPackAccess(
     onRetry: () -> Unit,
 ) {
     val loading = status == EntitlementStatus.Loading || status == EntitlementStatus.Unknown
-    FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.settings_pro), body = null) {
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
+        ScreenHeader(stringResource(R.string.settings_pro), onBack)
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
             Text(stringResource(R.string.pro_features_detail), style = MaterialTheme.typography.bodyLarge)
             Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium,
                 color = LocalAslColors.current.labelSecondary)
-            if (billingConfigured) Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge)
+            if (billingConfigured) Text(stringResource(if (dev.handspell.app.BuildConfig.REVENUECAT_API_KEY.startsWith("test_")) R.string.paywall_test_store else R.string.paywall_store_billing), style = MaterialTheme.typography.bodyLarge)
             when {
                 !billingConfigured -> Text(stringResource(R.string.settings_pro_not_configured), style = MaterialTheme.typography.bodyLarge)
                 loading -> {
@@ -146,8 +147,9 @@ fun ProPackAccess(
 
 @Composable
 private fun PackMessage(message: String, onBack: () -> Unit, onRetry: (() -> Unit)? = null, loading: Boolean = false) {
-    FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.home_pro_packs), body = null) {
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
+    Column(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped)) {
+        ScreenHeader(stringResource(R.string.home_pro_packs), onBack)
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xl)) {
             if (loading) CircularProgressIndicator(color = LocalAslColors.current.label)
             Text(message, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
             if (onRetry != null) AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth())

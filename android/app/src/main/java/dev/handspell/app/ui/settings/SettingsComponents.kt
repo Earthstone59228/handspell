@@ -1,5 +1,8 @@
 package dev.handspell.app.ui.settings
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import dev.handspell.app.ui.theme.AslShapes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -83,7 +86,7 @@ internal fun SettingsActionRow(title: String, enabled: Boolean = true, onClick: 
     val alpha = if (enabled) 1f else 0.4f
     Row(
         modifier = Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .clip(RoundedCornerShape(AslShapes.large)).clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -106,7 +109,7 @@ internal fun SettingsToggleRow(
     val colors = LocalAslColors.current
     Row(
         Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
-            .toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
+            .clip(RoundedCornerShape(AslShapes.large)).toggleable(value = checked, role = Role.Switch, onValueChange = onCheckedChange)
             .padding(horizontal = Spacing.md, vertical = Spacing.sm),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.md),

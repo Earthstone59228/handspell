@@ -1,6 +1,7 @@
 package dev.handspell.app.ui.settings
 
 import androidx.activity.compose.LocalActivity
+import dev.handspell.app.ui.components.selectionOutline
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +55,7 @@ fun PaywallRoute(gate: EntitlementGate, packs: List<ContentPack>, onBack: () -> 
     var packages by remember { mutableStateOf<List<PaywallPackage>?>(null) }
     var selectedId by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf(false) }
+    var errorDetail by remember { mutableStateOf<String?>(null) }
     var working by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<PurchaseResult?>(null) }
     var restore by remember { mutableStateOf<RestoreResult?>(null) }
@@ -63,45 +65,55 @@ fun PaywallRoute(gate: EntitlementGate, packs: List<ContentPack>, onBack: () -> 
         runCatchingUnlessCancelled { gate.loadPackages() }.onSuccess {
             packages = it
             selectedId = null
-        }.onFailure { error = true }
+        }.onFailure { error = true; errorDetail = it.message }
     }
     PaywallScreen(
         packs = packs.filter { it.kind != PackKind.DRILL },
         packages = packages,
         selectedId = selectedId,
         error = error,
+        errorDetail = errorDetail,
         working = working,
         result = result,
         restore = restore,
-        onSelect = { selectedId = it },
+        onSelect = { if (!working) selectedId = it },
         onRetry = {
             error = false
+            errorDetail = null
             packages = null
             scope.launch {
                 runCatchingUnlessCancelled { gate.loadPackages() }.onSuccess {
                     packages = it
                     selectedId = null
-                }.onFailure { error = true }
+                }.onFailure { error = true; errorDetail = it.message }
             }
         },
         onPurchase = {
             val id = selectedId
-            if (id != null && activity != null) {
+            if (!working && id != null && activity != null) {
                 working = true
+                errorDetail = null; result = null; restore = null
                 scope.launch {
-                    result = runCatchingUnlessCancelled { gate.purchase(id, activity) }.getOrDefault(PurchaseResult.FAILED)
-                    working = false
-                    if (result == PurchaseResult.PURCHASED) onBack()
+                    try {
+                        result = runCatchingUnlessCancelled { gate.purchase(id, activity) }
+                            .onFailure { errorDetail = it.message }.getOrDefault(PurchaseResult.FAILED)
+                        if (result == PurchaseResult.PURCHASED) onBack()
+                    } finally { working = false }
                 }
             }
         },
         onRestore = {
+          if (!working) {
             working = true
+            errorDetail = null; result = null; restore = null
             scope.launch {
-                restore = runCatchingUnlessCancelled { gate.restorePurchases() }.getOrDefault(RestoreResult.FAILED)
-                working = false
-                if (restore == RestoreResult.RESTORED) onBack()
+                try {
+                    restore = runCatchingUnlessCancelled { gate.restorePurchases() }
+                        .onFailure { errorDetail = it.message }.getOrDefault(RestoreResult.FAILED)
+                    if (restore == RestoreResult.RESTORED) onBack()
+                } finally { working = false }
             }
+          }
         },
         onBack = onBack,
         demoTrial = demoTrial,
@@ -117,6 +129,7 @@ private fun PaywallScreen(
     packages: List<PaywallPackage>?,
     selectedId: String?,
     error: Boolean,
+    errorDetail: String?,
     working: Boolean,
     result: PurchaseResult?,
     restore: RestoreResult?,
@@ -131,10 +144,27 @@ private fun PaywallScreen(
     lockedWord: String? = null,
 ) {
     val colors = LocalAslColors.current
-    FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.paywall_title), body = null) {
-      Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+    Column(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
+      ScreenHeader(stringResource(R.string.paywall_title), onBack)
+      Column(
+          Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
+          verticalArrangement = Arrangement.spacedBy(Spacing.md),
+      ) {
         if (lockedWord != null) Text(stringResource(R.string.paywall_word_locked, lockedWord),
             style = MaterialTheme.typography.titleLarge, color = colors.label)
+        // A real Pro user (not on the demo) has nothing to try.
+        DemoTrialGroup(demoTrial, isRealPro = isPro && demoTrial !is DemoTrialState.Active, onStart = onStartDemoTrial)
+        if (packs.isNotEmpty()) SettingsGroup {
+            Column {
+                packs.forEachIndexed { index, pack ->
+                    if (index > 0) SettingsDivider()
+                    SettingsInfoRow(pack.title, pack.summary)
+                }
+            }
+        } else Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge)
+        dev.handspell.app.ui.pro.ProComparison()
+        Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
+        Text(stringResource(if (dev.handspell.app.BuildConfig.REVENUECAT_API_KEY.startsWith("test_")) R.string.paywall_test_store else R.string.paywall_store_billing), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
         when {
             error -> {
                 Text(stringResource(R.string.paywall_load_failed), style = MaterialTheme.typography.bodyLarge)
@@ -154,14 +184,13 @@ private fun PaywallScreen(
                             Column(
                                 Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
                                     .selectable(selected = selectedId == item.id, role = Role.RadioButton) { onSelect(item.id) }
-                                    .then(if (selectedId == item.id) Modifier.border(Spacing.stroke, colors.accent, RoundedCornerShape(AslShapes.large)) else Modifier)
+                                    .selectionOutline(selectedId == item.id)
                                     .padding(Spacing.md),
                                 verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
                             ) {
                                 Text(
                                     stringResource(if (selectedId == item.id) R.string.paywall_selected else R.string.paywall_option,
-                                        // The store's product title can say "Premium"; the product is called Pro everywhere else.
-                                        stringResource(if (item.period == BillingPeriod.YEAR) R.string.paywall_plan_year else R.string.paywall_plan_month)),
+                                        item.title),
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                                 Text(stringResource(
@@ -189,22 +218,10 @@ private fun PaywallScreen(
             }
         }
         if (working) Text(stringResource(R.string.pro_billing_working), style = MaterialTheme.typography.bodyLarge)
-        if (packs.isNotEmpty()) SettingsGroup {
-            Column {
-                packs.forEachIndexed { index, pack ->
-                    if (index > 0) SettingsDivider()
-                    SettingsInfoRow(pack.title, pack.summary)
-                }
-            }
-        } else Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge)
-        dev.handspell.app.ui.pro.ProComparison()
-        // A real Pro user (not on the demo) has nothing to try.
-        DemoTrialGroup(demoTrial, isRealPro = isPro && demoTrial !is DemoTrialState.Active, onStart = onStartDemoTrial)
-        Text(stringResource(R.string.paywall_free), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
-        Text(stringResource(R.string.paywall_test_store), style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary)
         AslButton(stringResource(R.string.settings_restore), onRestore, Modifier.fillMaxWidth(),
             style = AslButtonStyle.Secondary, enabled = !working)
         Text(stringResource(R.string.settings_cancel_subscription), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
+        errorDetail?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodyLarge) }
         if (result == PurchaseResult.FAILED) Text(stringResource(R.string.paywall_purchase_failed), style = MaterialTheme.typography.bodyLarge)
         if (restore == RestoreResult.FAILED) Text(stringResource(R.string.settings_restore_failed), style = MaterialTheme.typography.bodyLarge)
         if (restore == RestoreResult.NOTHING_TO_RESTORE) Text(stringResource(R.string.settings_nothing_to_restore), style = MaterialTheme.typography.bodyLarge)

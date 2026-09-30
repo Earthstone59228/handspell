@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="streak_body_none">Practise a letter or a word today to start one.</string>
+    <string name="streak_body_none">Practice a letter or a word today to start one.</string>
     <string name="streak_body_today">Today counts. Come back tomorrow to keep it going.</string>
-    <string name="streak_body_pending">Practise today to keep it going.</string>
+    <string name="streak_body_pending">Practice today to keep it going.</string>
     <string name="streak_current">Current streak</string>
     <string name="streak_longest">Longest streak</string>
     <string name="streak_milestones">Milestones</string>
-    <string name="streak_footer">A day counts when you practise a letter or word with the camera, or mark one complete. A missed day starts the streak again; milestones you reached stay reached.</string>
+    <string name="streak_footer">A day counts when you practice a letter or word with the camera, or mark one complete. A missed day starts the streak again; milestones you reached stay reached.</string>
     <plurals name="streak_month_count">
         <item quantity="one">%1$d practice day this month</item>
         <item quantity="other">%1$d practice days this month</item>
     </plurals>
-    <string name="streak_day_practised">%2$s %1$d, practised</string>
+    <string name="streak_day_practised">%2$s %1$d, practiced</string>
     <string name="streak_day_open">%2$s %1$d</string>
     <plurals name="streak_milestone_days">
         <item quantity="one">%1$d day</item>

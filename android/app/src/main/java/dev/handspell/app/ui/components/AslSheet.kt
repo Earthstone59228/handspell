@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import dev.handspell.app.ui.theme.LocalInsetCornerRadius
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -39,7 +41,7 @@ private val SHEET_MAX_WIDTH = 560.dp
 
 /**
  * The alphabet menu's practice sheet, natively: a dimmed backdrop and a card rising from the bottom edge with a
- * hairline border and 28dp top corners. Tapping the backdrop or pressing back dismisses it. With reduce motion on it
+ * hairline border and concentric nested top corners. Tapping the backdrop or pressing back dismisses it. With reduce motion on it
  * appears and disappears without sliding.
  */
 @Composable
@@ -67,7 +69,7 @@ fun AslSheet(
             enter = slideInVertically(tween(slideMs)) { it } + fadeIn(tween(fadeMs)),
             exit = slideOutVertically(tween(slideMs)) { it } + fadeOut(tween(fadeMs)),
         ) {
-            val shape = RoundedCornerShape(topStart = AslShapes.extraLarge, topEnd = AslShapes.extraLarge)
+            val shape = RoundedCornerShape(topStart = AslShapes.sheet, topEnd = AslShapes.sheet)
             Column(
                 Modifier.widthIn(max = SHEET_MAX_WIDTH).fillMaxWidth().clip(shape)
                     .border(Spacing.hairline, colors.separator, shape)
@@ -75,10 +77,14 @@ fun AslSheet(
                     .clickable(remember { MutableInteractionSource() }, indication = null) {}
                     .semantics { dialog() }
                     .navigationBarsPadding()
-                    .padding(start = Spacing.xl, end = Spacing.xl, top = Spacing.xl + Spacing.xxs, bottom = Spacing.xl),
+                    .padding(AslShapes.sheetInset),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(Spacing.md),
-                content = content,
+                content = {
+                    CompositionLocalProvider(LocalInsetCornerRadius provides AslShapes.inner(AslShapes.sheet, AslShapes.sheetInset)) {
+                        content()
+                    }
+                },
             )
         }
     }

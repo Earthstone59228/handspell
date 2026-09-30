@@ -11,7 +11,7 @@ dependencyLocking {
     lockAllConfigurations()
 }
 
-// Test Store key lives in local.properties (gitignored), never as a literal in source. See
+// Public RevenueCat key lives in local.properties (gitignored), never as a literal in source. See
 // docs/research/revenuecat.md §6 and android/local.properties.example for the key name.
 val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
@@ -20,6 +20,8 @@ val localProperties = Properties().apply {
     }
 }
 val revenueCatApiKey: String = localProperties.getProperty("revenuecat.apiKey", "")
+val releaseRevenueCatApiKey: String = localProperties.getProperty("revenuecat.releaseApiKey", "").ifBlank { revenueCatApiKey }
+    .takeUnless { it.startsWith("test_") }.orEmpty()
 
 android {
     namespace = "dev.handspell.app"
@@ -45,6 +47,7 @@ android {
 
     buildTypes {
         release {
+            buildConfigField("String", "REVENUECAT_API_KEY", "\"$releaseRevenueCatApiKey\"")
             isMinifyEnabled = true
             isShrinkResources = true
             isDebuggable = false

@@ -2,12 +2,12 @@
 <resources>
     <string name="insights_title">Insights</string>
     <string name="insights_suggestion_title">Next up</string>
-    <string name="insights_suggestion_one">Practise %1$s next</string>
-    <string name="insights_suggestion_two">Practise %1$s and %2$s next</string>
+    <string name="insights_suggestion_one">Practice %1$s next</string>
+    <string name="insights_suggestion_two">Practice %1$s and %2$s next</string>
     <string name="insights_suggestion_none">Keep mixing letters. Nothing stands out yet.</string>
     <string name="insights_weakest">Lowest match rate</string>
     <string name="insights_weakest_none">No letter stands out yet</string>
-    <string name="insights_this_week">Letters practised this week</string>
+    <string name="insights_this_week">Letters practiced this week</string>
     <plurals name="insights_letters">
         <item quantity="one">%1$d letter</item>
         <item quantity="other">%1$d letters</item>

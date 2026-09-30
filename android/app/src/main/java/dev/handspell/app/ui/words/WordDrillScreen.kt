@@ -53,7 +53,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import dev.handspell.app.ui.theme.AslPalette
 import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.ui.components.AslButton
-import dev.handspell.app.ui.components.AslTextButton
 import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.components.CameraFrame
 import dev.handspell.app.ui.components.FrameGeometry
@@ -242,8 +241,10 @@ private fun ActiveWordDrill(
             word.tip?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary) }
             val next = nextWord(state.words, word)
             if (next != null) {
-                if (state.matched) AslButton(stringResource(R.string.continue_letter), { onContinue(next) }, Modifier.fillMaxWidth())
-                AslTextButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.align(Alignment.CenterHorizontally))
+                if (state.matched) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.weight(1f))
+                    AslButton(stringResource(R.string.continue_letter), { onContinue(next) }, Modifier.weight(1f))
+                } else AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.fillMaxWidth())
             }
         }
         Spacer(Modifier.height(Spacing.md))
@@ -263,7 +264,7 @@ private fun WordReferenceCard(
     frameSize: androidx.compose.ui.unit.IntSize,
     modifier: Modifier = Modifier,
 ) {
-    val label = stringResource(R.string.word_reference, word.display)
+    val label = stringResource(R.string.word_reference, word.displayTitle)
     var cardSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
     Box(
         modifier.clip(RoundedCornerShape(FrameGeometry.guideRadius)).onSizeChanged { cardSize = it }
@@ -275,9 +276,9 @@ private fun WordReferenceCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
         ) {
-            if (reference != null) WordReferenceView(reference, word.display, Modifier.size(Spacing.referenceGuide),
+            if (reference != null) WordReferenceView(reference, word.displayTitle, Modifier.size(Spacing.referenceGuide),
                 mutedColor = AslPalette.Paper.copy(alpha = 0.35f))
-            Text(word.display, style = if (reference != null) MaterialTheme.typography.labelMedium else MaterialTheme.typography.headlineSmall,
+            Text(word.displayTitle, style = if (reference != null) MaterialTheme.typography.labelMedium else MaterialTheme.typography.headlineSmall,
                 color = AslPalette.Paper)
         }
     }
@@ -289,7 +290,7 @@ private fun WordFeedback(progress: WordProgress, matched: Boolean, word: WordEnt
     val colors = LocalAslColors.current
     when {
         matched || progress == WordProgress.Matched -> FeedbackBadgeView(
-            stringResource(R.string.feedback_match_glyph), stringResource(R.string.word_feedback_match, word.display),
+            stringResource(R.string.feedback_match_glyph), stringResource(R.string.word_feedback_match, word.displayTitle),
             colors.feedbackMatch, FeedbackRing.Filled, null,
         )
         progress is WordProgress.Trying -> FeedbackBadgeView(

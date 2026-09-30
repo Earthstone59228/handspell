@@ -7,6 +7,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -29,6 +30,9 @@ object Spacing {
     val xxl = 32.dp
     val xxxl = 40.dp
     val huge = 48.dp
+    val scrollFade: Dp = 76.dp
+    val progressRing: Dp = 76.dp
+    val featureTile: Dp = 172.dp
     val letterTile: Dp = 64.dp
     val referenceGuide: Dp = 88.dp
     val touchTarget: Dp = 48.dp
@@ -40,21 +44,30 @@ object Spacing {
     val letterCard: Dp = 100.dp
     /** The card's bottom-right wireframe thumbnail (web `.sign-placeholder`). */
     val cardThumbWidth: Dp = 58.dp
-    val cardThumbHeight: Dp = 56.dp
+    val cardThumbHeight: Dp = 52.dp
     /** The practice sheet's big tile (web `.practice-letter`). */
     val practiceTile: Dp = 174.dp
     /** Width of the A–Z index rail (web `.alphabet-index`) and the list's gutter beside it. */
 }
 
 object AslShapes {
+    /** Radius at the outer edge of nested bottom-sheet content. */
+    val sheet = 48.dp
+    val sheetInset = Spacing.lg
+    val dialogInset = Spacing.xl
+    val cardInset = Spacing.md
+    /** Concentric corners, clamped when the inset extends past the curved corner. */
+    fun inner(outerRadius: Dp, inset: Dp): Dp = (outerRadius - inset).coerceAtLeast(0.dp)
+    val cardThumb get() = inner(large, cardInset)
+    val dialogButton get() = inner(extraLarge, dialogInset)
     val extraSmall = 8.dp
     val small = 12.dp
-    val button = 15.dp
+    val button = 28.dp
     val medium = 16.dp
-    val large = 20.dp
-    val extraLarge = 28.dp
+    val large = 28.dp
+    val extraLarge = 30.dp
     /** Web `.sign-placeholder` and `.practice-letter` radii. */
-    val thumb = 13.dp
+    val thumb get() = cardThumb
     val tile = 35.dp
 }
 
@@ -106,17 +119,10 @@ data class AslColors(
     val feedbackAdjust: Color,
     val feedbackNeutral: Color,
     val destructive: Color,
-    /** Menu and list cards (Home entries, Letters and Words rows): the same raised fill as [surface] in both modes. */
-    val card: Color,
-    val onCard: Color,
-    val onCardSecondary: Color,
-    /** "Complete" meta and other blue text on a [card]. */
-    val onCardAccent: Color,
-    /**
-     * Media tile: the big letter / word example in a sheet or reward. It stays light in the dark theme because the hand
-     * wireframe and figure are drawn for a light ground, like a photo mat. Web `.practice-letter`.
-     */
-    val tile: Color,
+    /** The alphabet menu's letter cards: an off-white card with dark text, raised against the dark ground. */
+    val card: Color = AslPalette.Paper,
+    val onCard: Color = AslPalette.Ink,
+    val onCardSecondary: Color = AslPalette.Ink.copy(alpha = 0.62f),
 )
 
 private val AslDarkColors = AslColors(
@@ -136,11 +142,6 @@ private val AslDarkColors = AslColors(
     feedbackAdjust = AslPalette.Paper,
     feedbackNeutral = AslPalette.Paper.copy(alpha = 0.62f),
     destructive = AslPalette.Paper,
-    card = AslPalette.Slate,
-    onCard = AslPalette.Paper,
-    onCardSecondary = AslPalette.Paper.copy(alpha = 0.62f),
-    onCardAccent = AslPalette.Blue,
-    tile = AslPalette.Paper,
 )
 
 /**
@@ -151,11 +152,11 @@ private val AslLightColors = AslColors(
     label = AslPalette.Ink,
     labelSecondary = AslPalette.Ink.copy(alpha = 0.62f),
     labelTertiary = AslPalette.Ink.copy(alpha = 0.45f),
-    backgroundGrouped = AslPalette.Paper,
+    backgroundGrouped = Color(0xFFF6F8FB),
     surface = AslPalette.White,
     onSurface = AslPalette.Ink,
     onSurfaceSecondary = AslPalette.Ink.copy(alpha = 0.62f),
-    separator = AslPalette.Ink.copy(alpha = 0.14f),
+    separator = Color(0xFFCBD5E1).copy(alpha = 0.55f),
     accent = AslPalette.Blue,
     onAccent = AslPalette.Paper,
     feedbackMatch = AslPalette.Blue,
@@ -165,8 +166,6 @@ private val AslLightColors = AslColors(
     card = AslPalette.White,
     onCard = AslPalette.Ink,
     onCardSecondary = AslPalette.Ink.copy(alpha = 0.62f),
-    onCardAccent = AslPalette.BlueText,
-    tile = AslPalette.White,
 )
 
 val LocalAslColors = staticCompositionLocalOf { AslDarkColors }
@@ -197,7 +196,7 @@ internal fun reduceMotionEnabled(context: android.content.Context): Boolean =
     ) == 0f
 
 object AslText {
-    val largeTitle = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, fontSize = 34.sp, lineHeight = 38.sp, letterSpacing = (-1.5).sp)
+    val largeTitle = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, fontSize = 40.sp, lineHeight = 43.sp, letterSpacing = (-1.5).sp)
     val title1 = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, fontSize = 28.sp, lineHeight = 32.sp, letterSpacing = (-1).sp)
     val title2 = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, fontSize = 22.sp, lineHeight = 28.sp, letterSpacing = (-0.5).sp)
     val title3 = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.SemiBold, fontSize = 20.sp, lineHeight = 25.sp, letterSpacing = (-0.4).sp)
@@ -261,3 +260,14 @@ fun HandspellTheme(themeMode: ThemeMode = ThemeMode.SYSTEM, content: @Composable
         )
     }
 }
+
+/** Shared atmospheric ground; the dark appearance retains the same quiet blue glow. */
+@Composable
+fun atmosphereBrush(): Brush {
+    val colors = LocalAslColors.current
+    val mist = if (LocalDarkTheme.current) Color(0xFF263542) else Color(0xFFDFEAF4)
+    return Brush.linearGradient(listOf(mist, colors.backgroundGrouped, colors.backgroundGrouped, mist))
+}
+
+/** Child controls inherit a computed radius only when their enclosing content declares its actual inset. */
+val LocalInsetCornerRadius = staticCompositionLocalOf<Dp?> { null }

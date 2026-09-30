@@ -29,8 +29,13 @@ fun PaperScreen(
     onCapacitorSplashLicense: () -> Unit,
 ) {
     val colors = LocalAslColors.current
-    FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.paper_title), body = null) {
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+    Column(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
+        ScreenHeader(stringResource(R.string.paper_title), onBack, compact = true)
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .padding(start = Spacing.md, end = Spacing.md, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) {
             Text(
                 stringResource(R.string.paper_intro), style = MaterialTheme.typography.bodyLarge,
                 color = colors.labelSecondary, modifier = Modifier.padding(horizontal = Spacing.xs),

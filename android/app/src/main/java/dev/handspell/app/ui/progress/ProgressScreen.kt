@@ -25,8 +25,8 @@ import dev.handspell.app.R
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.progress.ProgressSnapshot
 import dev.handspell.app.progress.ProgressStore
-import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.menu.lettersCompleteCount
+import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.streak.StreakSection
 import dev.handspell.app.ui.streak.streakBody
 import dev.handspell.app.ui.streak.streakState
@@ -139,20 +139,6 @@ private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit,
 @Composable
 private fun InsightsGroup(insights: Insights, isPro: Boolean, onSeePro: () -> Unit) {
     val colors = LocalAslColors.current
-    if (!isPro) {
-        // Free users get one teaser row instead of five locked ones.
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            SettingsGroupHeader(stringResource(R.string.insights_title))
-            SettingsGroup {
-                Column {
-                    SettingsInfoRow(stringResource(R.string.insights_teaser_title), stringResource(R.string.insights_teaser_body))
-                    SettingsDivider()
-                    SettingsActionRow(stringResource(R.string.settings_see_pro), onClick = onSeePro)
-                }
-            }
-        }
-        return
-    }
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.insights_title))
         SettingsGroup {

@@ -52,7 +52,7 @@ private const val GUIDE_LINE_WIDTH_PX = 2.5f
 object FrameGeometry {
     val outerRadius = AslShapes.extraLarge
     val guideInset = Spacing.sm
-    val guideRadius = outerRadius - guideInset
+    val guideRadius = AslShapes.inner(outerRadius, guideInset)
 }
 
 /**

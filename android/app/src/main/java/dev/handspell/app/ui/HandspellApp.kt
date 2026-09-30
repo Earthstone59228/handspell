@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.WindowInsets
@@ -72,7 +73,6 @@ import dev.handspell.app.ui.quest.questTitle
 import dev.handspell.app.ui.quest.shouldCelebrateQuest
 import dev.handspell.app.ui.theme.LocalDarkTheme
 import dev.handspell.app.ui.theme.toggledTheme
-import dev.handspell.app.ui.menu.ThemeToggle
 import dev.handspell.app.ui.components.TimerMark
 import dev.handspell.app.ui.menu.MenuRowCard
 import dev.handspell.app.ui.speed.SpeedAccess
@@ -133,7 +133,6 @@ fun HandspellApp(
 ) {
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
-    // The locked word that opened the paywall, so the paywall can say why it appeared; cleared on leaving it.
     var paywallWord by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(entitlementGate) {
         entitlementGate.paywallRequests.collect { source ->
@@ -175,6 +174,7 @@ fun HandspellApp(
     var proMentionDismissed by rememberSaveable { mutableStateOf(false) }
     // Pro promotions, each dismissible for this session ("Not now").
     var menuProDismissed by rememberSaveable { mutableStateOf(false) }
+    var showMenuPro by rememberSaveable { mutableStateOf(false) }
     var wordsProDismissed by rememberSaveable { mutableStateOf(false) }
     var rewardProLine by remember { mutableStateOf(false) }
     val proRewardLineDay by preferences.proRewardLineDay.collectAsStateWithLifecycle(initialValue = null)
@@ -198,32 +198,27 @@ fun HandspellApp(
             progressStore.setQuestCelebrated(questDay)
         }
     }
-    Scaffold(containerColor = MaterialTheme.colorScheme.background, contentWindowInsets = WindowInsets(0)) { padding -> Box { NavHost(
+    Scaffold(containerColor = androidx.compose.ui.graphics.Color.Transparent, contentWindowInsets = WindowInsets(0)) { padding -> Box(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) { NavHost(
         navController = navController,
         startDestination = MENU_ROUTE,
         modifier = when {
             isAlphabet -> Modifier
-            else -> Modifier.padding(padding).padding(top = statusBarTop).navigationBarsPadding()
+            else -> Modifier.padding(padding).navigationBarsPadding()
         },
     ) {
         composable(MENU_ROUTE) {
             val menuWords = WordsMenuState(loading = false, words = words.orEmpty(), isPro = isPro).practicable
             val menuState = mainMenuState(progress, menuWords.map { it.gloss }, isPro, System.currentTimeMillis())
-            val darkNow = LocalDarkTheme.current
-            val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
-            val themeMode by preferences.themeMode.collectAsStateWithLifecycle(initialValue = dev.handspell.app.prefs.ThemeMode.SYSTEM)
             MainMenuScreen(
                 state = menuState,
-                headerActions = {
-                    ThemeToggle(dark = darkNow) {
-                        scope.launch { preferences.setThemeMode(toggledTheme(themeMode, systemDark)) }
-                    }
-                },
                 actions = MainMenuActions(
                     onLetters = { navController.navigate(ALPHABET_ROUTE) },
                     onWords = { navController.navigate(WORDS_ROUTE) },
                     onProgress = { navController.navigate(PROGRESS_ROUTE) },
                     onSettings = { navController.navigate(SETTINGS_ROUTE) },
+                    onPaper = { navController.navigate(PAPER_ROUTE) },
+                    onSpeed = { navController.navigate(SPEED_ROUTE) },
+                    onPro = { if (isPro) navController.navigate(PRACTICE_ROUTE) else showMenuPro = true },
                 ),
                 belowEntries = {
                     val quest = questProgress(progress, questDay)
@@ -234,30 +229,38 @@ fun HandspellApp(
                             Quest.SPEED_ROUND -> SPEED_ROUTE
                         })
                     }
-                    val speed = speedAccess(isPro, progress?.freeSpeedChallengeDay, System.currentTimeMillis())
-                    // While today's open quest is the speed round, its card already leads there: one entry, not two.
-                    if (!(quest.quest == Quest.SPEED_ROUND && !quest.complete)) MenuRowCard(
-                        stringResource(R.string.menu_speed_title),
-                        stringResource(when (speed) {
-                            SpeedAccess.Unlimited -> R.string.menu_speed_pro
-                            SpeedAccess.FreeAvailable -> R.string.menu_speed_free
-                            is SpeedAccess.UsedToday -> R.string.menu_speed_used
-                        }),
-                        onClick = { navController.navigate(SPEED_ROUTE) },
-                    ) { TimerMark(active = speed.canStart) }
-                    val trial by entitlementGate.demoTrial.collectAsStateWithLifecycle()
-                    ProMenuCard(
-                        isPro = isPro, trialLabel = dev.handspell.app.ui.pro.demoTrialTitle(trial),
-                        proWordCount = proWordCount,
-                        demoAvailable = trial == dev.handspell.app.billing.DemoTrialState.NotStarted,
-                        dismissed = menuProDismissed,
-                        onSeePro = { entitlementGate.requestPaywall(PaywallSource.MAIN_MENU) },
-                        onStartDemo = { scope.launch { entitlementGate.startDemoTrial() } },
-                        onDismiss = { menuProDismissed = true },
-                        onOpenPacks = { navController.navigate(PRACTICE_ROUTE) },
-                    )
                 },
             )
+            LaunchedEffect(isPro, menuProDismissed) {
+                if (!isPro && !menuProDismissed) {
+                    kotlinx.coroutines.delay(900)
+                    showMenuPro = true
+                }
+            }
+            val trial by entitlementGate.demoTrial.collectAsStateWithLifecycle()
+            dev.handspell.app.ui.components.AslSheet(
+                visible = showMenuPro && !isPro,
+                onDismiss = { showMenuPro = false; menuProDismissed = true },
+            ) {
+                Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState())) {
+                    ProMenuCard(
+                        isPro = false, trialLabel = dev.handspell.app.ui.pro.demoTrialTitle(trial),
+                        proWordCount = proWordCount,
+                        demoAvailable = trial == dev.handspell.app.billing.DemoTrialState.NotStarted,
+                        dismissed = false,
+                        onSeePro = {
+                            showMenuPro = false; menuProDismissed = true
+                            entitlementGate.requestPaywall(PaywallSource.MAIN_MENU)
+                        },
+                        onStartDemo = {
+                            showMenuPro = false; menuProDismissed = true
+                            scope.launch { entitlementGate.startDemoTrial() }
+                        },
+                        onDismiss = { showMenuPro = false; menuProDismissed = true },
+                        onOpenPacks = { showMenuPro = false; navController.navigate(PRACTICE_ROUTE) },
+                    )
+                }
+            }
         }
         composable(SPEED_ROUTE) {
             val detector = wordDetector()
@@ -282,16 +285,16 @@ fun HandspellApp(
                 onBack = { navController.popBackStack() },
                 onPractice = { word -> navController.navigate("$WORD_DRILL_ROUTE/${word.gloss}") },
                 onMarkComplete = { word, complete ->
-                    if (complete) showReward(RewardSubject(RewardSubject.Kind.WORD, word.gloss, word.display))
+                    if (complete) showReward(RewardSubject(RewardSubject.Kind.WORD, word.gloss, word.displayTitle))
                     scope.launch { progressStore.setWordMarkedComplete(word.gloss, complete) }
                 },
-                onLocked = { word -> paywallWord = word.display; entitlementGate.requestPaywall(PaywallSource.WORDS) },
+                onLocked = { word -> paywallWord = word.displayTitle; entitlementGate.requestPaywall(PaywallSource.WORDS) },
                 proStrip = !isPro && !wordsProDismissed && proWordCount > 0,
                 onDismissProStrip = { wordsProDismissed = true },
-                onSeePro = { paywallWord = null; entitlementGate.requestPaywall(PaywallSource.WORDS) },
                 references = wordReferences,
                 onSettings = { navController.navigate(SETTINGS_ROUTE) },
-                                leftHanded = leftHanded,
+                onPaper = { navController.navigate(PAPER_ROUTE) },
+                leftHanded = leftHanded,
             )
         }
         composable("$WORD_DRILL_ROUTE/{gloss}") { entry ->
