@@ -27,12 +27,13 @@
     <string name="words_card_complete_description">Practise the word %1$s, complete</string>
     <string name="words_card_locked_description">%1$s, included with Pro</string>
     <string name="words_card_complete">complete</string>
+    <string name="words_pro_header">Included with Pro</string>
     <string name="words_sheet_title">%1$s</string>
     <string name="words_sheet_title_complete">%1$s · complete</string>
     <string name="words_practice">Practice</string>
     <string name="mark_complete">Mark complete</string>
     <string name="mark_complete_undo">Undo completion</string>
-    <string name="mark_complete_undo_short">Undo</string>
+    <string name="mark_complete_undo_short">Mark as not done</string>
 
     <!-- Word drill -->
     <string name="word_drill_title">Word practice</string>
