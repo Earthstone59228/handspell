@@ -84,16 +84,20 @@ class AppContainer(context: Context) {
         CameraWordDetector(context.applicationContext, free, extraClassifiers = listOfNotNull(pro))
     }
 
-    /** A word model, or null when its asset is missing or unreadable (never a crash). */
+    /** A word model, or null when its asset is missing or unreadable (never a crash); the reason is logged. */
     private fun loadWordModel(assets: AssetManager, name: String): WordClassifier? = try {
         WordClassifier.load({ assets.open(name) }, name)
-    } catch (_: ClassifierAssetException) {
+    } catch (error: ClassifierAssetException) {
+        android.util.Log.w(TAG, "word model $name not loaded", error)
         null
-    } catch (_: IllegalArgumentException) {
+    } catch (error: IllegalArgumentException) {
+        android.util.Log.w(TAG, "word model $name not loaded", error)
         null
-    } catch (_: IllegalStateException) {
+    } catch (error: IllegalStateException) {
+        android.util.Log.w(TAG, "word model $name not loaded", error)
         null
-    } catch (_: java.io.IOException) {
+    } catch (error: java.io.IOException) {
+        android.util.Log.w(TAG, "word model $name not loaded", error)
         null
     }
 
@@ -115,4 +119,8 @@ class AppContainer(context: Context) {
         val classifier: LetterClassifier?,
         val failure: ClassifierAssetException?,
     )
+
+    private companion object {
+        const val TAG = "HandspellContainer"
+    }
 }

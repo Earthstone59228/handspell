@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,12 +27,9 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.handspell.app.R
-import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.components.StreakMark
-import dev.handspell.app.ui.settings.FrostedSettingsHero
 import dev.handspell.app.ui.settings.SettingsDivider
 import dev.handspell.app.ui.settings.SettingsGroup
 import dev.handspell.app.ui.settings.SettingsGroupFooter
@@ -46,47 +42,40 @@ import java.util.Calendar
 import java.util.Locale
 import java.util.TimeZone
 
+/** Streak copy for the Progress header: none yet, today counts, or practise today to keep it. */
 @Composable
-fun StreakRoute(progressStore: ProgressStore, onBack: () -> Unit, belowMilestones: @Composable () -> Unit = {}) {
-    val snapshot by progressStore.snapshot.collectAsStateWithLifecycle(initialValue = null)
-    val state = remember(snapshot) { streakState(snapshot, System.currentTimeMillis()) }
-    StreakScreen(state, onBack, belowMilestones)
+fun streakBody(state: StreakState): String? = when {
+    state.loading -> null
+    state.current == 0 -> stringResource(R.string.streak_body_none)
+    state.practisedToday -> stringResource(R.string.streak_body_today)
+    else -> stringResource(R.string.streak_body_pending)
 }
 
-/** Current and longest streak, this month's practised days and the milestone markers. Nothing here moves. */
+/**
+ * The top of the Progress screen: current and longest streak with the flame, this month's practised days and the
+ * milestone markers. Nothing here moves.
+ */
 @Composable
-fun StreakScreen(state: StreakState, onBack: () -> Unit, belowMilestones: @Composable () -> Unit = {}) {
-    val body = when {
-        state.loading -> null
-        state.current == 0 -> stringResource(R.string.streak_body_none)
-        state.practisedToday -> stringResource(R.string.streak_body_today)
-        else -> stringResource(R.string.streak_body_pending)
+fun StreakSection(state: StreakState) {
+    if (state.loading) return
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        StreakTile(state.current, stringResource(R.string.streak_current), active = state.current > 0 && state.practisedToday,
+            showMark = true, modifier = Modifier.weight(1f))
+        StreakTile(state.longest, stringResource(R.string.streak_longest), active = false, showMark = false,
+            modifier = Modifier.weight(1f))
     }
-    FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.streak_title), body = body) {
-        if (state.loading) {
-            Text(stringResource(R.string.settings_loading), style = MaterialTheme.typography.bodyLarge)
-            return@FrostedSettingsHero
-        }
-        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            StreakTile(state.current, stringResource(R.string.streak_current), active = state.current > 0 && state.practisedToday,
-                showMark = true, modifier = Modifier.weight(1f))
-            StreakTile(state.longest, stringResource(R.string.streak_longest), active = false, showMark = false,
-                modifier = Modifier.weight(1f))
-        }
-        state.calendar?.let { MonthGroup(it) }
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            SettingsGroupHeader(stringResource(R.string.streak_milestones))
-            SettingsGroup {
-                Column {
-                    state.milestones.forEachIndexed { index, row ->
-                        if (index > 0) SettingsDivider()
-                        MilestoneRowView(row)
-                    }
+    state.calendar?.let { MonthGroup(it) }
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        SettingsGroupHeader(stringResource(R.string.streak_milestones))
+        SettingsGroup {
+            Column {
+                state.milestones.forEachIndexed { index, row ->
+                    if (index > 0) SettingsDivider()
+                    MilestoneRowView(row)
                 }
             }
-            SettingsGroupFooter(stringResource(R.string.streak_footer))
         }
-        belowMilestones()
+        SettingsGroupFooter(stringResource(R.string.streak_footer))
     }
 }
 

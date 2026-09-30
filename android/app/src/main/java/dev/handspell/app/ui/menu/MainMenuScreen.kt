@@ -38,7 +38,6 @@ import dev.handspell.app.ui.theme.Spacing
 data class MainMenuActions(
     val onLetters: () -> Unit,
     val onWords: () -> Unit,
-    val onStreak: () -> Unit,
     val onProgress: () -> Unit,
     val onSettings: () -> Unit,
     val onPaper: () -> Unit,
@@ -81,12 +80,10 @@ fun MainMenuScreen(
                 onClick = actions.onWords,
             )
         }
-        StreakEntry(state, actions.onStreak)
+        ProgressEntry(state, actions.onProgress)
         belowEntries()
         SettingsGroup {
             Column {
-                SettingsActionRow(stringResource(R.string.progress_title), onClick = actions.onProgress)
-                SettingsDivider()
                 SettingsActionRow(stringResource(R.string.settings), onClick = actions.onSettings)
             }
         }
@@ -129,16 +126,19 @@ private fun MenuEntryCard(title: String, meta: String?, onClick: () -> Unit) {
 }
 
 @Composable
-private fun StreakEntry(state: MainMenuState, onClick: () -> Unit) {
-    val title = if (state.streakDays > 0) pluralStringResource(R.plurals.menu_streak_days, state.streakDays, state.streakDays)
+private fun ProgressEntry(state: MainMenuState, onClick: () -> Unit) {
+    // The one way into Progress, carrying the live streak as its subtitle.
+    val streak = if (state.streakDays > 0) pluralStringResource(R.plurals.menu_streak_days, state.streakDays, state.streakDays)
     else stringResource(R.string.menu_streak_none)
     val body = when {
         state.loading -> stringResource(R.string.settings_loading)
-        state.streakDays == 0 -> stringResource(R.string.menu_streak_start)
-        state.practisedToday -> stringResource(R.string.menu_streak_today_done)
-        else -> stringResource(R.string.menu_streak_today_pending)
+        state.streakDays == 0 -> stringResource(R.string.menu_progress_start, streak)
+        state.practisedToday -> stringResource(R.string.menu_progress_today_done, streak)
+        else -> stringResource(R.string.menu_progress_today_pending, streak)
     }
-    MenuRowCard(title, body, onClick) { StreakMark(active = state.streakDays > 0 && state.practisedToday) }
+    MenuRowCard(stringResource(R.string.progress_title), body, onClick) {
+        StreakMark(active = state.streakDays > 0 && state.practisedToday)
+    }
 }
 
 /** A grey row card (the Settings group style) with a leading mark, a title, one line of detail and a blue chevron. */

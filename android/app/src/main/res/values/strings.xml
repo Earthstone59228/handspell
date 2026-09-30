@@ -194,11 +194,9 @@
         <item quantity="one">%1$d story step completed</item>
         <item quantity="other">%1$d story steps completed</item>
     </plurals>
-    <string name="progress_stat_streak">day streak</string>
     <string name="progress_hero_body">Camera drills and lessons on this phone.</string>
     <string name="progress_stat_letters">letters</string>
     <string name="progress_stat_matched">matched</string>
-    <string name="progress_stat_best">Longest streak</string>
     <string name="progress_summary">Summary</string>
     <string name="progress_letter_row">%1$s, %2$s</string>
     <string name="onboarding_hero_body">Practise ASL fingerspelling with your camera.</string>

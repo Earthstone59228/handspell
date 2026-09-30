@@ -15,9 +15,9 @@
         <item quantity="other">%1$d-day streak</item>
     </plurals>
     <string name="menu_streak_none">No streak yet</string>
-    <string name="menu_streak_start">Practise a letter or a word to start one.</string>
-    <string name="menu_streak_today_done">Today counts. See your week.</string>
-    <string name="menu_streak_today_pending">Practise today to keep it.</string>
+    <string name="menu_progress_start">%1$s. Practise a letter or a word to start one.</string>
+    <string name="menu_progress_today_done">%1$s. Today counts.</string>
+    <string name="menu_progress_today_pending">%1$s. Practise today to keep it.</string>
 
     <!-- Words menu -->
     <string name="words_title">Words</string>
@@ -33,6 +33,7 @@
     <string name="words_practice">Practice</string>
     <string name="mark_complete">Mark complete</string>
     <string name="mark_complete_undo">Undo completion</string>
+    <string name="mark_complete_undo_short">Undo</string>
 
     <!-- Word drill -->
     <string name="word_drill_title">Word practice</string>
@@ -47,4 +48,9 @@
     <string name="word_feedback_match">That’s %1$s</string>
     <string name="word_feedback_trying">Keep signing</string>
     <string name="word_feedback_no_hand">Show your hands to the camera</string>
+
+    <!-- Settings (round 2) -->
+    <string name="settings_documents">Privacy and documents</string>
+    <string name="settings_about_row">About Handspell</string>
+    <string name="settings_about_title">About</string>
 </resources>

@@ -27,6 +27,10 @@ interface AppPreferencesStore {
         get() = kotlinx.coroutines.flow.flowOf(dev.handspell.app.reminder.ReminderSlot.EVENING)
     suspend fun setReminderEnabled(enabled: Boolean) {}
     suspend fun setReminderSlot(slot: dev.handspell.app.reminder.ReminderSlot) {}
+
+    /** The local day the reward sheet last showed its Pro line (at most once a day). */
+    val proRewardLineDay: kotlinx.coroutines.flow.Flow<Long?> get() = kotlinx.coroutines.flow.flowOf(null)
+    suspend fun setProRewardLineDay(day: Long) {}
 }
 
 internal val leftHandedKey = booleanPreferencesKey("left_handed")
@@ -39,6 +43,7 @@ internal fun readReminderSlot(preferences: Preferences): dev.handspell.app.remin
     dev.handspell.app.reminder.ReminderSlot.entries.firstOrNull { it.name == preferences[reminderSlotKey] }
         ?: dev.handspell.app.reminder.ReminderSlot.EVENING
 
+internal val proRewardLineKey = androidx.datastore.preferences.core.longPreferencesKey("pro_reward_line_day")
 internal val demoTrialKey = androidx.datastore.preferences.core.longPreferencesKey("demo_trial_started_at")
 
 /** Saved Theme; anything unknown (or nothing) is System. */
@@ -72,6 +77,12 @@ class DataStoreAppPreferencesStore(context: Context) : AppPreferencesStore {
 
     override suspend fun setReminderSlot(slot: dev.handspell.app.reminder.ReminderSlot) {
         store.edit { it[reminderSlotKey] = slot.name }
+    }
+
+    override val proRewardLineDay: Flow<Long?> = store.data.map { it[proRewardLineKey] }
+
+    override suspend fun setProRewardLineDay(day: Long) {
+        store.edit { it[proRewardLineKey] = day }
     }
 
     override suspend fun setLeftHanded(enabled: Boolean) {

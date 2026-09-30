@@ -80,9 +80,9 @@ import dev.handspell.app.ui.speed.SpeedChallengeRoute
 import dev.handspell.app.ui.speed.speedAccess
 import dev.handspell.app.ui.pro.ProMention
 import dev.handspell.app.ui.pro.ProMenuCard
-import dev.handspell.app.ui.pro.shouldMentionPro
+import dev.handspell.app.ui.pro.shouldShowRewardProLine
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.runtime.saveable.rememberSaveable
-import dev.handspell.app.ui.streak.StreakRoute
 import dev.handspell.app.ui.reward.RewardSheet
 import dev.handspell.app.ui.reward.RewardSubject
 import dev.handspell.app.ui.reward.rewardFor
@@ -99,7 +99,6 @@ import dev.handspell.app.ui.words.WordsMenuState
 import dev.handspell.app.vision.words.WordDetector
 
 private const val MENU_ROUTE = "menu"
-private const val STREAK_ROUTE = "streak"
 private const val SPEED_ROUTE = "speed"
 private const val WORDS_ROUTE = "words"
 private const val WORD_DRILL_ROUTE = "word"
@@ -118,6 +117,7 @@ private const val MODEL_LICENSE_ROUTE = "model-license"
 private const val CAPACITOR_CORE_LICENSE_ROUTE = "capacitor-core-license"
 private const val CAPACITOR_SPLASH_LICENSE_ROUTE = "capacitor-splash-license"
 private const val PAYWALL_ROUTE = "paywall"
+private const val ABOUT_ROUTE = "about"
 private const val PACK_ROUTE = "pack"
 
 @Composable
@@ -165,7 +165,20 @@ fun HandspellApp(
     var reward by remember { mutableStateOf<Reward?>(null) }
     // "Not now" on a Pro mention hides every mention until the app is next started.
     var proMentionDismissed by rememberSaveable { mutableStateOf(false) }
-    fun showReward(subject: RewardSubject) { reward = rewardFor(subject, progress, System.currentTimeMillis()) }
+    // Pro promotions, each dismissible for this session ("Not now").
+    var menuProDismissed by rememberSaveable { mutableStateOf(false) }
+    var wordsProDismissed by rememberSaveable { mutableStateOf(false) }
+    var rewardProLine by remember { mutableStateOf(false) }
+    val proRewardLineDay by preferences.proRewardLineDay.collectAsStateWithLifecycle(initialValue = null)
+    val proWordCount = words.orEmpty().count { it.tier == dev.handspell.app.content.Tier.PRO }
+    fun showReward(subject: RewardSubject) {
+        val now = System.currentTimeMillis()
+        val today = localPracticeDay(now)
+        // Decided once when the reward opens, so recording the day doesn't hide the line while it is on screen.
+        rewardProLine = shouldShowRewardProLine(isPro, proMentionDismissed, proRewardLineDay, today)
+        if (rewardProLine) scope.launch { preferences.setProRewardLineDay(today) }
+        reward = rewardFor(subject, progress, now)
+    }
     // Today's quest: celebrated once, after any reward on screen has been closed.
     val questDay = localPracticeDay(System.currentTimeMillis())
     val questText = questTitle(questFor(questDay))
@@ -201,7 +214,6 @@ fun HandspellApp(
                 actions = MainMenuActions(
                     onLetters = { navController.navigate(ALPHABET_ROUTE) },
                     onWords = { navController.navigate(WORDS_ROUTE) },
-                    onStreak = { navController.navigate(STREAK_ROUTE) },
                     onProgress = { navController.navigate(PROGRESS_ROUTE) },
                     onSettings = { navController.navigate(SETTINGS_ROUTE) },
                     onPaper = { navController.navigate(PAPER_ROUTE) },
@@ -228,7 +240,12 @@ fun HandspellApp(
                     val trial by entitlementGate.demoTrial.collectAsStateWithLifecycle()
                     ProMenuCard(
                         isPro = isPro, trialLabel = dev.handspell.app.ui.pro.demoTrialTitle(trial),
+                        proWordCount = proWordCount,
+                        demoAvailable = trial == dev.handspell.app.billing.DemoTrialState.NotStarted,
+                        dismissed = menuProDismissed,
                         onSeePro = { entitlementGate.requestPaywall(PaywallSource.MAIN_MENU) },
+                        onStartDemo = { scope.launch { entitlementGate.startDemoTrial() } },
+                        onDismiss = { menuProDismissed = true },
                         onOpenPacks = { navController.navigate(PRACTICE_ROUTE) },
                     )
                 },
@@ -249,9 +266,6 @@ fun HandspellApp(
                 onBack = { navController.popBackStack() },
             )
         }
-        composable(STREAK_ROUTE) {
-            StreakRoute(progressStore, onBack = { navController.popBackStack() })
-        }
         composable(WORDS_ROUTE) {
             val list = words
             WordsMenuScreen(
@@ -264,6 +278,8 @@ fun HandspellApp(
                     scope.launch { progressStore.setWordMarkedComplete(word.gloss, complete) }
                 },
                 onLocked = { entitlementGate.requestPaywall(PaywallSource.WORDS) },
+                proStrip = !isPro && !wordsProDismissed && proWordCount > 0,
+                onDismissProStrip = { wordsProDismissed = true },
             )
         }
         composable("$WORD_DRILL_ROUTE/{gloss}") { entry ->
@@ -298,7 +314,7 @@ fun HandspellApp(
                 onSettings = { navController.navigate(SETTINGS_ROUTE) },
                 onPaper = { navController.navigate(PAPER_ROUTE) },
                 onNativePractice = { navController.navigate(PRACTICE_ROUTE) },
-                onProgress = { navController.navigate(STREAK_ROUTE) },
+                onProgress = { navController.navigate(PROGRESS_ROUTE) },
                 progressSnapshot = progress,
                 leftHanded = leftHanded,
                 darkTheme = LocalDarkTheme.current,
@@ -393,6 +409,16 @@ fun HandspellApp(
                 buildInfo = BuildInfo(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
                 onBack = { navController.popBackStack() },
                 onOpenCapture = onOpenCapture,
+                onOpenDocuments = { navController.navigate(PAPER_ROUTE) },
+                onOpenAbout = { navController.navigate(ABOUT_ROUTE) },
+            )
+        }
+        composable(ABOUT_ROUTE) {
+            dev.handspell.app.ui.settings.AboutScreen(
+                classifierModelId = signDetector.classifierModelId,
+                buildInfo = BuildInfo(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
+                onBack = { navController.popBackStack() },
+                onOpenCapture = onOpenCapture,
             )
         }
         composable(PROGRESS_ROUTE) {
@@ -455,9 +481,10 @@ fun HandspellApp(
         }
     }
     // Above every screen, the alphabet WebView included; a tap on Continue or the backdrop closes it.
-    RewardSheet(reward, onDismiss = { reward = null }, proMention = { shownReward ->
-        if (shouldMentionPro(shownReward.milestoneReached, isPro, proMentionDismissed)) ProMention(
-            text = stringResource(R.string.pro_mention_milestone),
+    RewardSheet(reward, onDismiss = { reward = null }, proMention = { _ ->
+        if (rewardProLine && !isPro && !proMentionDismissed) ProMention(
+            text = if (proWordCount > 0) pluralStringResource(R.plurals.pro_reward_line, proWordCount, proWordCount)
+            else stringResource(R.string.pro_reward_line_plain),
             onSeePro = { reward = null; entitlementGate.requestPaywall(PaywallSource.STREAK_MILESTONE) },
             onDismiss = { proMentionDismissed = true },
         )

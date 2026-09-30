@@ -17,6 +17,12 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import dev.handspell.app.R
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import dev.handspell.app.ui.components.AslButton
+import dev.handspell.app.ui.components.AslButtonStyle
+import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.settings.SettingsActionRow
 import dev.handspell.app.ui.settings.SettingsDivider
 import dev.handspell.app.ui.settings.SettingsGroup
@@ -26,26 +32,97 @@ import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 
 /**
- * The main menu's quiet Pro entry: a grey card like the Settings rows (never the accent fill), saying plainly what Pro
- * adds. A tap on the row opens the paywall; nothing opens by itself. With Pro active it becomes the way to the packs.
+ * The main menu's Pro card. Free users see what Pro adds in plain words, a "See what's in Pro" button (opens the
+ * paywall on tap only), the 3-day demo trial while it is unused, and "Not now", which shrinks the card to one quiet
+ * row for the rest of the session. With Pro active it is the way to the packs.
  */
 @Composable
-fun ProMenuCard(isPro: Boolean, trialLabel: String?, onSeePro: () -> Unit, onOpenPacks: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+fun ProMenuCard(
+    isPro: Boolean,
+    trialLabel: String?,
+    proWordCount: Int,
+    demoAvailable: Boolean,
+    dismissed: Boolean,
+    onSeePro: () -> Unit,
+    onStartDemo: () -> Unit,
+    onDismiss: () -> Unit,
+    onOpenPacks: () -> Unit,
+) {
+    val colors = LocalAslColors.current
+    if (isPro || dismissed) Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.settings_pro))
         SettingsGroup {
             Column {
-                SettingsInfoRow(
-                    if (isPro) trialLabel ?: stringResource(R.string.menu_pro_title_active) else stringResource(R.string.menu_pro_title),
-                    stringResource(if (isPro) R.string.menu_pro_body_active else R.string.menu_pro_body_free),
-                )
-                SettingsDivider()
-                if (isPro) SettingsActionRow(stringResource(R.string.settings_open_packs), onClick = onOpenPacks)
-                else SettingsActionRow(stringResource(R.string.settings_see_pro), onClick = onSeePro)
+                if (isPro) {
+                    SettingsInfoRow(trialLabel ?: stringResource(R.string.menu_pro_title_active), stringResource(R.string.menu_pro_body_active))
+                    SettingsDivider()
+                    SettingsActionRow(stringResource(R.string.settings_open_packs), onClick = onOpenPacks)
+                } else SettingsActionRow(stringResource(R.string.settings_see_pro), onClick = onSeePro)
+            }
+        }
+        return
+    }
+    AslCard {
+        Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+            Text(stringResource(R.string.settings_pro).uppercase(), style = MaterialTheme.typography.labelSmall,
+                color = colors.accent)
+            Text(stringResource(R.string.pro_card_title), style = MaterialTheme.typography.headlineSmall, color = colors.onSurface,
+                modifier = Modifier.semantics { heading() })
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                if (proWordCount > 0) ProPoint(pluralStringResource(R.plurals.pro_point_words, proWordCount, proWordCount))
+                ProPoint(stringResource(R.string.pro_point_speed))
+                ProPoint(stringResource(R.string.pro_point_packs))
+                ProPoint(stringResource(R.string.pro_point_insights))
+            }
+            AslButton(stringResource(R.string.pro_card_see), onSeePro, Modifier.fillMaxWidth())
+            if (demoAvailable) {
+                AslButton(stringResource(R.string.pro_card_demo), onStartDemo, Modifier.fillMaxWidth(), style = AslButtonStyle.Secondary)
+                Text(stringResource(R.string.pro_card_demo_note), style = MaterialTheme.typography.labelMedium,
+                    color = colors.onSurfaceSecondary)
             }
         }
     }
+    SettingsGroup { SettingsActionRow(stringResource(R.string.pro_mention_not_now), onClick = onDismiss) }
 }
+
+@Composable
+private fun ProPoint(text: String) {
+    val colors = LocalAslColors.current
+    Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs), verticalAlignment = Alignment.Top) {
+        Text("✓", style = MaterialTheme.typography.bodyMedium, color = colors.accent, modifier = Modifier.clearAndSetSemantics {})
+        Text(text, style = MaterialTheme.typography.bodyMedium, color = colors.onSurface)
+    }
+}
+
+/** Bottom of the Words menu for free users: how many words Pro adds, a few locked examples, one tap to the paywall. */
+@Composable
+fun WordsProStrip(proWordCount: Int, examples: List<String>, onSeePro: () -> Unit, onDismiss: () -> Unit) {
+    val colors = LocalAslColors.current
+    SettingsGroup {
+        Column {
+            Column(Modifier.fillMaxWidth().padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                Text(pluralStringResource(R.plurals.words_pro_strip_title, proWordCount, proWordCount),
+                    style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
+                Row(horizontalArrangement = Arrangement.spacedBy(Spacing.md), verticalAlignment = Alignment.CenterVertically) {
+                    examples.forEach { word ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xxs), verticalAlignment = Alignment.CenterVertically) {
+                            dev.handspell.app.ui.components.ProLockIcon(colors.onSurfaceSecondary)
+                            Text(word, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceSecondary, maxLines = 1)
+                        }
+                    }
+                }
+            }
+            SettingsDivider()
+            SettingsActionRow(stringResource(R.string.settings_see_pro), onClick = onSeePro)
+            SettingsDivider()
+            SettingsActionRow(stringResource(R.string.pro_mention_not_now), onClick = onDismiss)
+        }
+    }
+}
+
+/** The reward sheet's Pro line: free users only, at most once a day, never again this session after "Not now". */
+fun shouldShowRewardProLine(isPro: Boolean, dismissedThisSession: Boolean, lastShownDay: Long?, today: Long): Boolean =
+    !isPro && !dismissedThisSession && lastShownDay != today
 
 /** One row of the free-versus-Pro comparison. Values are plain words; nothing is shown in red or crossed out. */
 data class ComparisonRow(val feature: Int, val free: Int, val pro: Int)

@@ -213,28 +213,30 @@ private fun ChallengeIntro(
                 }
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            val line = when (access) {
-                SpeedAccess.Unlimited -> stringResource(R.string.speed_access_pro)
-                SpeedAccess.FreeAvailable -> stringResource(R.string.speed_access_free)
-                is SpeedAccess.UsedToday -> {
-                    val (hours, minutes) = timeUntil(access.resetsAtMs, now)
-                    stringResource(R.string.speed_access_used, hours, minutes)
-                }
+        if (access is SpeedAccess.UsedToday) {
+            // The locked state says plainly what happened, when it resets, and what Pro would change.
+            val (hours, minutes) = timeUntil(access.resetsAtMs, now)
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+                modifier = Modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }) {
+                Text(stringResource(R.string.speed_used_title), style = MaterialTheme.typography.headlineSmall, color = colors.label)
+                Text(stringResource(R.string.speed_used_reset, hours, minutes), style = MaterialTheme.typography.bodyLarge,
+                    color = colors.labelSecondary)
             }
-            Text(line, style = MaterialTheme.typography.bodyLarge, color = colors.label,
-                modifier = Modifier.padding(horizontal = Spacing.xs).semantics { liveRegion = LiveRegionMode.Polite })
-            if (access is SpeedAccess.UsedToday) SettingsGroup {
-                Column {
+            dev.handspell.app.ui.components.AslCard {
+                Column(Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+                    Text(stringResource(R.string.speed_used_pro_title), style = MaterialTheme.typography.titleMedium, color = colors.onSurface)
                     Text(stringResource(R.string.speed_access_pro_note), style = MaterialTheme.typography.bodyMedium,
-                        color = colors.onSurfaceSecondary, modifier = Modifier.padding(start = Spacing.md, end = Spacing.md, top = Spacing.md))
-                    SettingsActionRow(stringResource(R.string.settings_see_pro), onClick = onSeePro)
+                        color = colors.onSurfaceSecondary)
+                    AslButton(stringResource(R.string.settings_see_pro), onSeePro, Modifier.fillMaxWidth())
                 }
             }
+        } else {
+            Text(stringResource(if (access == SpeedAccess.Unlimited) R.string.speed_access_pro else R.string.speed_access_free),
+                style = MaterialTheme.typography.bodyLarge, color = colors.label,
+                modifier = Modifier.padding(horizontal = Spacing.xs).semantics { liveRegion = LiveRegionMode.Polite })
+            val modeReady = mode == SpeedMode.LETTERS || wordsAvailable
+            AslButton(stringResource(R.string.speed_start), onStart, Modifier.fillMaxWidth(), enabled = modeReady && !loading)
         }
-        val modeReady = mode == SpeedMode.LETTERS || wordsAvailable
-        AslButton(stringResource(R.string.speed_start), onStart, Modifier.fillMaxWidth(),
-            enabled = access.canStart && modeReady && !loading)
         SettingsGroupFooter(stringResource(R.string.speed_challenge_footer))
     }
 }

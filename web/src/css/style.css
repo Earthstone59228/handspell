@@ -413,12 +413,15 @@ html.left-handed .index-surface {
 }
 .sheet-actions {
   display:grid;
-  grid-template-columns:1fr 1fr;
+  /* Two single-line buttons side by side; at large text sizes (the column minimum grows with the font) they stack. */
+  grid-template-columns:repeat(auto-fit,minmax(8.5em,1fr));
   gap:10px;
   margin-top:27px
 }
 .practice-button,.complete-button {
   width:100%;
+  padding:0 12px;
+  white-space:nowrap;
   min-height:54px;
   border:0;
   border-radius:15px;

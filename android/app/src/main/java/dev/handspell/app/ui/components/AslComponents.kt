@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selectableGroup
 import androidx.compose.ui.semantics.semantics
@@ -54,6 +55,23 @@ import dev.handspell.app.ui.theme.Spacing
 import kotlin.math.tanh
 
 internal val BackChevronStart = 12.dp
+
+/** Above this font scale, paired buttons stack full width and labels may wrap (DESIGN.md §7, 200% font scale). */
+const val LARGE_FONT_SCALE = 1.3f
+
+/** Two actions side by side, single-line labels; stacked full width at large font scales so nothing is cut off. */
+@Composable
+fun AslButtonPair(first: @Composable (Modifier) -> Unit, second: (@Composable (Modifier) -> Unit)?) {
+    if (LocalDensity.current.fontScale > LARGE_FONT_SCALE || second == null) Column(
+        Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+    ) {
+        first(Modifier.fillMaxWidth())
+        second?.invoke(Modifier.fillMaxWidth())
+    } else Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
+        first(Modifier.weight(1f))
+        second(Modifier.weight(1f))
+    }
+}
 // 4dp below the status bar (was 16): the owner found the frosted top bars sat too low. The 48dp touch box is unchanged,
 // and the alphabet page moved by the same 12px (web/src/css/style.css .top-area / .screen-back).
 internal val BackChevronTop = 4.dp
@@ -147,6 +165,10 @@ fun AslButton(
     modifier: Modifier = Modifier,
     style: AslButtonStyle = AslButtonStyle.Primary,
     enabled: Boolean = true,
+    /** What TalkBack says when the visible label is shortened (e.g. "Undo" → "Undo completion"). */
+    contentDescription: String? = null,
+    /** Keep the label on one line (side-by-side buttons); wrapping is still allowed at large font scales. */
+    singleLine: Boolean = false,
 ) {
     val colors = LocalAslColors.current
     val container = if (style == AslButtonStyle.Primary) colors.accent else colors.surface
@@ -154,13 +176,19 @@ fun AslButton(
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.sizeIn(minHeight = Spacing.primaryButton),
+        modifier = modifier.sizeIn(minHeight = Spacing.primaryButton)
+            .then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
         shape = RoundedCornerShape(AslShapes.button),
         colors = ButtonDefaults.buttonColors(
             containerColor = container, contentColor = content,
             disabledContainerColor = container.copy(alpha = 0.4f), disabledContentColor = content.copy(alpha = 0.7f),
         ),
-    ) { Text(text, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge) }
+    ) {
+        val wrapAllowed = LocalDensity.current.fontScale > LARGE_FONT_SCALE
+        Text(text, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyLarge,
+            maxLines = if (singleLine && !wrapAllowed) 1 else Int.MAX_VALUE, softWrap = !singleLine || wrapAllowed,
+            modifier = if (contentDescription != null) Modifier.clearAndSetSemantics {} else Modifier)
+    }
 }
 
 /** Rounded lighter-grey card with white text. */

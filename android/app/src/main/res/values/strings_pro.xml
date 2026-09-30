@@ -20,6 +20,30 @@
     <string name="compare_more_words">More word signs</string>
     <string name="compare_row_description">%1$s. Free: %2$s. Pro: %3$s.</string>
 
-    <string name="pro_mention_milestone">Enjoying the streak? Pro adds story lessons and timed speed packs to practise with.</string>
     <string name="pro_mention_not_now">Not now</string>
+
+    <!-- Round 2 -->
+    <string name="pro_card_title">More to practise with Pro</string>
+    <plurals name="pro_point_words">
+        <item quantity="one">%1$d more word sign</item>
+        <item quantity="other">%1$d more word signs</item>
+    </plurals>
+    <string name="pro_point_speed">Unlimited speed challenges</string>
+    <string name="pro_point_packs">Three story lessons and three timed speed packs</string>
+    <string name="pro_point_insights">Progress insights: your weakest letters and what to practise next</string>
+    <string name="pro_card_see">See what’s in Pro</string>
+    <string name="pro_card_demo">Try Pro free for 3 days (demo)</string>
+    <string name="pro_card_demo_note">A demo of the free-trial flow in this build. Nothing is bought or charged, and it ends by itself.</string>
+    <plurals name="words_pro_strip_title">
+        <item quantity="one">%1$d more word with Pro</item>
+        <item quantity="other">%1$d more words with Pro</item>
+    </plurals>
+    <plurals name="pro_reward_line">
+        <item quantity="one">Pro adds %1$d more word sign and unlimited speed challenges.</item>
+        <item quantity="other">Pro adds %1$d more word signs and unlimited speed challenges.</item>
+    </plurals>
+    <string name="pro_reward_line_plain">Pro adds unlimited speed challenges, story lessons and progress insights.</string>
+    <string name="speed_used_title">Today’s free round is used</string>
+    <string name="speed_used_reset">The next free round is ready at midnight, in %1$d h %2$d min.</string>
+    <string name="speed_used_pro_title">Unlimited rounds with Pro</string>
 </resources>

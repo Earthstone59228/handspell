@@ -26,7 +26,6 @@ import dev.handspell.app.billing.EntitlementGate
 import dev.handspell.app.prefs.AppPreferencesStore
 import dev.handspell.app.prefs.ThemeMode
 import dev.handspell.app.billing.DemoTrialState
-import dev.handspell.app.ui.pro.DemoTrialGroup
 import dev.handspell.app.ui.pro.demoTrialTitle
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Row
@@ -55,6 +54,8 @@ fun SettingsRoute(
     onBack: () -> Unit,
     onOpenPacks: () -> Unit = {},
     onOpenCapture: (() -> Unit)? = null,
+    onOpenDocuments: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
 ) {
     val model: SettingsViewModel = viewModel(factory = SettingsViewModel.factory(
         preferences, progressStore, clearAlphabetData, entitlementGate, classifierModelId, buildInfo,
@@ -71,6 +72,8 @@ fun SettingsRoute(
         demoTrial = demoTrial,
         onStartDemoTrial = { scope.launch { entitlementGate.startDemoTrial() } },
         reminders = reminders,
+        onOpenDocuments = onOpenDocuments,
+        onOpenAbout = onOpenAbout,
     )
 }
 
@@ -91,19 +94,20 @@ fun SettingsScreen(
     demoTrial: DemoTrialState = DemoTrialState.NotStarted,
     onStartDemoTrial: () -> Unit = {},
     reminders: ReminderController? = null,
+    onOpenDocuments: () -> Unit = {},
+    onOpenAbout: () -> Unit = {},
 ) {
     val colors = LocalAslColors.current
     androidx.compose.foundation.layout.Box {
+    // Only what a learner acts on: Pro, how it looks, the reminder, documents, deleting data. Technical details
+    // (model, version, debug tools) sit behind the one quiet About row.
     FrostedSettingsHero(onBack) {
-        AppearanceGroup(state.themeMode, onSetTheme)
-        PracticeGroup(state, onAskClear, onSetLeftHanded)
+        SubscriptionGroup(state, onOpenPaywall, onRestore, onRetryEntitlement, onOpenPacks, demoTrial, onStartDemoTrial)
+        AppearanceGroup(state.themeMode, onSetTheme, state.leftHanded, onSetLeftHanded)
         if (reminders != null) ReminderGroup(reminders)
-        SubscriptionGroup(state, onOpenPaywall, onRestore, onRetryEntitlement, onOpenPacks, demoTrial)
-        DemoTrialGroup(demoTrial, isRealPro = state.subscription == SubscriptionUi.PRO && demoTrial !is DemoTrialState.Active,
-            onStart = onStartDemoTrial)
-        PrivacyGroup(state.classifierModelId)
-        AboutGroup(state)
-        if (onOpenCapture != null) DebugGroup(onOpenCapture)
+        SettingsGroup { SettingsActionRow(stringResource(R.string.settings_documents), onClick = onOpenDocuments) }
+        DeleteGroup(state, onAskClear)
+        SettingsGroup { SettingsActionRow(stringResource(R.string.settings_about_row), onClick = onOpenAbout) }
     }
     if (reminders != null) ReminderRationale(reminders)
     }
@@ -149,7 +153,7 @@ fun SettingsScreen(
 
 /** Theme: System, Light or Dark. The main menu's quick toggle writes the same setting. */
 @Composable
-private fun AppearanceGroup(mode: ThemeMode, onSetTheme: (ThemeMode) -> Unit) {
+private fun AppearanceGroup(mode: ThemeMode, onSetTheme: (ThemeMode) -> Unit, leftHanded: Boolean, onSetLeftHanded: (Boolean) -> Unit) {
     val colors = LocalAslColors.current
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.settings_appearance))
@@ -173,50 +177,26 @@ private fun AppearanceGroup(mode: ThemeMode, onSetTheme: (ThemeMode) -> Unit) {
                             modifier = Modifier.clearAndSetSemantics {})
                     }
                 }
-            }
-        }
-        SettingsGroupFooter(stringResource(R.string.settings_theme_footer))
-    }
-}
-
-@Composable
-private fun PracticeGroup(state: SettingsUiState, onAskClear: () -> Unit, onSetLeftHanded: (Boolean) -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-        SettingsGroupHeader(stringResource(R.string.settings_progress))
-        SettingsGroup {
-            Column {
-                when (val progress = state.progress) {
-                    ProgressSummary.Loading -> SettingsValueRow(stringResource(R.string.settings_progress), stringResource(R.string.settings_loading))
-                    ProgressSummary.Empty -> SettingsInfoRow(stringResource(R.string.settings_no_progress), stringResource(R.string.settings_no_progress_body))
-                    is ProgressSummary.Recorded -> {
-                        SettingsValueRow(
-                            stringResource(R.string.settings_streak),
-                            if (progress.currentStreakDays == 0) stringResource(R.string.settings_no_streak)
-                            else pluralStringResource(R.plurals.settings_streak_days, progress.currentStreakDays, progress.currentStreakDays),
-                        )
-                        SettingsDivider()
-                        SettingsValueRow(stringResource(R.string.settings_letters_practised), stringResource(
-                            R.string.settings_letters_count, progress.lettersPractised, progress.lettersTotal,
-                        ))
-                        SettingsDivider()
-                        SettingsValueRow(stringResource(R.string.settings_attempts), pluralStringResource(
-                            R.plurals.settings_attempts_count, progress.attempts, progress.attempts, progress.matches,
-                        ))
-                    }
-                }
                 SettingsDivider()
                 SettingsToggleRow(
                     stringResource(R.string.settings_left_handed_layout),
                     stringResource(R.string.settings_left_handed_layout_body),
-                    state.leftHanded, onSetLeftHanded,
-                )
-                SettingsDivider()
-                SettingsDestructiveRow(
-                    stringResource(R.string.settings_delete_data),
-                    enabled = state.deletion != DeletionUi.IN_PROGRESS,
-                    onClick = onAskClear,
+                    leftHanded, onSetLeftHanded,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun DeleteGroup(state: SettingsUiState, onAskClear: () -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        SettingsGroup {
+            SettingsDestructiveRow(
+                stringResource(R.string.settings_delete_data),
+                enabled = state.deletion != DeletionUi.IN_PROGRESS,
+                onClick = onAskClear,
+            )
         }
         SettingsGroupFooter(stringResource(R.string.settings_progress_footer))
         when (state.deletion) {
@@ -231,16 +211,12 @@ private fun PracticeGroup(state: SettingsUiState, onAskClear: () -> Unit, onSetL
 private fun SubscriptionGroup(
     state: SettingsUiState, onPaywall: () -> Unit, onRestore: () -> Unit, onRetry: () -> Unit, onOpenPacks: () -> Unit,
     demoTrial: DemoTrialState,
+    onStartDemoTrial: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.settings_pro))
         SettingsGroup {
             Column {
-                SettingsInfoRow(stringResource(R.string.home_pro_packs), stringResource(R.string.pro_features_detail))
-                SettingsDivider()
-                // Interim home of the story and speed packs since the tab bar went; the owner may move it.
-                SettingsActionRow(stringResource(R.string.settings_open_packs), onClick = onOpenPacks)
-                SettingsDivider()
                 val status = when (state.subscription) {
                     SubscriptionUi.CHECKING -> stringResource(R.string.settings_pro_checking)
                     SubscriptionUi.FREE -> stringResource(R.string.settings_pro_free)
@@ -255,7 +231,17 @@ private fun SubscriptionGroup(
                 }
                 if (state.subscription == SubscriptionUi.FREE) {
                     SettingsDivider()
+                    SettingsInfoRow(stringResource(R.string.menu_pro_title), stringResource(R.string.menu_pro_body_free))
+                    SettingsDivider()
                     SettingsActionRow(stringResource(R.string.settings_see_pro), onClick = onPaywall)
+                    if (demoTrial == DemoTrialState.NotStarted) {
+                        SettingsDivider()
+                        SettingsActionRow(stringResource(R.string.demo_trial_start), onClick = onStartDemoTrial)
+                    }
+                }
+                if (state.subscription == SubscriptionUi.PRO) {
+                    SettingsDivider()
+                    SettingsActionRow(stringResource(R.string.settings_open_packs), onClick = onOpenPacks)
                 }
                 if (state.billingConfigured) {
                     SettingsDivider()
@@ -266,6 +252,12 @@ private fun SubscriptionGroup(
                     )
                 }
             }
+        }
+        when (demoTrial) {
+            DemoTrialState.NotStarted -> if (state.subscription == SubscriptionUi.FREE)
+                SettingsGroupFooter(stringResource(R.string.demo_trial_offer_body))
+            is DemoTrialState.Active -> SettingsGroupFooter(stringResource(R.string.demo_trial_active_body))
+            is DemoTrialState.Ended -> SettingsGroupFooter(stringResource(R.string.demo_trial_ended_body))
         }
         if (state.billingConfigured) {
             SettingsGroupFooter(stringResource(R.string.settings_test_store_footer))
@@ -283,7 +275,7 @@ private fun SubscriptionGroup(
 }
 
 @Composable
-private fun PrivacyGroup(modelId: String?) {
+internal fun PrivacyGroup(modelId: String?) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.settings_privacy))
         SettingsGroup {
@@ -303,7 +295,7 @@ private fun PrivacyGroup(modelId: String?) {
 }
 
 @Composable
-private fun AboutGroup(state: SettingsUiState) {
+internal fun AboutGroup(state: SettingsUiState) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.settings_about))
         SettingsGroup {
@@ -317,7 +309,7 @@ private fun AboutGroup(state: SettingsUiState) {
 }
 
 @Composable
-private fun DebugGroup(onOpenCapture: () -> Unit) {
+internal fun DebugGroup(onOpenCapture: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
         SettingsGroupHeader(stringResource(R.string.settings_debug_tools))
         SettingsGroup {

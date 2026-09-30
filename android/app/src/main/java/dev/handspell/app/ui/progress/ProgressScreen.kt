@@ -26,6 +26,9 @@ import dev.handspell.app.core.model.Letter
 import dev.handspell.app.progress.ProgressSnapshot
 import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.ui.components.AslCard
+import dev.handspell.app.ui.streak.StreakSection
+import dev.handspell.app.ui.streak.streakBody
+import dev.handspell.app.ui.streak.streakState
 import dev.handspell.app.ui.components.ProLockLabel
 import androidx.compose.runtime.remember
 import dev.handspell.app.ui.settings.FrostedSettingsHero
@@ -54,11 +57,14 @@ private fun ProgressScreen(
     snapshot: ProgressSnapshot?, onBack: () -> Unit, onPractice: () -> Unit, onSettings: () -> Unit,
     isPro: Boolean, onSeePro: () -> Unit,
 ) {
+    val streak = remember(snapshot) { streakState(snapshot, System.currentTimeMillis()) }
     FrostedSettingsHero(
         onBack = onBack,
         title = stringResource(R.string.progress_title),
-        body = stringResource(R.string.progress_hero_body),
+        body = streakBody(streak) ?: stringResource(R.string.progress_hero_body),
     ) {
+        // One screen for everything the learner has done: the streak first, then the numbers and letters.
+        StreakSection(streak)
         when {
             snapshot == null -> SettingsGroup {
                 SettingsValueRow(stringResource(R.string.progress_title), stringResource(R.string.settings_loading))
@@ -85,19 +91,12 @@ private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit,
     val practised = letters.count { it.attempts > 0 }
 
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-        StatTile(snapshot.currentStreakDays.toString(), stringResource(R.string.progress_stat_streak), colors.accent,
-            Modifier.weight(1f))
         StatTile("$practised/${Letter.staticLetters.size}", stringResource(R.string.progress_stat_letters), colors.label,
             Modifier.weight(1f))
         StatTile(matches.toString(), stringResource(R.string.progress_stat_matched), colors.label, Modifier.weight(1f))
     }
 
-    InsightsGroup(remember(snapshot) { insightsFor(snapshot, System.currentTimeMillis()) }, isPro, onSeePro)
-
     Group(stringResource(R.string.progress_summary)) {
-        SettingsValueRow(stringResource(R.string.progress_stat_best),
-            pluralStringResource(R.plurals.settings_streak_days, snapshot.longestStreakDays, snapshot.longestStreakDays))
-        SettingsDivider()
         SettingsValueRow(stringResource(R.string.settings_attempts),
             pluralStringResource(R.plurals.settings_attempts_count, attempts, attempts, matches))
         if (snapshot.completedStoryStepIds.isNotEmpty()) {
@@ -115,6 +114,8 @@ private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit,
                 pluralStringResource(R.plurals.progress_letter_count, item.attempts, item.matches, item.attempts))
         }
     }
+
+    InsightsGroup(remember(snapshot) { insightsFor(snapshot, System.currentTimeMillis()) }, isPro, onSeePro)
 
     if (snapshot.speedRuns.isNotEmpty()) Group(stringResource(R.string.progress_speed_runs)) {
         snapshot.speedRuns.take(5).forEachIndexed { index, run ->

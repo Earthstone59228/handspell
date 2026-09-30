@@ -20,4 +20,12 @@ class ProPromotionTest {
         assertEquals(R.string.compare_included, free[R.string.compare_words])
         assertTrue(PRO_COMPARISON.all { it.pro != R.string.compare_not_included })
     }
+
+    @Test fun `reward Pro line at most once a day, free users only, gone after not now`() {
+        assertTrue(shouldShowRewardProLine(isPro = false, dismissedThisSession = false, lastShownDay = null, today = 10))
+        assertTrue(shouldShowRewardProLine(false, false, lastShownDay = 9, today = 10))
+        assertFalse(shouldShowRewardProLine(false, false, lastShownDay = 10, today = 10))
+        assertFalse(shouldShowRewardProLine(isPro = true, dismissedThisSession = false, lastShownDay = null, today = 10))
+        assertFalse(shouldShowRewardProLine(false, dismissedThisSession = true, lastShownDay = null, today = 10))
+    }
 }

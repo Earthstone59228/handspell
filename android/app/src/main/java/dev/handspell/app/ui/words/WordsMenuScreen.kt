@@ -31,7 +31,9 @@ import dev.handspell.app.content.WordEntry
 import dev.handspell.app.progress.WordRecord
 import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.ui.components.AslButtonStyle
+import dev.handspell.app.ui.components.AslButtonPair
 import dev.handspell.app.ui.components.AslSheet
+import dev.handspell.app.ui.pro.WordsProStrip
 import dev.handspell.app.ui.components.ProLockLabel
 import dev.handspell.app.ui.settings.FrostedSettingsHero
 import dev.handspell.app.ui.settings.SettingsGroupFooter
@@ -66,6 +68,8 @@ fun WordsMenuScreen(
     onPractice: (WordEntry) -> Unit,
     onMarkComplete: (WordEntry, Boolean) -> Unit,
     onLocked: (WordEntry) -> Unit,
+    proStrip: Boolean = false,
+    onDismissProStrip: () -> Unit = {},
 ) {
     var selectedGloss by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = state.words.firstOrNull { it.gloss == selectedGloss }
@@ -86,6 +90,11 @@ fun WordsMenuScreen(
                         }
                     }
                     SettingsGroupFooter(stringResource(R.string.words_footer))
+                    val locked = state.words.filter(state::isLocked)
+                    if (proStrip && locked.isNotEmpty()) WordsProStrip(
+                        proWordCount = locked.size, examples = locked.take(3).map { it.display },
+                        onSeePro = { onLocked(locked.first()) }, onDismiss = onDismissProStrip,
+                    )
                 }
             }
         }
@@ -161,11 +170,19 @@ private fun WordSheet(
         stringResource(if (complete) R.string.words_sheet_title_complete else R.string.words_sheet_title, word.display),
         style = MaterialTheme.typography.headlineSmall,
     )
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-        AslButton(stringResource(R.string.words_practice), onPractice, Modifier.weight(1f))
-        if (markedComplete) AslButton(stringResource(R.string.mark_complete_undo), { onMarkComplete(false) },
-            Modifier.weight(1f), style = AslButtonStyle.Secondary)
-        else if (!complete) AslButton(stringResource(R.string.mark_complete), { onMarkComplete(true) },
-            Modifier.weight(1f), style = AslButtonStyle.Secondary)
-    }
+    val undo = stringResource(R.string.mark_complete_undo)
+    AslButtonPair(
+        first = { modifier -> AslButton(stringResource(R.string.words_practice), onPractice, modifier, singleLine = true) },
+        second = when {
+            markedComplete -> { modifier ->
+                AslButton(stringResource(R.string.mark_complete_undo_short), { onMarkComplete(false) }, modifier,
+                    style = AslButtonStyle.Secondary, contentDescription = undo, singleLine = true)
+            }
+            !complete -> { modifier ->
+                AslButton(stringResource(R.string.mark_complete), { onMarkComplete(true) }, modifier,
+                    style = AslButtonStyle.Secondary, singleLine = true)
+            }
+            else -> null
+        },
+    )
 }
