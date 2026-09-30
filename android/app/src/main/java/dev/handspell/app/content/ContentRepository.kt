@@ -27,6 +27,6 @@ interface ContentRepository {
 
     suspend fun pack(packId: String): ContentPack?
 
-    /** Drill items limited to letters the shipped classifier actually supports. */
+    /** Drills supported by the shipped static classifier or the motion recognizer. */
     suspend fun availableDrills(): List<PackItem.Drill>
 }

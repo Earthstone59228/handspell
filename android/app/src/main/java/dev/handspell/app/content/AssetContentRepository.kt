@@ -38,14 +38,7 @@ class AssetContentRepository(
 
     override suspend fun availableDrills(): List<PackItem.Drill> = withContext(Dispatchers.IO) {
         ensureLoaded()
-        val supported = supportedLetters().toSet()
-        packsState.value
-            .asSequence()
-            .filter { it.kind == PackKind.DRILL && it.tier == Tier.FREE }
-            .flatMap { it.items.asSequence() }
-            .filterIsInstance<PackItem.Drill>()
-            .filter { it.letter in supported }
-            .toList()
+        practiceDrills(packsState.value, supportedLetters())
     }
 
     private suspend fun ensureLoaded(): Unit = loadMutex.withLock {
@@ -110,4 +103,16 @@ class AssetContentRepository(
         const val INDEX_PATH = "content/index.json"
         const val SCHEMA_VERSION = 1
     }
+}
+
+/** Motion drills use the camera's path recognizer, so static classifier labels must not exclude them. */
+internal fun practiceDrills(packs: List<ContentPack>, staticLetters: List<Letter>): List<PackItem.Drill> {
+    if (staticLetters.isEmpty()) return emptyList()
+    val supported = (staticLetters + listOf(Letter.J, Letter.Z)).toSet()
+    return packs.asSequence()
+        .filter { it.kind == PackKind.DRILL && it.tier == Tier.FREE }
+        .flatMap { it.items.asSequence() }
+        .filterIsInstance<PackItem.Drill>()
+        .filter { it.letter in supported }
+        .toList()
 }
