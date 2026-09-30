@@ -45,6 +45,13 @@ class MainMenuStateTest {
         assertEquals(3, state.wordsTotal)
     }
 
+    @Test fun `progress screen and menu share one letters-complete count`() {
+        val s = snapshot(day, 3)
+        assertEquals(3, lettersCompleteCount(s))
+        assertEquals(mainMenuState(s, emptyList(), false, noon, utc).lettersComplete, lettersCompleteCount(s))
+        assertEquals(1, lettersCompleteCount(s.copy(alphabetCompleted = null)))
+    }
+
     @Test fun `streak is live today or yesterday and zero after a gap`() {
         mainMenuState(snapshot(day, 3), emptyList(), false, noon, utc).let {
             assertEquals(3, it.streakDays); assertTrue(it.practisedToday)

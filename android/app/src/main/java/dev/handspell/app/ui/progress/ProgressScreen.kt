@@ -26,6 +26,7 @@ import dev.handspell.app.core.model.Letter
 import dev.handspell.app.progress.ProgressSnapshot
 import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.ui.components.AslCard
+import dev.handspell.app.ui.menu.lettersCompleteCount
 import dev.handspell.app.ui.streak.StreakSection
 import dev.handspell.app.ui.streak.streakBody
 import dev.handspell.app.ui.streak.streakState
@@ -88,10 +89,10 @@ private fun RecordedProgress(snapshot: ProgressSnapshot, onSettings: () -> Unit,
     val letters = snapshot.letters.values.sortedBy { it.letter.name }
     val attempts = letters.sumOf { it.attempts }
     val matches = letters.sumOf { it.matches }
-    val practised = letters.count { it.attempts > 0 }
+    val complete = lettersCompleteCount(snapshot)
 
     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-        StatTile("$practised/${Letter.entries.size}", stringResource(R.string.progress_stat_letters), colors.label,
+        StatTile("$complete/${Letter.entries.size}", stringResource(R.string.progress_stat_letters), colors.label,
             Modifier.weight(1f))
         StatTile(matches.toString(), stringResource(R.string.progress_stat_matched), colors.label, Modifier.weight(1f))
     }

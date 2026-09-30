@@ -80,8 +80,8 @@ data class WordsMenuState(
     /** Complete words among those the learner can open (locked Pro words are not counted against them). */
     val completeCount: Int get() = practicable.count { records[it.gloss]?.complete == true }
 
-    /** Complete words among every listed word, for the header's "N / M" line (like the alphabet's "N / 24"). */
-    val completeOfAll: Int get() = words.count { records[it.gloss]?.complete == true }
+    /** The header's "N / M" total: the words this learner can open (free set for free users, all for Pro), like the menu. */
+    val openTotal: Int get() = practicable.size
 
     fun isLocked(word: WordEntry): Boolean = word.tier == Tier.PRO && !isPro
 
@@ -163,10 +163,10 @@ fun WordsMenuScreen(
                 HeaderIcon(R.drawable.ic_paper, stringResource(R.string.menu_open_paper), onPaper)
             }
             if (!state.loading) Text(
-                wordsProgressLine(state.completeOfAll, state.words.size), style = AslText.progressLine,
+                wordsProgressLine(state.completeCount, state.openTotal), style = AslText.progressLine,
                 color = colors.label.copy(alpha = 0.62f),
                 modifier = Modifier.padding(start = Spacing.lg, top = Spacing.xs, bottom = Spacing.sm)
-                    .semantics { contentDescription = "${state.completeOfAll} of ${state.words.size}" },
+                    .semantics { contentDescription = "${state.completeCount} of ${state.openTotal}" },
             )
         }
         AslSheet(visible = selected != null, onDismiss = { selectedGloss = null }) {

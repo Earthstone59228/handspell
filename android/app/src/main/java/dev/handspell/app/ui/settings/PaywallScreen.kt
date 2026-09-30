@@ -173,7 +173,8 @@ private fun PaywallScreen(
                             ) {
                                 Text(
                                     stringResource(if (selectedId == item.id) R.string.paywall_selected else R.string.paywall_option,
-                                        item.title),
+                                        // The store's product title can say "Premium"; the product is called Pro everywhere else.
+                                        stringResource(if (item.period == BillingPeriod.YEAR) R.string.paywall_plan_year else R.string.paywall_plan_month)),
                                     style = MaterialTheme.typography.titleMedium,
                                 )
                                 Text(stringResource(

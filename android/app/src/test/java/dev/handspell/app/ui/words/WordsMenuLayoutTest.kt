@@ -10,14 +10,15 @@ import org.junit.Test
 class WordsMenuLayoutTest {
     private fun w(gloss: String, display: String = gloss, tier: Tier = Tier.FREE) = WordEntry(gloss, display, tier)
 
-    @Test fun `progress line counts completed over every listed word`() {
+    @Test fun `progress line counts completed over the words the learner can open`() {
         val state = WordsMenuState(
             loading = false,
             words = listOf(w("hello"), w("bye"), w("cat", tier = Tier.PRO)),
             records = mapOf("hello" to WordRecord("hello", matches = 1), "cat" to WordRecord("cat", markedComplete = true)),
         )
-        assertEquals("2 / 3", wordsProgressLine(state.completeOfAll, state.words.size))
-        assertEquals(1, state.completeCount) // the locked Pro word is not practicable
+        assertEquals("1 / 2", wordsProgressLine(state.completeCount, state.openTotal)) // free: the locked Pro word is left out
+        val pro = state.copy(isPro = true)
+        assertEquals("2 / 3", wordsProgressLine(pro.completeCount, pro.openTotal))
     }
 
     @Test fun `thumbnail frame is about nine twentieths in and hand bounds span its points`() {

@@ -43,7 +43,7 @@
     <string name="settings_progress_footer">Alphabet checkmarks are stored separately on this phone. Delete practice data clears both stores. No camera frames are saved.</string>
     <string name="settings_delete_confirm_title">Delete practice data?</string>
     <string name="settings_delete_confirm_body">This removes alphabet checkmarks, camera letter counts, story progress, speed-run results and streaks from this phone. It can’t be undone.</string>
-    <string name="alphabet_progress_note">These counts come from camera drills and lessons. Alphabet checkmarks are self-reported and appear on the Alphabet screen.</string>
+    <string name="alphabet_progress_note">“Letters complete” is the same count as on the menu: letters you checked off or matched on camera. “Camera matches” counts every camera match.</string>
     <string name="settings_delete_confirm">Delete</string>
     <string name="settings_cancel">Cancel</string>
     <string name="settings_deleted">Practice data deleted.</string>
@@ -86,6 +86,8 @@
     <string name="paywall_selected">%1$s, selected</string>
     <string name="paywall_option">%1$s</string>
     <string name="paywall_price">%1$s per %2$s</string>
+    <string name="paywall_plan_month">Pro, monthly</string>
+    <string name="paywall_plan_year">Pro, yearly</string>
     <string name="paywall_month">month</string>
     <string name="paywall_year">year</string>
     <string name="paywall_renewal">In a real store, the plan renews until you cancel. This build uses simulated purchases.</string>
@@ -194,8 +196,8 @@
         <item quantity="other">%1$d story steps completed</item>
     </plurals>
     <string name="progress_hero_body">Camera drills and lessons on this phone.</string>
-    <string name="progress_stat_letters">letters</string>
-    <string name="progress_stat_matched">matched</string>
+    <string name="progress_stat_letters">letters complete</string>
+    <string name="progress_stat_matched">camera matches</string>
     <string name="progress_summary">Summary</string>
     <string name="progress_letter_row">%1$s, %2$s</string>
     <string name="onboarding_hero_body">Practise ASL fingerspelling with your camera.</string>
