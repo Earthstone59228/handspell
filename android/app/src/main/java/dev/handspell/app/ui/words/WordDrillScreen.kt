@@ -53,6 +53,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import dev.handspell.app.ui.theme.AslPalette
 import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.ui.components.AslButton
+import dev.handspell.app.ui.components.AslTextButton
 import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.components.CameraFrame
 import dev.handspell.app.ui.components.FrameGeometry
@@ -241,10 +242,8 @@ private fun ActiveWordDrill(
             word.tip?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary) }
             val next = nextWord(state.words, word)
             if (next != null) {
-                if (state.matched) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.weight(1f))
-                    AslButton(stringResource(R.string.continue_letter), { onContinue(next) }, Modifier.weight(1f))
-                } else AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.fillMaxWidth())
+                if (state.matched) AslButton(stringResource(R.string.continue_letter), { onContinue(next) }, Modifier.fillMaxWidth())
+                AslTextButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.align(Alignment.CenterHorizontally))
             }
         }
         Spacer(Modifier.height(Spacing.md))

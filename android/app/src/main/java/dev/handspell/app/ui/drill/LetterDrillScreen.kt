@@ -66,6 +66,7 @@ import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.core.model.SignFeedbackState
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.ui.components.AslButton
+import dev.handspell.app.ui.components.AslTextButton
 import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.components.CameraFrame
 import dev.handspell.app.ui.components.FrameGeometry
@@ -297,14 +298,9 @@ private fun ActiveDrill(
                 }
                 val next = state.drills.nextAfter(drill)
                 if (next != null) {
-                    if (state.matched) {
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                            AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.weight(1f))
-                            AslButton(stringResource(R.string.continue_letter), { onContinue(next) }, Modifier.weight(1f))
-                        }
-                    } else {
-                        AslButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.fillMaxWidth())
-                    }
+                    // Continue is the one filled button once a letter is matched; Skip is always a quiet text action.
+                    if (state.matched) AslButton(stringResource(R.string.continue_letter), { onContinue(next) }, Modifier.fillMaxWidth())
+                    AslTextButton(stringResource(R.string.skip_letter), { onSkip(next) }, Modifier.align(Alignment.CenterHorizontally))
                 }
             }
             Spacer(Modifier.height(Spacing.md))

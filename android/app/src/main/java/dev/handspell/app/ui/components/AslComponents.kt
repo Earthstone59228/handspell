@@ -200,6 +200,26 @@ fun AslButton(
     }
 }
 
+/** Low-emphasis action: plain text, no fill. For dismiss/skip/undo actions that must not compete with the primary. */
+@Composable
+fun AslTextButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    color: Color = LocalAslColors.current.labelSecondary,
+    contentDescription: String? = null,
+) {
+    androidx.compose.material3.TextButton(
+        onClick = onClick,
+        modifier = modifier.sizeIn(minHeight = Spacing.touchTarget)
+            .then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
+        colors = ButtonDefaults.textButtonColors(contentColor = color),
+    ) {
+        Text(text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium,
+            modifier = if (contentDescription != null) Modifier.clearAndSetSemantics {} else Modifier)
+    }
+}
+
 /** Rounded lighter-grey card with white text. */
 @Composable
 fun AslCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
