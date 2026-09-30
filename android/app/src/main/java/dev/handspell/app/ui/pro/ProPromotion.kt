@@ -34,7 +34,7 @@ import dev.handspell.app.ui.theme.Spacing
 /**
  * The main menu's Pro card. Free users see what Pro adds in plain words, a "See what's in Pro" button (opens the
  * paywall on tap only), the 3-day demo trial while it is unused, and "Not now", which shrinks the card to one quiet
- * row for the rest of the session. With Pro active it is the way to the packs.
+ * row for the rest of the session. With Pro active it just says so.
  */
 @Composable
 fun ProMenuCard(
@@ -46,7 +46,6 @@ fun ProMenuCard(
     onSeePro: () -> Unit,
     onStartDemo: () -> Unit,
     onDismiss: () -> Unit,
-    onOpenPacks: () -> Unit,
 ) {
     val colors = LocalAslColors.current
     if (isPro || dismissed) Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
@@ -55,8 +54,6 @@ fun ProMenuCard(
             Column {
                 if (isPro) {
                     SettingsInfoRow(trialLabel ?: stringResource(R.string.menu_pro_title_active), stringResource(R.string.menu_pro_body_active))
-                    SettingsDivider()
-                    SettingsActionRow(stringResource(R.string.settings_open_packs), onClick = onOpenPacks)
                 } else SettingsActionRow(stringResource(R.string.settings_see_pro), onClick = onSeePro)
             }
         }

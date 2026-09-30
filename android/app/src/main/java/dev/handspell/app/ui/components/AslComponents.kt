@@ -122,11 +122,20 @@ internal fun HeaderTitle(title: String, modifier: Modifier = Modifier) {
     )
 }
 
-/** The line under a header's title (progress, or a one-sentence description): same inset and gap on every screen. */
+/** One line, always reserved under a header's title (empty or not), so every menu's top bar is exactly the same height. */
+internal val HeaderSublineSlot = 30.dp
+
+/** The line under a header's title: progress or one short sentence. Same inset, slot height and single line everywhere. */
 @Composable
-internal fun HeaderSubline(text: String, modifier: Modifier = Modifier, style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium) {
-    Text(text, style = style, color = LocalAslColors.current.labelSecondary,
-        modifier = modifier.padding(start = Spacing.lg, end = Spacing.lg, top = Spacing.xs))
+internal fun HeaderSubline(
+    text: String?,
+    modifier: Modifier = Modifier,
+    style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.bodyMedium,
+) {
+    Box(modifier.fillMaxWidth().height(HeaderSublineSlot).padding(horizontal = Spacing.lg), contentAlignment = Alignment.CenterStart) {
+        if (text != null) Text(text, style = style, color = LocalAslColors.current.labelSecondary, maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+    }
 }
 
 /**
@@ -159,6 +168,7 @@ fun ScreenHeader(
             actions()
         } else {
             HeaderTitleRow(title, onBack, actions = actions)
+            HeaderSubline(null)
             Spacer(Modifier.height(HeaderBottomSpace))
         }
     }
@@ -232,10 +242,12 @@ fun AslButton(
         AslButtonStyle.Secondary -> colors.onSurface
         AslButtonStyle.Card -> colors.onCard
     }
+    val interactions = remember { MutableInteractionSource() }
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.sizeIn(minHeight = Spacing.primaryButton)
+        interactionSource = interactions,
+        modifier = modifier.pressScale(interactions).sizeIn(minHeight = Spacing.primaryButton)
             .then(if (contentDescription != null) Modifier.semantics { this.contentDescription = contentDescription } else Modifier),
         shape = RoundedCornerShape(cornerRadius),
         colors = ButtonDefaults.buttonColors(

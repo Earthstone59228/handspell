@@ -3,6 +3,9 @@ package dev.handspell.app.ui
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
@@ -109,6 +112,7 @@ private const val SPEED_ROUTE = "speed"
 private const val WORDS_ROUTE = "words"
 private const val WORD_DRILL_ROUTE = "word"
 private const val PRACTICE_ROUTE = "practice"
+private const val STORIES_ROUTE = "stories"
 private const val ALPHABET_ROUTE = "alphabet"
 private const val UNAVAILABLE_ROUTE = "unavailable"
 private const val REQUESTED_DRILL_ROUTE = "requested-drill"
@@ -218,6 +222,11 @@ fun HandspellApp(
     Scaffold(containerColor = androidx.compose.ui.graphics.Color.Transparent, contentWindowInsets = WindowInsets(0)) { padding -> Box(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) { NavHost(
         navController = navController,
         startDestination = MENU_ROUTE,
+        // A short slide with a fade: the new screen glides in from the side it came from, the old one eases away.
+        enterTransition = { if (reduceMotion) fadeIn(tween(0)) else fadeIn(tween(240, 50)) + slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 9 } },
+        exitTransition = { if (reduceMotion) fadeOut(tween(0)) else fadeOut(tween(140)) + slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 14 } },
+        popEnterTransition = { if (reduceMotion) fadeIn(tween(0)) else fadeIn(tween(240, 50)) + slideInHorizontally(tween(300, easing = FastOutSlowInEasing)) { -it / 14 } },
+        popExitTransition = { if (reduceMotion) fadeOut(tween(0)) else fadeOut(tween(140)) + slideOutHorizontally(tween(300, easing = FastOutSlowInEasing)) { it / 9 } },
         modifier = when {
             isAlphabet -> Modifier
             else -> Modifier.padding(padding).navigationBarsPadding()
@@ -235,7 +244,7 @@ fun HandspellApp(
                     onSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
                     onSpeed = { navController.safeNavigate(SPEED_ROUTE) },
                     onPro = { showMenuPro = true },
-                    onStories = { if (isPro) navController.safeNavigate(PRACTICE_ROUTE) else showMenuPro = true },
+                    onStories = { if (isPro) navController.safeNavigate(STORIES_ROUTE) else showMenuPro = true },
                 ),
                 belowEntries = {
                     val quest = questProgress(progress, questDay)
@@ -275,7 +284,6 @@ fun HandspellApp(
                             scope.launch { entitlementGate.startDemoTrial() }
                         },
                         onDismiss = { showMenuPro = false; menuProDismissed = true },
-                        onOpenPacks = { showMenuPro = false; navController.safeNavigate(PRACTICE_ROUTE) },
                     )
                 }
             }
@@ -311,7 +319,6 @@ fun HandspellApp(
                 onDismissProStrip = { wordsProDismissed = true },
                 references = wordReferences,
                 onSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
-                onPaper = { navController.safeNavigate(PAPER_ROUTE) },
                 leftHanded = leftHanded,
             )
         }
@@ -355,7 +362,6 @@ fun HandspellApp(
                     navController.safeNavigate("$REQUESTED_DRILL_ROUTE/$letter")
                 },
                 onSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
-                onPaper = { navController.safeNavigate(PAPER_ROUTE) },
                 onNativePractice = { navController.safeNavigate(PRACTICE_ROUTE) },
                 onProgress = { navController.safeNavigate(PROGRESS_ROUTE) },
                 progressSnapshot = progress,
@@ -404,6 +410,18 @@ fun HandspellApp(
                 actionLabel = stringResource(R.string.back),
                 onAction = { navController.safePop() },
                 onBack = { navController.safePop() },
+            )
+        }
+        composable(STORIES_ROUTE) {
+            HomeScreen(
+                state = homeState,
+                onBack = { navController.safePop() },
+                onSelectDrill = { drill -> navController.safeNavigate("$DRILL_ROUTE/${drill.id}") },
+                onRetry = homeViewModel::reload,
+                onOpenSettings = { navController.safeNavigate(SETTINGS_ROUTE) },
+                onOpenPack = ::openPack,
+                showProPacks = true,
+                lettersSection = false,
             )
         }
         composable(PRACTICE_ROUTE) {
@@ -463,7 +481,7 @@ fun HandspellApp(
                 clearAlphabetData = { AlphabetStorage.clear(context) },
                 entitlementGate = entitlementGate,
                 // INTERIM entry to the Story and speed packs (owner has not decided where they live).
-                onOpenPacks = { navController.safeNavigate(PRACTICE_ROUTE) },
+                onOpenPacks = { navController.safeNavigate(STORIES_ROUTE) },
                 classifierModelId = signDetector.classifierModelId,
                 buildInfo = BuildInfo(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
                 onBack = { navController.safePop() },

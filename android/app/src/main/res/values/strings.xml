@@ -4,7 +4,7 @@
     <string name="letter_unavailable_body">You can still mark it complete on the Alphabet screen.</string>
     <string name="alphabet_drill_unavailable">Live camera feedback is not available for letter %1$s in this build. You can still mark it complete on the Alphabet screen.</string>
     <string name="paper_title">Documents</string>
-    <string name="paper_intro">Privacy and license documents included with Handspell.</string>
+    <string name="paper_intro">Privacy and licenses</string>
     <string name="paper_mit_license">Handspell license</string>
     <string name="paper_notices">Third-party notices</string>
     <string name="paper_model_license">Hand model license</string>
@@ -187,7 +187,7 @@
         <item quantity="one">%1$d story step completed</item>
         <item quantity="other">%1$d story steps completed</item>
     </plurals>
-    <string name="progress_hero_body">Camera drills and lessons on this phone.</string>
+    <string name="progress_hero_body">Camera drills and lessons</string>
     <string name="progress_stat_letters">Letters</string>
     <string name="progress_stat_matched">Matched</string>
     <string name="progress_summary">Summary</string>

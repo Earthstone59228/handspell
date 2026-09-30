@@ -51,7 +51,6 @@ private const val ASSET_HOST = "appassets.androidplatform.net"
 fun AlphabetScreen(
     onPractice: (String) -> Unit,
     onSettings: () -> Unit,
-    onPaper: () -> Unit,
     onNativePractice: () -> Unit,
     onProgress: () -> Unit,
     /** Back with nothing open on the page: leave the alphabet for the main menu. */
@@ -78,7 +77,6 @@ fun AlphabetScreen(
     }
     val currentPractice = rememberUpdatedState(onPractice)
     val currentSettings = rememberUpdatedState(onSettings)
-    val currentPaper = rememberUpdatedState(onPaper)
     val currentProgress = rememberUpdatedState(onProgress)
     val currentSnapshot = rememberUpdatedState(progressSnapshot)
     val currentLeftHanded = rememberUpdatedState(leftHanded)
@@ -92,7 +90,6 @@ fun AlphabetScreen(
             context.applicationContext,
             { letter -> currentPractice.value(letter) },
             { currentSettings.value() },
-            { currentPaper.value() },
             { currentMatches.value },
             { currentSnapshot.value },
             { currentProgress.value() },
@@ -232,7 +229,6 @@ class AlphabetBridge(
     private val context: android.content.Context,
     private val onPractice: (String) -> Unit,
     private val onSettings: () -> Unit,
-    private val onPaper: () -> Unit,
     private val matchesProvider: () -> Map<String, Int>,
     private val streakProvider: () -> ProgressSnapshot?,
     private val onProgress: () -> Unit,
@@ -299,9 +295,6 @@ class AlphabetBridge(
     fun openSettings() { returningFromNative = true; dispatch(onSettings) }
 
     @JavascriptInterface
-    fun openPaper() { returningFromNative = true; dispatch(onPaper) }
-
-    @JavascriptInterface
     fun openProgress() { returningFromNative = true; dispatch(onProgress) }
 
     private fun dispatch(action: () -> Unit) { mainHandler.post(action) }
@@ -339,11 +332,10 @@ private val BRIDGE_SCRIPT = """
           event.stopImmediatePropagation();
           document.querySelector('#close-setup')?.click();
           HandspellBridge.openPractice(letter);
-        } else if (button.id === 'open-settings' || button.id === 'open-paper' || button.id === 'open-progress') {
+        } else if (button.id === 'open-settings' || button.id === 'open-progress') {
           event.preventDefault();
           event.stopImmediatePropagation();
           if (button.id === 'open-settings') HandspellBridge.openSettings();
-          else if (button.id === 'open-paper') HandspellBridge.openPaper();
           else HandspellBridge.openProgress();
         }
       }, true);

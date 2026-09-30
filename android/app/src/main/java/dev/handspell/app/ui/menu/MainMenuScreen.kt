@@ -1,6 +1,14 @@
 package dev.handspell.app.ui.menu
 
 import androidx.compose.foundation.Canvas
+import dev.handspell.app.ui.components.pressScale
+import dev.handspell.app.ui.components.appear
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import dev.handspell.app.ui.components.fadedScrollEdges
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.platform.LocalDensity
@@ -100,21 +108,21 @@ fun MainMenuScreen(
                 .padding(horizontal = Spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                 Spacer(Modifier.height(Spacing.xxxl))
-                Column(Modifier.padding(horizontal = Spacing.xs).padding(bottom = Spacing.xxl)) {
+                Column(Modifier.appear().padding(horizontal = Spacing.xs).padding(bottom = Spacing.xxl)) {
                     Text("Hi, signer.", style = AslText.largeTitle, color = colors.labelSecondary)
                     Text("What will you\nlearn today?", style = AslText.largeTitle, color = colors.label,
                         modifier = Modifier.semantics { heading() })
                 }
                 Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     CompletionCard("Letters", state.lettersComplete, state.lettersTotal,
-                        state.loading, actions.onLetters, Modifier.weight(1f))
+                        state.loading, actions.onLetters, Modifier.weight(1f).appear(80))
                     CompletionCard("Words", state.wordsComplete, state.wordsTotal,
-                        state.loading, actions.onWords, Modifier.weight(1f))
+                        state.loading, actions.onWords, Modifier.weight(1f).appear(150))
                 }
                 Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                     CompletionCard("Progress", state.lettersComplete + state.wordsComplete,
-                        state.lettersTotal + state.wordsTotal, state.loading, actions.onProgress, Modifier.weight(1f))
-                    MenuEntryCard("Stories", "Story lessons", actions.onStories, "✎", Modifier.weight(1f))
+                        state.lettersTotal + state.wordsTotal, state.loading, actions.onProgress, Modifier.weight(1f).appear(220))
+                    MenuEntryCard("Stories", "Story lessons", actions.onStories, "✎", Modifier.weight(1f).appear(290))
                 }
                 Spacer(Modifier.height(Spacing.xs))
                 belowEntries()
@@ -131,10 +139,15 @@ fun MainMenuScreen(
 @Composable
 private fun CompletionCard(title: String, complete: Int, total: Int, loading: Boolean, onClick: () -> Unit, modifier: Modifier) {
     val colors = LocalAslColors.current
-    val fraction = if (total > 0) (complete.toFloat() / total).coerceIn(0f, 1f) else 0f
+    val target = if (total > 0) (complete.toFloat() / total).coerceIn(0f, 1f) else 0f
+    // The ring sweeps up to its value when the menu opens, and the percentage counts with it.
+    var started by remember { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { started = true }
+    val fraction by animateFloatAsState(if (started) target else 0f, tween(900, easing = FastOutSlowInEasing), label = "ring")
+    val interactions = remember { MutableInteractionSource() }
     Surface(
-        modifier.fillMaxWidth().fillMaxHeight().clip(RoundedCornerShape(AslShapes.extraLarge))
-            .clickable(role = Role.Button, onClick = onClick)
+        modifier.pressScale(interactions).fillMaxWidth().fillMaxHeight().clip(RoundedCornerShape(AslShapes.extraLarge))
+            .clickable(interactionSource = interactions, indication = LocalIndication.current, role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { contentDescription = "$title, $complete of $total signs complete" },
         shape = RoundedCornerShape(AslShapes.extraLarge), color = colors.surface.copy(alpha = if (LocalDarkTheme.current) 0.65f else 0.92f),
         border = androidx.compose.foundation.BorderStroke(Spacing.hairline, colors.separator),
@@ -198,9 +211,11 @@ internal fun HeaderIcon(icon: Int, description: String, onClick: () -> Unit) {
 @Composable
 private fun MenuEntryCard(title: String, meta: String?, onClick: () -> Unit, mark: String, modifier: Modifier) {
     val colors = LocalAslColors.current
+    val interactions = remember { MutableInteractionSource() }
     Surface(
-        modifier.fillMaxWidth().fillMaxHeight()
-            .clip(RoundedCornerShape(AslShapes.extraLarge)).clickable(role = Role.Button, onClick = onClick),
+        modifier.pressScale(interactions).fillMaxWidth().fillMaxHeight()
+            .clip(RoundedCornerShape(AslShapes.extraLarge))
+            .clickable(interactionSource = interactions, indication = LocalIndication.current, role = Role.Button, onClick = onClick),
         shape = RoundedCornerShape(AslShapes.extraLarge),
         color = colors.surface.copy(alpha = if (LocalDarkTheme.current) 0.65f else 0.92f),
         contentColor = colors.label,

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="streak_body_none">Practice a letter or a word today to start one.</string>
-    <string name="streak_body_today">Today counts. Come back tomorrow to keep it going.</string>
+    <string name="streak_body_none">Practice today to start a streak.</string>
+    <string name="streak_body_today">Today counts. Come back tomorrow.</string>
     <string name="streak_body_pending">Practice today to keep it going.</string>
     <string name="streak_current">Current streak</string>
     <string name="streak_longest">Longest streak</string>

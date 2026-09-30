@@ -1,5 +1,5 @@
 <resources>
-    <string name="settings_hero_body">Your practice, Pro access and data on this phone.</string>
+    <string name="settings_hero_body">Practice, Pro and your data</string>
     <string name="pro_features_detail">Pro includes three stories with five words each, plus three timed rounds.</string>
     <string name="pro_features_offline">Lessons are bundled with the app. Once Pro access is confirmed, the lesson content needs no download.</string>
     <string name="pro_access_loading">Checking Pro access…</string>

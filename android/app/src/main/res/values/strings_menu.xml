@@ -59,4 +59,9 @@
     <string name="settings_documents">Privacy and documents</string>
     <string name="settings_about_row">About Handspell</string>
     <string name="settings_about_title">About</string>
+    <!-- Stories (story lessons and timed speed packs) and the practice list -->
+    <string name="stories_title">Stories</string>
+    <string name="stories_subline">Story lessons and timed speed packs</string>
+    <string name="stories_empty">No story lessons are available yet.</string>
+    <string name="practice_subline">Live feedback from your front camera</string>
 </resources>

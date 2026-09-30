@@ -1,6 +1,10 @@
 package dev.handspell.app.ui.home
 
 import androidx.compose.foundation.background
+import dev.handspell.app.ui.components.pressScale
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,12 +43,17 @@ import dev.handspell.app.content.PackItem
 import dev.handspell.app.content.ContentPack
 import dev.handspell.app.content.PackKind
 import dev.handspell.app.ui.components.AslButton
-import dev.handspell.app.ui.components.ScreenHeader
+import dev.handspell.app.ui.components.FrostedHeaderLayout
+import dev.handspell.app.ui.components.captureBackdrop
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 
+/**
+ * The practice catalogue on the shared frosted top bar. With [lettersSection] off (the Stories entry on the main menu) it
+ * lists only the Story lessons and timed speed packs; the letters are practised from the Alphabet.
+ */
 @Composable
 fun HomeScreen(
     state: HomeUiState,
@@ -55,79 +64,86 @@ fun HomeScreen(
     showProPacks: Boolean = true,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
+    lettersSection: Boolean = true,
 ) {
-    val colors = LocalAslColors.current
-    Column(modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
-        // The large "Practice" title is the first item of the catalogue, so the bar carries only the back chevron.
-        ScreenHeader(title = "", onBack = onBack, compact = true)
+    FrostedHeaderLayout(
+        title = stringResource(if (lettersSection) R.string.practice_title else R.string.stories_title),
+        onBack = onBack,
+        modifier = modifier,
+        subline = stringResource(if (lettersSection) R.string.practice_subline else R.string.stories_subline),
+    ) { layer, top ->
         when {
-            state.isLoading -> HomeMessage(stringResource(R.string.content_loading), null, null, Modifier.weight(1f))
+            state.isLoading -> HomeMessage(stringResource(R.string.content_loading), null, null, Modifier.padding(top = top))
             state.error -> HomeMessage(
                 stringResource(R.string.content_unavailable_title),
-                stringResource(R.string.content_unavailable_body), onRetry, Modifier.weight(1f),
+                stringResource(R.string.content_unavailable_body), onRetry, Modifier.padding(top = top),
             )
-            else -> PracticeCatalogue(state, onSelectDrill, onOpenPack, showProPacks, Modifier.weight(1f))
+            else -> PracticeCatalogue(state, onSelectDrill, onOpenPack, showProPacks, lettersSection, layer, top)
         }
     }
 }
 
 @Composable
-private fun PracticeCatalogue(state: HomeUiState, onSelectDrill: (PackItem.Drill) -> Unit,
-                              onOpenPack: (ContentPack) -> Unit, showProPacks: Boolean, modifier: Modifier) {
+private fun PracticeCatalogue(
+    state: HomeUiState, onSelectDrill: (PackItem.Drill) -> Unit, onOpenPack: (ContentPack) -> Unit,
+    showProPacks: Boolean, lettersSection: Boolean, layer: androidx.compose.ui.graphics.layer.GraphicsLayer, top: androidx.compose.ui.unit.Dp,
+) {
     val practised = state.attemptCounts.values.count { it > 0 }
     val next = state.drills.firstOrNull { (state.attemptCounts[it.letter] ?: 0) == 0 } ?: state.drills.firstOrNull()
+    val proPacks = state.packs.filter { showProPacks && it.kind != PackKind.DRILL }
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = Spacing.letterTile),
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(Spacing.md),
+        modifier = Modifier.fillMaxSize().captureBackdrop(layer),
+        contentPadding = PaddingValues(start = Spacing.md, end = Spacing.md, top = top + Spacing.xs, bottom = Spacing.xl),
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
         verticalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Column(Modifier.padding(bottom = Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                Text(stringResource(R.string.practice_title), style = MaterialTheme.typography.headlineMedium)
-                Text(
-                    stringResource(R.string.home_description),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = LocalAslColors.current.labelSecondary,
-                )
+        if (lettersSection) {
+            if (next != null) item(span = { GridItemSpan(maxLineSpan) }) {
+                FeaturedLetter(next, practised, onSelectDrill, Modifier.padding(bottom = Spacing.xl))
             }
-        }
-        if (next != null) item(span = { GridItemSpan(maxLineSpan) }) {
-            FeaturedLetter(next, practised, onSelectDrill, Modifier.padding(bottom = Spacing.xl))
-        }
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Column(Modifier.padding(bottom = Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-                Text(stringResource(R.string.practice_letters_heading), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    stringResource(R.string.practice_letters_progress, practised, state.drills.size),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = LocalAslColors.current.labelSecondary,
-                )
-            }
-        }
-        items(state.drills, key = { it.letter.name }) { drill ->
-            LetterTile(drill, state.attemptCounts[drill.letter] ?: 0, onSelectDrill)
-        }
-        val proPacks = state.packs.filter { showProPacks && it.kind != PackKind.DRILL }
-        if (proPacks.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
-            Text(stringResource(R.string.home_pro_packs), style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = Spacing.xl))
-        }
-        items(proPacks, key = { it.packId }, span = { GridItemSpan(maxLineSpan) }) { pack ->
-            Surface(
-                modifier = Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
-                    .clip(RoundedCornerShape(AslShapes.large)).clickable(role = Role.Button) { onOpenPack(pack) },
-                shape = RoundedCornerShape(AslShapes.large), color = LocalAslColors.current.surface,
-                contentColor = LocalAslColors.current.onSurface,
-            ) {
-                Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
-                    Text(pack.title, style = MaterialTheme.typography.titleMedium)
-                    Text(pack.summary, style = MaterialTheme.typography.bodyMedium,
-                        color = LocalAslColors.current.onSurfaceSecondary)
-                    if (!state.isPro) dev.handspell.app.ui.components.ProLockLabel(LocalAslColors.current.onSurfaceSecondary)
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Column(Modifier.padding(bottom = Spacing.xs), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+                    Text(stringResource(R.string.practice_letters_heading), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.practice_letters_progress, practised, state.drills.size),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = LocalAslColors.current.labelSecondary,
+                    )
                 }
             }
+            items(state.drills, key = { it.letter.name }) { drill ->
+                LetterTile(drill, state.attemptCounts[drill.letter] ?: 0, onSelectDrill)
+            }
+            if (proPacks.isNotEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(stringResource(R.string.home_pro_packs), style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = Spacing.xl))
+            }
+        } else if (proPacks.isEmpty()) item(span = { GridItemSpan(maxLineSpan) }) {
+            Text(stringResource(R.string.stories_empty), style = MaterialTheme.typography.bodyLarge,
+                color = LocalAslColors.current.labelSecondary)
+        }
+        items(proPacks, key = { it.packId }, span = { GridItemSpan(maxLineSpan) }) { pack ->
+            PackRow(pack, state.isPro, onOpenPack)
+        }
+    }
+}
+
+@Composable
+private fun PackRow(pack: ContentPack, isPro: Boolean, onOpenPack: (ContentPack) -> Unit) {
+    val interactions = remember { MutableInteractionSource() }
+    Surface(
+        modifier = Modifier.pressScale(interactions).fillMaxWidth().sizeIn(minHeight = Spacing.touchTarget)
+            .clip(RoundedCornerShape(AslShapes.large))
+            .clickable(interactionSource = interactions, indication = LocalIndication.current, role = Role.Button) { onOpenPack(pack) },
+        shape = RoundedCornerShape(AslShapes.large), color = LocalAslColors.current.surface,
+        contentColor = LocalAslColors.current.onSurface,
+    ) {
+        Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
+            Text(pack.title, style = MaterialTheme.typography.titleMedium)
+            Text(pack.summary, style = MaterialTheme.typography.bodyMedium,
+                color = LocalAslColors.current.onSurfaceSecondary)
+            if (!isPro) dev.handspell.app.ui.components.ProLockLabel(LocalAslColors.current.onSurfaceSecondary)
         }
     }
 }
@@ -170,9 +186,11 @@ private fun FeaturedLetter(
 private fun LetterTile(drill: PackItem.Drill, attempts: Int, onSelectDrill: (PackItem.Drill) -> Unit) {
     val colors = LocalAslColors.current
     val description = stringResource(R.string.letter_tile_progress_description, drill.letter.display, attempts)
+    val interactions = remember { MutableInteractionSource() }
     Surface(
-        modifier = Modifier.fillMaxWidth().sizeIn(minWidth = Spacing.touchTarget, minHeight = Spacing.letterTile)
-            .clip(RoundedCornerShape(AslShapes.large)).clickable(role = Role.Button) { onSelectDrill(drill) }
+        modifier = Modifier.pressScale(interactions).fillMaxWidth().sizeIn(minWidth = Spacing.touchTarget, minHeight = Spacing.letterTile)
+            .clip(RoundedCornerShape(AslShapes.large))
+            .clickable(interactionSource = interactions, indication = LocalIndication.current, role = Role.Button) { onSelectDrill(drill) }
             .semantics { contentDescription = description },
         shape = RoundedCornerShape(AslShapes.large),
         color = colors.surface,

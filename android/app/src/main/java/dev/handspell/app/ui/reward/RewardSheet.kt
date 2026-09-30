@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import dev.handspell.app.R
 import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.ui.components.AslSheet
@@ -93,7 +94,7 @@ private fun RewardContent(reward: Reward, onContinue: () -> Unit, proMention: (@
         Text(pluralStringResource(R.plurals.reward_today, reward.completedToday, reward.completedToday),
             style = MaterialTheme.typography.bodyLarge, color = colors.labelSecondary, textAlign = TextAlign.Center)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-            StreakMark(active = true, size = Spacing.xl)
+            StreakMark(active = true, size = 64.dp, flicker = true)
             Text(pluralStringResource(R.plurals.menu_streak_days, reward.streakDays, reward.streakDays),
                 style = MaterialTheme.typography.titleMedium, color = colors.label)
         }

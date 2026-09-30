@@ -787,3 +787,24 @@ html.theme-light .progress-line {color:#526176}
   outline-offset:-2px;
   border-radius:inherit;
 }
+
+/* Top bar geometry shared with every native menu (FrostedHeaderLayout): 4px, a 48px title row, one 30px line and a 24px
+   feathered gap, 106px below the status bar. The blur stops at the bar's own bottom edge, where it feathers out. */
+.top-area {
+  padding:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 4px) 12px 24px 12px;
+}
+.top-area::before {inset:0}
+.top-line {gap:0; min-height:48px}
+.header-back {width:48px; height:48px; margin:0}
+h1 {font-size:40px; line-height:43px; letter-spacing:-1.5px}
+.header-icons {gap:0}
+.header-icon {width:48px; height:48px}
+.header-icon svg {width:28px; height:28px}
+.progress-line {height:30px; min-height:30px; margin-top:0; padding:0 8px}
+.streak-chip {margin:-7px 0}
+.letter-scroll {
+  padding-top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 114px);
+}
+.alphabet-index {
+  top:calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 114px);
+}

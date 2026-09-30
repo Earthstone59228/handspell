@@ -358,7 +358,6 @@ modal.querySelector('.practice-sheet').addEventListener('transitionend', event =
 
 document.querySelector('#close-practice').addEventListener('click', closePractice);
 function openUtility(name, trigger) {
-  if (name === 'Paper' && native?.openPaper) { native.openPaper(); return; }
   if (name === 'Settings' && native?.openSettings) { native.openSettings(); return; }
   utilityTrigger = trigger;
   utility.setAttribute('aria-label', name);
@@ -372,7 +371,6 @@ function closeUtility() {
   utilityTrigger?.focus();
 }
 document.querySelector('#open-settings').addEventListener('click', event => openUtility('Settings', event.currentTarget));
-document.querySelector('#open-paper').addEventListener('click', event => openUtility('Paper', event.currentTarget));
 document.querySelector('#utility-back').addEventListener('click', closeUtility);
 function closeSetup() {
   setup.hidden = true;

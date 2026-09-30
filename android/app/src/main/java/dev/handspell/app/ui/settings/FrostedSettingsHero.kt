@@ -39,18 +39,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import dev.handspell.app.R
-import dev.handspell.app.ui.components.HeaderBottomSpace
-import dev.handspell.app.ui.components.HeaderSubline
-import dev.handspell.app.ui.components.HeaderTitleRow
+import dev.handspell.app.ui.components.FrostedHeaderLayout
+import dev.handspell.app.ui.components.captureBackdrop
 import dev.handspell.app.ui.components.BackChevronStart
 import dev.handspell.app.ui.components.BackChevronTop
 import dev.handspell.app.ui.theme.LocalAslColors
 import dev.handspell.app.ui.theme.Spacing
 
 /**
- * Alphabet's pinned dark frosted hero, sampling the actual rows as they scroll beneath it. Settings, Progress and
- * the first-run introduction share it, so every grouped screen has the same large title and blurred header.
- * Without [onBack] (first run) the chevron row is replaced by the same amount of space.
+ * Settings, Progress, Documents and the other grouped screens: the shared frosted top bar over a scrolling column of
+ * cards. [body] is the one short line under the title (or null for none; the slot is reserved either way).
  */
 @Composable
 internal fun FrostedSettingsHero(
@@ -58,31 +56,16 @@ internal fun FrostedSettingsHero(
     title: String = stringResource(R.string.settings),
     body: String? = stringResource(R.string.settings_hero_body),
     modifier: Modifier = Modifier,
-    /** Header icons on the title row, right-aligned, as on the alphabet menu (settings, paper). */
+    /** Header icons on the title row, right-aligned (settings on the alphabet menu). */
     actions: (@Composable RowScope.() -> Unit)? = null,
-    /** Space above the title when there is no back chevron. */
-    topSpace: androidx.compose.ui.unit.Dp = Spacing.xxxl,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val colors = LocalAslColors.current
-    val density = LocalDensity.current
-    val contentLayer = rememberGraphicsLayer()
-    var heroHeight by remember { mutableIntStateOf(0) }
-    val heroPadding = with(density) { heroHeight.toDp() }
-    Box(modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
+    FrostedHeaderLayout(title, onBack, modifier, subline = body, actions = { actions?.invoke(this) }) { layer, top ->
         Column(
-            Modifier.fillMaxSize().captureBackdrop(contentLayer).verticalScroll(rememberScrollState())
-                .padding(start = Spacing.md, end = Spacing.md, top = heroPadding + Spacing.md, bottom = Spacing.xl),
+            Modifier.fillMaxSize().captureBackdrop(layer).verticalScroll(rememberScrollState())
+                .padding(start = Spacing.md, end = Spacing.md, top = top + Spacing.md, bottom = Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.xl),
             content = content,
         )
-        Column(
-            Modifier.fillMaxWidth().onSizeChanged { heroHeight = it.height }
-                .clipToBounds().frostedBackdrop(contentLayer).statusBarsPadding(),
-        ) {
-            HeaderTitleRow(title, onBack, actions = { actions?.invoke(this) })
-            if (body != null) HeaderSubline(body)
-            Spacer(Modifier.height(HeaderBottomSpace))
-        }
     }
 }

@@ -144,12 +144,7 @@ private fun PaywallScreen(
     lockedWord: String? = null,
 ) {
     val colors = LocalAslColors.current
-    Column(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
-      ScreenHeader(stringResource(R.string.paywall_title), onBack)
-      Column(
-          Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(Spacing.md),
-          verticalArrangement = Arrangement.spacedBy(Spacing.md),
-      ) {
+    FrostedSettingsHero(onBack = onBack, title = stringResource(R.string.paywall_title), body = null) {
         if (lockedWord != null) Text(stringResource(R.string.paywall_word_locked, lockedWord),
             style = MaterialTheme.typography.titleLarge, color = colors.label)
         // A real Pro user (not on the demo) has nothing to try.
@@ -225,7 +220,6 @@ private fun PaywallScreen(
         if (result == PurchaseResult.FAILED) Text(stringResource(R.string.paywall_purchase_failed), style = MaterialTheme.typography.bodyLarge)
         if (restore == RestoreResult.FAILED) Text(stringResource(R.string.settings_restore_failed), style = MaterialTheme.typography.bodyLarge)
         if (restore == RestoreResult.NOTHING_TO_RESTORE) Text(stringResource(R.string.settings_nothing_to_restore), style = MaterialTheme.typography.bodyLarge)
-      }
     }
 }
 

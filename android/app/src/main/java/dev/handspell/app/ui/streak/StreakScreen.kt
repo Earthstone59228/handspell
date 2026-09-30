@@ -27,6 +27,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import dev.handspell.app.R
 import dev.handspell.app.ui.components.AslCard
 import dev.handspell.app.ui.components.StreakMark
@@ -86,7 +87,7 @@ private fun StreakTile(value: Int, caption: String, active: Boolean, showMark: B
     AslCard(modifier.fillMaxHeight().semantics(mergeDescendants = true) { contentDescription = "$caption: $days" }) {
         Column(Modifier.padding(Spacing.md), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                if (showMark) StreakMark(active = active)
+                if (showMark) StreakMark(active = active, size = 56.dp, flicker = true)
                 Text(value.toString(), style = MaterialTheme.typography.headlineMedium,
                     color = if (showMark) colors.accent else colors.label, maxLines = 1)
             }
@@ -181,7 +182,7 @@ private fun MilestoneRowView(row: MilestoneRow) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
-        StreakMark(active = row.status == MilestoneStatus.REACHED, size = Spacing.xl)
+        StreakMark(active = row.status == MilestoneStatus.REACHED, size = 44.dp, flicker = row.status == MilestoneStatus.REACHED)
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Spacing.xxs)) {
             Text(pluralStringResource(R.plurals.streak_milestone_days, row.days, row.days),
                 style = MaterialTheme.typography.titleMedium, color = colors.onSurface)

@@ -3,9 +3,7 @@ package dev.handspell.app.ui.words
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.rememberGraphicsLayer
-import dev.handspell.app.ui.components.HeaderBottomSpace
-import dev.handspell.app.ui.components.HeaderSubline
-import dev.handspell.app.ui.components.HeaderTitleRow
+import dev.handspell.app.ui.components.FrostedHeaderLayout
 import dev.handspell.app.ui.components.captureBackdrop
 import dev.handspell.app.ui.components.frostedBackdrop
 import dev.handspell.app.ui.components.selectionOutline
@@ -119,7 +117,6 @@ fun WordsMenuScreen(
     onDismissProStrip: () -> Unit = {},
     references: Map<String, WordReference> = emptyMap(),
     onSettings: () -> Unit = {},
-    onPaper: () -> Unit = {},
     leftHanded: Boolean = false,
 ) {
     val colors = LocalAslColors.current
@@ -127,16 +124,32 @@ fun WordsMenuScreen(
     val reduceMotion = LocalReduceMotion.current
     var selectedGloss by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = state.words.firstOrNull { it.gloss == selectedGloss }
-    val contentLayer = rememberGraphicsLayer()
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
-    var headerHeight by remember { mutableIntStateOf(0) }
-    val headerDp = with(density) { headerHeight.toDp() }
-    Box(Modifier.fillMaxSize().background(dev.handspell.app.ui.theme.atmosphereBrush())) {
+    FrostedHeaderLayout(
+        title = stringResource(R.string.words_title),
+        onBack = onBack,
+        subline = if (state.loading) null else wordsProgressLine(state.completeCount, state.openTotal),
+        sublineStyle = AslText.progressLine,
+        sublineDescription = "${state.completeCount} of ${state.openTotal}",
+        actions = { HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), onSettings) },
+        overlay = {
+            AslSheet(visible = selected != null, onDismiss = { selectedGloss = null }) {
+                if (selected != null) WordSheet(
+                    word = selected,
+                    reference = references[selected.gloss],
+                    complete = state.records[selected.gloss]?.complete == true,
+                    markedComplete = state.records[selected.gloss]?.markedComplete == true,
+                    onPractice = { selectedGloss = null; onPractice(selected) },
+                    onMarkComplete = { complete -> selectedGloss = null; onMarkComplete(selected, complete) },
+                )
+            }
+        },
+    ) { layer, top ->
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize().captureBackdrop(contentLayer),
-            contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, top = headerDp + Spacing.xs, bottom = Spacing.xl),
+            modifier = Modifier.fillMaxSize().captureBackdrop(layer),
+            contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, top = top + Spacing.xs, bottom = Spacing.xl),
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             when {
@@ -159,31 +172,6 @@ fun WordsMenuScreen(
                     }
                 }
             }
-        }
-        // Header over the list, like the alphabet's frosted .top-area.
-        Column(
-            Modifier.fillMaxWidth().onSizeChanged { headerHeight = it.height }
-                .clipToBounds().frostedBackdrop(contentLayer).statusBarsPadding(),
-        ) {
-            HeaderTitleRow(stringResource(R.string.words_title), onBack) {
-                HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), onSettings)
-                HeaderIcon(R.drawable.ic_paper, stringResource(R.string.menu_open_paper), onPaper)
-            }
-            if (!state.loading) HeaderSubline(
-                wordsProgressLine(state.completeCount, state.openTotal), style = AslText.progressLine,
-                modifier = Modifier.semantics { contentDescription = "${state.completeCount} of ${state.openTotal}" },
-            )
-            Spacer(Modifier.height(HeaderBottomSpace))
-        }
-        AslSheet(visible = selected != null, onDismiss = { selectedGloss = null }) {
-            if (selected != null) WordSheet(
-                word = selected,
-                reference = references[selected.gloss],
-                complete = state.records[selected.gloss]?.complete == true,
-                markedComplete = state.records[selected.gloss]?.markedComplete == true,
-                onPractice = { selectedGloss = null; onPractice(selected) },
-                onMarkComplete = { complete -> selectedGloss = null; onMarkComplete(selected, complete) },
-            )
         }
     }
 }
