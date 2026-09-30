@@ -157,7 +157,7 @@ private fun CompletionCard(title: String, complete: Int, total: Int, loading: Bo
             Spacer(Modifier.height(TileRingGap))
             Text(title, style = AslText.title3, color = colors.label,
                 maxLines = 2)
-            Text(if (loading) "Loading progress" else "$complete / $total complete",
+            Text(if (loading) "Loading progress" else "$complete / $total Complete",
                 style = AslText.footnote, color = colors.labelSecondary)
         }
     }

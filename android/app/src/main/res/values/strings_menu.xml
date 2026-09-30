@@ -11,9 +11,9 @@
     <string name="menu_theme_to_light">Switch to light appearance</string>
     <string name="menu_theme_to_dark">Switch to dark appearance</string>
     <string name="menu_letters">Letters</string>
-    <string name="menu_letters_meta">%1$d of %2$d complete</string>
+    <string name="menu_letters_meta">%1$d of %2$d Complete</string>
     <string name="menu_words">Words</string>
-    <string name="menu_words_meta">%1$d of %2$d complete</string>
+    <string name="menu_words_meta">%1$d of %2$d Complete</string>
     <plurals name="menu_streak_days">
         <item quantity="one">%1$d-day streak</item>
         <item quantity="other">%1$d-day streak</item>
@@ -30,9 +30,9 @@
     <string name="words_card_description">Practice the word %1$s</string>
     <string name="words_card_complete_description">Practice the word %1$s, complete</string>
     <string name="words_card_locked_description">%1$s, included with Pro</string>
-    <string name="words_card_complete">complete</string>
+    <string name="words_card_complete">Complete</string>
     <string name="words_sheet_title">%1$s</string>
-    <string name="words_sheet_title_complete">%1$s · complete</string>
+    <string name="words_sheet_title_complete">%1$s · Complete</string>
     <string name="words_practice">Practice</string>
     <string name="mark_complete">Mark complete</string>
     <string name="mark_complete_undo">Undo completion</string>

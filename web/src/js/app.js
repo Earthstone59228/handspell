@@ -95,8 +95,8 @@ function renderCards() {
 }
 
 function cardMeta(letter, done) {
-  if (!isPracticable(letter)) return 'needs motion';
-  return done ? 'complete' : String(letters.indexOf(letter) + 1).padStart(2, '0');
+  if (!isPracticable(letter)) return 'Needs motion';
+  return done ? 'Complete' : String(letters.indexOf(letter) + 1).padStart(2, '0');
 }
 
 function signArt(letter) {
