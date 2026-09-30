@@ -143,7 +143,7 @@ fun WordsMenuScreen(
             state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, top = headerDp + Spacing.xs, bottom = Spacing.xl),
-            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm - Spacing.hairline), // web .letter-list gap: 11px
         ) {
             when {
                 state.loading -> item { Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge) }

@@ -1,4 +1,10 @@
 :root {
+  /* Card tokens: mirror LocalAslColors card / onCard / onCardSecondary / onCardAccent in HandspellTheme.kt. */
+  --card:#2C2C2E;
+  --on-card:#F5F5F7;
+  --on-card-2:#F5F5F79E;
+  --on-card-accent:#007AFF;
+  --card-line:#F5F5F724;
   font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
   color:#F5F5F7;
   background:#1D1D1F;
@@ -189,8 +195,8 @@ html.left-handed .letter-list {
   padding:12px 19px;
   border:0;
   border-radius:20px;
-  background:#F5F5F7;
-  color:#1D1D1F;
+  background:var(--card);
+  color:var(--on-card);
   text-align:left;
   cursor:pointer;
   scroll-margin-top:8px;
@@ -219,10 +225,10 @@ html.left-handed .letter-list {
   font-size:11px;
   font-weight:650;
   letter-spacing:.5px;
-  color:#66666B
+  color:var(--on-card-2)
 }
 .letter-card.done .card-meta {
-  color:#005FCC
+  color:var(--on-card-accent)
 }
 .letter-card.unavailable {
   cursor:default;
@@ -242,9 +248,9 @@ html.left-handed .letter-list {
   place-items:center;
   width:58px;
   height:58px;
-  border:1px solid #1D1D1F24;
+  border:1px solid var(--card-line);
   border-radius:13px;
-  color:#1D1D1F;
+  color:var(--on-card);
   opacity:.45
 }
 .sign-placeholder.wireframe {
@@ -433,8 +439,8 @@ html.left-handed .index-surface {
   color:#F5F5F7
 }
 .complete-button {
-  background:#F5F5F7;
-  color:#1D1D1F
+  background:var(--card);
+  color:var(--on-card)
 }
 .letter-text {
   position:absolute;
@@ -452,13 +458,15 @@ html.left-handed .index-surface {
   color:inherit;
   font-size:15px;
   font-weight:500;
-  text-decoration:underline;
   opacity:.7;
   cursor:pointer
 }
 .undo-link:focus-visible {
   outline:2px solid #007AFF;
   outline-offset:3px
+}
+.practice-letter .sign-placeholder:not(.wireframe) {
+  color:#1D1D1F
 }
 .practice-letter .sign-placeholder,.practice-letter .sign-placeholder.wireframe {
   position:static;
@@ -671,6 +679,11 @@ html.left-handed .index-surface {
 /* Light appearance: the same four colours swapped (Paper ground, Ink text, white cards, Blue for actions), set from the
    app's Theme setting through the bridge. Nothing new is introduced; tints are these colours at lower opacity. */
 html.theme-light {
+  --card:#FFFFFF;
+  --on-card:#1D1D1F;
+  --on-card-2:#1D1D1F9E;
+  --on-card-accent:#005FCC;
+  --card-line:#1D1D1F24;
   color-scheme:light
 }
 html.theme-light,html.theme-light body {
