@@ -42,6 +42,9 @@ import dev.handspell.app.ui.components.ScreenHeader
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.ui.theme.AslShapes
 import dev.handspell.app.ui.theme.LocalAslColors
+import androidx.compose.ui.unit.Dp
+import dev.handspell.app.ui.settings.FrostedHeaderContent
+import dev.handspell.app.ui.settings.FrostedHeaderScaffold
 import dev.handspell.app.ui.theme.Spacing
 
 @Composable
@@ -55,43 +58,36 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
 ) {
-    val colors = LocalAslColors.current
-    Column(modifier.fillMaxSize().background(colors.backgroundGrouped)) {
-        // The large "Practice" title is the first item of the catalogue, so the bar carries only the back chevron.
-        ScreenHeader(title = "", onBack = onBack, compact = true)
+    FrostedHeaderScaffold(
+        header = {
+            FrostedHeaderContent(onBack, stringResource(R.string.practice_title), stringResource(R.string.home_description))
+        },
+        modifier = modifier,
+    ) { headerDp ->
         when {
-            state.isLoading -> HomeMessage(stringResource(R.string.content_loading), null, null, Modifier.weight(1f))
+            state.isLoading -> HomeMessage(stringResource(R.string.content_loading), null, null,
+                Modifier.fillMaxSize().padding(top = headerDp))
             state.error -> HomeMessage(
                 stringResource(R.string.content_unavailable_title),
-                stringResource(R.string.content_unavailable_body), onRetry, Modifier.weight(1f),
+                stringResource(R.string.content_unavailable_body), onRetry, Modifier.fillMaxSize().padding(top = headerDp),
             )
-            else -> PracticeCatalogue(state, onSelectDrill, onOpenPack, showProPacks, Modifier.weight(1f))
+            else -> PracticeCatalogue(state, onSelectDrill, onOpenPack, showProPacks, headerDp, Modifier.fillMaxSize())
         }
     }
 }
 
 @Composable
 private fun PracticeCatalogue(state: HomeUiState, onSelectDrill: (PackItem.Drill) -> Unit,
-                              onOpenPack: (ContentPack) -> Unit, showProPacks: Boolean, modifier: Modifier) {
+                              onOpenPack: (ContentPack) -> Unit, showProPacks: Boolean, headerDp: Dp, modifier: Modifier) {
     val practised = state.attemptCounts.values.count { it > 0 }
     val next = state.drills.firstOrNull { (state.attemptCounts[it.letter] ?: 0) == 0 } ?: state.drills.firstOrNull()
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = Spacing.letterTile),
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(Spacing.md),
+        contentPadding = PaddingValues(start = Spacing.lg, end = Spacing.lg, top = headerDp + Spacing.xs, bottom = Spacing.xl),
         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
         verticalArrangement = Arrangement.spacedBy(Spacing.xs),
     ) {
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Column(Modifier.padding(bottom = Spacing.xl), verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                Text(stringResource(R.string.practice_title), style = MaterialTheme.typography.headlineMedium)
-                Text(
-                    stringResource(R.string.home_description),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = LocalAslColors.current.labelSecondary,
-                )
-            }
-        }
         if (next != null) item(span = { GridItemSpan(maxLineSpan) }) {
             FeaturedLetter(next, practised, onSelectDrill, Modifier.padding(bottom = Spacing.xl))
         }
