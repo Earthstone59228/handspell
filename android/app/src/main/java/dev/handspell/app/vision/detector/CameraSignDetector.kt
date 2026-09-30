@@ -8,6 +8,8 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import dev.handspell.app.core.model.HandLandmarks
 import dev.handspell.app.core.model.HandOverlay
+import dev.handspell.app.core.model.Handedness
+import dev.handspell.app.core.model.FeedbackHint
 import dev.handspell.app.core.model.Letter
 import dev.handspell.app.core.model.SignFeedbackState
 import dev.handspell.app.vision.DetectorStatus
@@ -74,6 +76,7 @@ class CameraSignDetector(
 
     private var target: Letter? = null
     private var motionRecognizer: MotionLetterRecognizer? = null
+    private var motionHandedness: Handedness? = null
     @Volatile private var lastHandSeenMs = 0L
     @Volatile private var lowLightDismissed = false
 
@@ -107,6 +110,7 @@ class CameraSignDetector(
     override fun setTarget(target: Letter?) {
         synchronized(lock) {
             this.target = target
+            motionHandedness = null
             motionRecognizer = target?.takeIf { it.requiresMotion }?.let(::MotionLetterRecognizer)
             feedbackEngine.setTarget(target)
             feedbackState.value = SignFeedbackState.NoHand(target)
@@ -122,6 +126,7 @@ class CameraSignDetector(
             val generation = sessions.claim(owner)
             feedbackEngine.reset()
             motionRecognizer?.reset()
+            motionHandedness = null
             feedbackState.value = SignFeedbackState.NoHand(target)
             overlayState.value = null
             thumbnailState.value = null
@@ -161,6 +166,7 @@ class CameraSignDetector(
             landmarkerHelper = null
             feedbackEngine.reset()
             motionRecognizer?.reset()
+            motionHandedness = null
             feedbackState.value = SignFeedbackState.NoHand(target)
             overlayState.value = null
             thumbnailState.value = null
@@ -189,8 +195,10 @@ class CameraSignDetector(
             lastHandSeenMs = SystemClock.uptimeMillis()
             lowLightState.value = false
 
-            // Single-target practice uses the first hand MediaPipe reports.
-            val hand = hands.first()
+            // Keep following the same physical hand when MediaPipe reorders two detections.
+            val hand = if (motionRecognizer != null) {
+                hands.firstOrNull { it.handedness == motionHandedness } ?: hands.first()
+            } else hands.first()
             overlayState.value = HandOverlay(
                 imageLandmarks = hand.image,
                 imageWidth = hand.imageWidth,
@@ -198,6 +206,7 @@ class CameraSignDetector(
                 timestampMs = hand.timestampMs,
             )
             motionRecognizer?.let {
+                motionHandedness = hand.handedness
                 feedbackState.value = motionFeedback(it.onFrame(hand, hand.timestampMs))
                 return
             }
@@ -216,7 +225,8 @@ class CameraSignDetector(
         return when (progress) {
             MotionProgress.NoHand -> SignFeedbackState.NoHand(letter)
             MotionProgress.WrongShape -> SignFeedbackState.NotRecognized(letter, 0f)
-            is MotionProgress.Tracing -> SignFeedbackState.Adjust(letter, 0f, null, progress.progress)
+            is MotionProgress.Tracing -> SignFeedbackState.Adjust(letter, 0f,
+                FeedbackHint(if (letter == Letter.J) "hint_trace_j" else "hint_trace_z", null), progress.progress)
             is MotionProgress.Matched -> SignFeedbackState.Match(letter, 1f - progress.distance, 0L)
         }
     }

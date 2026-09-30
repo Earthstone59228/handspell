@@ -414,6 +414,8 @@ private fun detectorMessage(id: String): String = stringResource(when (id) {
 
 @Composable
 private fun hintText(id: String?): String = stringResource(when (id) {
+    "hint_trace_j" -> R.string.hint_trace_j
+    "hint_trace_z" -> R.string.hint_trace_z
     "hint_thumb_between_index_middle" -> R.string.hint_thumb_between_index_middle
     "hint_thumb_across_front" -> R.string.hint_thumb_across_front
     "hint_thumb_to_side" -> R.string.hint_thumb_to_side

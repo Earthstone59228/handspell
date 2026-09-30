@@ -57,7 +57,7 @@ class MotionLetterRecognizerTest {
         val startY = 400f
         repeat(restFrames) { last = recognizer.onFrame(hand(shape, startX, startY, t), t); t += 1000L / fps }
         for ((dx, dy) in path) { last = recognizer.onFrame(hand(shape, startX + dx * 120f, startY + dy * 120f, t), t); t += 1000L / fps }
-        repeat(restFrames) {
+        repeat(maxOf(restFrames, 8)) {
             last = recognizer.onFrame(hand(shape, startX + path.last().first * 120f, startY + path.last().second * 120f, t), t); t += 1000L / fps
         }
         return last
@@ -156,6 +156,83 @@ class MotionLetterRecognizerTest {
         assertTrue(recognizer.onFrame(null, t + 5000) is MotionProgress.Matched)
         recognizer.reset()
         assertEquals(MotionProgress.NoHand, recognizer.onFrame(null, t + 6000))
+    }
+
+    @Test fun `tiny detections expire a trace like missing hands`() {
+        val recognizer = MotionLetterRecognizer(Letter.Z)
+        val visible = hand(Shape.INDEX, 500f, 400f, 0)
+        assertTrue(recognizer.onFrame(visible, 0) is MotionProgress.Tracing)
+        val tiny = visible.copy(imageWidth = 1, imageHeight = 1)
+        assertTrue(recognizer.onFrame(tiny, 100) is MotionProgress.Tracing)
+        assertEquals(MotionProgress.NoHand, recognizer.onFrame(tiny, 450))
+    }
+
+    @Test fun `a detection gap cannot join separate parts of a stroke`() {
+        val recognizer = MotionLetterRecognizer(Letter.Z)
+        val path = zPath()
+        var t = 0L
+        for ((dx, dy) in path.take(path.size - 1)) {
+            recognizer.onFrame(hand(Shape.INDEX, 500f + dx * 120f, 400f + dy * 120f, t), t)
+            t += 33
+        }
+        t += 500
+        val end = path.last()
+        repeat(10) {
+            assertFalse(recognizer.onFrame(hand(Shape.INDEX, 500f + end.first * 120f, 400f + end.second * 120f, t), t) is MotionProgress.Matched)
+            t += 33
+        }
+    }
+
+    @Test fun `a short endpoint pause does not count as a full rest`() {
+        // Missing callbacks leave only two endpoints inside the rest window.
+        // The unobserved interval must not be treated as a sustained hold.
+        val recognizer = MotionLetterRecognizer(Letter.Z)
+        var t = 0L
+        for ((dx, dy) in zPath()) {
+            recognizer.onFrame(hand(Shape.INDEX, 500f + dx * 120f, 400f + dy * 120f, t), t)
+            t += 33
+        }
+        t += 250
+        val end = hand(Shape.INDEX, 500f + 2.2f * 120f, 400f + 2f * 120f, t)
+        assertFalse(recognizer.onFrame(end, t) is MotionProgress.Matched)
+        assertFalse(recognizer.onFrame(end, t + 33) is MotionProgress.Matched)
+    }
+
+    @Test fun `changing hands cannot complete another hands stroke`() {
+        val recognizer = MotionLetterRecognizer(Letter.Z)
+        val path = zPath()
+        var t = 0L
+        for ((dx, dy) in path.take(path.size - 1)) {
+            recognizer.onFrame(hand(Shape.INDEX, 500f + dx * 120f, 400f + dy * 120f, t), t)
+            t += 33
+        }
+        val end = path.last()
+        repeat(10) {
+            val other = hand(Shape.INDEX, 500f + end.first * 120f, 400f + end.second * 120f, t)
+                .copy(handedness = Handedness.LEFT)
+            assertFalse(recognizer.onFrame(other, t) is MotionProgress.Matched)
+            t += 33
+        }
+    }
+
+    @Test fun `nonfinite image landmarks are rejected without poisoning the trace`() {
+        for (bad in listOf(Float.NaN, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY)) {
+            val recognizer = MotionLetterRecognizer(Letter.Z)
+            val visible = hand(Shape.INDEX, 500f, 400f, 0)
+            val invalid = visible.copy(image = visible.image.mapIndexed { i, p -> if (i == 8) p.copy(x = bad) else p })
+            assertEquals(MotionProgress.NoHand, recognizer.onFrame(invalid, 0))
+            assertTrue(recognizer.onFrame(visible, 33) is MotionProgress.Tracing)
+        }
+    }
+
+    @Test fun `a local wrong stroke is not hidden by low average deviation`() {
+        val template = MotionLetterRecognizer.templates(Letter.J).first()
+        val detour = template.mapIndexed { i, p ->
+            if (i == 12) floatArrayOf(p[0] + 0.25f, p[1]) else p.copyOf()
+        }
+        assertTrue(MotionLetterRecognizer.meanDistance(detour, template) < MotionGate.MAX_DISTANCE)
+        assertEquals(Float.MAX_VALUE, MotionLetterRecognizer.templateDistance(detour, template))
+        assertEquals(0f, MotionLetterRecognizer.templateDistance(template, template))
     }
 
     @Test fun `only J and Z are motion letters`() {

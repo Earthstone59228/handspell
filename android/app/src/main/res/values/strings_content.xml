@@ -20,4 +20,6 @@
     <string name="hint_three_straight">Keep three fingers straight up, not just one</string>
     <string name="hint_hook_index">Bend your index finger into a hook shape</string>
     <string name="hint_generic">Check the shape against the description and try again</string>
+    <string name="hint_trace_j">Trace down and hook up with your pinky, then pause</string>
+    <string name="hint_trace_z">Trace across, diagonally down and back, then across; pause at the end</string>
 </resources>

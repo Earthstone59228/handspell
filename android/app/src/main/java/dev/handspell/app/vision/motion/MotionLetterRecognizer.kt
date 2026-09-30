@@ -1,6 +1,7 @@
 package dev.handspell.app.vision.motion
 
 import dev.handspell.app.core.model.HandLandmarks
+import dev.handspell.app.core.model.Handedness
 import dev.handspell.app.core.model.Letter
 import kotlin.math.hypot
 import kotlin.math.max
@@ -42,6 +43,9 @@ object MotionGate {
     /** Mean distance, in bounding-box units, between the drawn path and the letter's template. */
     const val MAX_DISTANCE = 0.10f
 
+    /** A local detour cannot be hidden by averaging the rest of an otherwise similar path. */
+    const val MAX_POINT_DISTANCE = 0.20f
+
     const val RESAMPLE = 24
 
     /**
@@ -69,6 +73,7 @@ class MotionLetterRecognizer(val letter: Letter) {
 
     private val buffer = ArrayDeque<Sample>()
     private var lastHandMs = Long.MIN_VALUE
+    private var lastHandedness: Handedness? = null
     private var matched: MotionProgress.Matched? = null
     private var latest: MotionProgress = MotionProgress.NoHand
     private val templates = templates(letter).flatMap { listOf(it, mirrorX(it)) }
@@ -78,20 +83,24 @@ class MotionLetterRecognizer(val letter: Letter) {
         matched = null
         latest = MotionProgress.NoHand
         lastHandMs = Long.MIN_VALUE
+        lastHandedness = null
     }
 
     /** Feed one analysed frame; [hand] is null when no hand was found. */
     fun onFrame(hand: HandLandmarks?, timestampMs: Long): MotionProgress {
         matched?.let { return it }
-        if (hand == null) {
+        val sample = hand?.let { sampleOf(it, timestampMs) }
+        if (sample == null) {
             if (lastHandMs == Long.MIN_VALUE || timestampMs - lastHandMs > NO_HAND_MS) {
                 buffer.clear()
                 latest = MotionProgress.NoHand
             }
             return latest
         }
+        if ((lastHandMs != Long.MIN_VALUE && timestampMs - lastHandMs > NO_HAND_MS) ||
+            (lastHandedness != null && lastHandedness != hand.handedness)) buffer.clear()
+        lastHandedness = hand.handedness
         lastHandMs = timestampMs
-        val sample = sampleOf(hand, timestampMs) ?: return latest
         buffer.addLast(sample)
         while (buffer.isNotEmpty() && timestampMs - buffer.first().timestampMs > MotionGate.BUFFER_MS) buffer.removeFirst()
         if (!sample.shapeOk) {
@@ -120,7 +129,7 @@ class MotionLetterRecognizer(val letter: Letter) {
     private fun sampleOf(hand: HandLandmarks, timestampMs: Long): Sample? {
         val w = hand.imageWidth.toFloat()
         val h = hand.imageHeight.toFloat()
-        if (w <= 0f || h <= 0f) return null
+        if (w <= 0f || h <= 0f || hand.image.any { !it.x.isFinite() || !it.y.isFinite() }) return null
         fun px(i: Int) = hand.image[i].x * w
         fun py(i: Int) = hand.image[i].y * h
         fun dist(a: Int, b: Int) = hypot(px(a) - px(b), py(a) - py(b))
@@ -159,14 +168,18 @@ class MotionLetterRecognizer(val letter: Letter) {
         if (extent < MotionGate.MIN_EXTENT_HAND_SIZES) return Float.MAX_VALUE to extent
         val path = resampleByArcLength(smoothed, MotionGate.RESAMPLE)
         val shape = normalise(path)
-        val distance = templates.minOf { meanDistance(shape, it) }
+        val distance = templates.minOf { templateDistance(shape, it) }
         return distance to extent
     }
 
     /** True when the fingertip moved less than the rest threshold over the last [MotionGate.REST_MS]. */
     private fun atRest(nowMs: Long): Boolean {
-        val recent = buffer.filter { nowMs - it.timestampMs <= MotionGate.REST_MS }
-        if (recent.size < 2) return false
+        // Include the sample immediately before the interval: two frames alone do not prove a full hold.
+        val cutoff = nowMs - MotionGate.REST_MS
+        val start = buffer.indexOfLast { it.timestampMs <= cutoff }
+        if (start < 0) return false
+        val recent = buffer.drop(start)
+        if (recent.size < 2 || recent.zipWithNext().any { (a, b) -> b.timestampMs - a.timestampMs > MotionGate.REST_MS }) return false
         val handSize = recent.map { it.handSize }.sorted()[recent.size / 2]
         val spread = max(recent.maxOf { it.x } - recent.minOf { it.x }, recent.maxOf { it.y } - recent.minOf { it.y })
         return spread <= MotionGate.REST_MOVEMENT_HAND_SIZES * handSize
@@ -248,6 +261,17 @@ class MotionLetterRecognizer(val letter: Letter) {
                     points[segment][1] + (points[segment + 1][1] - points[segment][1]) * t,
                 )
             }
+        }
+
+        /** Bound each point before averaging, so a short wrong stroke cannot disappear in the mean. */
+        internal fun templateDistance(path: List<FloatArray>, template: List<FloatArray>): Float {
+            var total = 0f
+            for (i in path.indices) {
+                val distance = hypot(path[i][0] - template[i][0], path[i][1] - template[i][1])
+                if (distance > MotionGate.MAX_POINT_DISTANCE) return Float.MAX_VALUE
+                total += distance
+            }
+            return total / path.size
         }
 
         fun meanDistance(a: List<FloatArray>, b: List<FloatArray>): Float {
