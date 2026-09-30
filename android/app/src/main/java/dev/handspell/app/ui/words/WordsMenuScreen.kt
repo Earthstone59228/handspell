@@ -57,6 +57,7 @@ import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.ui.components.AslButtonPair
 import dev.handspell.app.ui.components.AslButtonStyle
 import dev.handspell.app.ui.components.AslSheet
+import dev.handspell.app.ui.components.AslTextButton
 import dev.handspell.app.ui.components.BackChevron
 import dev.handspell.app.ui.components.ProLockLabel
 import dev.handspell.app.ui.menu.HeaderIcon
@@ -132,11 +133,21 @@ fun WordsMenuScreen(
                 state.loading -> item { Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge) }
                 state.words.isEmpty() -> item { Text(stringResource(R.string.words_empty), style = MaterialTheme.typography.bodyLarge) }
                 else -> {
-                    itemsIndexed(state.words, key = { _, word -> word.gloss }) { index, word ->
+                    val open = state.words.filterNot(state::isLocked)
+                    val lockedWords = state.words.filter(state::isLocked)
+                    val cardFor: @Composable (Int, WordEntry) -> Unit = { index, word ->
                         WordCard(word, index, state.records[word.gloss], state.isLocked(word), references[word.gloss],
                             selected = word.gloss == selectedGloss) {
                             if (state.isLocked(word)) onLocked(word) else selectedGloss = word.gloss
                         }
+                    }
+                    itemsIndexed(open, key = { _, word -> word.gloss }) { index, word -> cardFor(index, word) }
+                    if (lockedWords.isNotEmpty()) {
+                        item(key = "pro-header") {
+                            Text(stringResource(R.string.words_pro_header), style = MaterialTheme.typography.titleMedium,
+                                color = colors.label, modifier = Modifier.padding(top = Spacing.md).semantics { heading() })
+                        }
+                        itemsIndexed(lockedWords, key = { _, word -> word.gloss }) { index, word -> cardFor(open.size + index, word) }
                     }
                     item { SettingsGroupFooter(stringResource(R.string.words_footer)) }
                     val locked = state.words.filter(state::isLocked)
@@ -274,16 +285,12 @@ private fun WordSheet(
     val undo = stringResource(R.string.mark_complete_undo)
     AslButtonPair(
         first = { modifier -> AslButton(stringResource(R.string.words_practice), onPractice, modifier, singleLine = true) },
-        second = when {
-            markedComplete -> { modifier ->
-                AslButton(stringResource(R.string.mark_complete_undo_short), { onMarkComplete(false) }, modifier,
-                    style = AslButtonStyle.Card, contentDescription = undo, singleLine = true)
-            }
-            !complete -> { modifier ->
-                AslButton(stringResource(R.string.mark_complete), { onMarkComplete(true) }, modifier,
-                    style = AslButtonStyle.Card, singleLine = true)
-            }
-            else -> null
-        },
+        second = if (!complete && !markedComplete) { modifier ->
+            AslButton(stringResource(R.string.mark_complete), { onMarkComplete(true) }, modifier,
+                style = AslButtonStyle.Card, singleLine = true)
+        } else null,
     )
+    // Undoing a completion is rare: a quiet text action under Practice, not a button of equal weight.
+    if (markedComplete) AslTextButton(stringResource(R.string.mark_complete_undo_short), { onMarkComplete(false) },
+        contentDescription = undo)
 }
