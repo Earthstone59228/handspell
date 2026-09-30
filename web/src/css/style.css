@@ -698,7 +698,7 @@ html.theme-light .setup-confirm:focus-visible {
   outline-color:#1D1D1F
 }
 
-/* Revamp: atmospheric surfaces and translucent, softly rounded cards. */
+/* UI redesign: atmospheric surfaces and translucent, softly rounded cards. */
 .app-shell {
   background:radial-gradient(ellipse at 0% 0%,#344653 0,transparent 55%),
     radial-gradient(ellipse at 100% 100%,#263b49 0,transparent 55%),#1D1D1F;
