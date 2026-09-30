@@ -1,47 +1,74 @@
 package dev.handspell.app.ui.words
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import dev.handspell.app.R
 import dev.handspell.app.content.Tier
 import dev.handspell.app.content.WordEntry
 import dev.handspell.app.content.WordReference
-import androidx.compose.ui.text.style.TextAlign
 import dev.handspell.app.progress.WordRecord
 import dev.handspell.app.ui.components.AslButton
-import dev.handspell.app.ui.components.AslButtonStyle
 import dev.handspell.app.ui.components.AslButtonPair
+import dev.handspell.app.ui.components.AslButtonStyle
 import dev.handspell.app.ui.components.AslSheet
-import dev.handspell.app.ui.pro.WordsProStrip
+import dev.handspell.app.ui.components.BackChevron
 import dev.handspell.app.ui.components.ProLockLabel
-import dev.handspell.app.ui.settings.FrostedSettingsHero
+import dev.handspell.app.ui.menu.HeaderIcon
+import dev.handspell.app.ui.pro.WordsProStrip
 import dev.handspell.app.ui.settings.SettingsGroupFooter
+import dev.handspell.app.ui.theme.AslPalette
 import dev.handspell.app.ui.theme.AslShapes
+import dev.handspell.app.ui.theme.AslText
 import dev.handspell.app.ui.theme.LocalAslColors
+import dev.handspell.app.ui.theme.LocalReduceMotion
 import dev.handspell.app.ui.theme.Spacing
+import kotlinx.coroutines.launch
 
 /** What the Words menu shows. [loading] until the bundled list has been read. */
 data class WordsMenuState(
@@ -53,15 +80,34 @@ data class WordsMenuState(
     /** Complete words among those the learner can open (locked Pro words are not counted against them). */
     val completeCount: Int get() = practicable.count { records[it.gloss]?.complete == true }
 
+    /** Complete words among every listed word, for the header's "N / M" line (like the alphabet's "N / 24"). */
+    val completeOfAll: Int get() = words.count { records[it.gloss]?.complete == true }
+
     fun isLocked(word: WordEntry): Boolean = word.tier == Tier.PRO && !isPro
 
     /** Words the drill cycles through: everything the learner can open. */
     val practicable: List<WordEntry> get() = words.filterNot(::isLocked)
 }
 
+/** The header's progress line, as the alphabet writes it: "3 / 36". */
+fun wordsProgressLine(complete: Int, total: Int): String = "$complete / $total"
+
 /**
- * The words menu: the alphabet's header and its off-white cards, one per word. A tap opens the same practice sheet
- * as a letter (Practice, Mark complete); a Pro word shows the neutral lock and asks for the paywall instead.
+ * The A–Z rail's entries: each initial present in [words], A to Z, with the list position of the first word starting
+ * with it (the list itself is in catalogue order, free words first).
+ */
+fun wordInitials(words: List<WordEntry>): List<Pair<Char, Int>> =
+    words.mapIndexedNotNull { index, word -> word.display.firstOrNull()?.uppercaseChar()?.let { it to index } }
+        .filter { it.first in 'A'..'Z' }
+        .groupBy({ it.first }, { it.second })
+        .map { (initial, positions) -> initial to positions.min() }
+        .sortedBy { it.first }
+
+/**
+ * The words menu, built as the alphabet page is: a frosted header (back, bold title, settings and documents icons,
+ * "N / M"), the off-white cards (word on the left, index or "complete" top right, the hand wireframe in the bordered
+ * slot bottom right), and the A–Z rail on the right (left in left-handed layout). A tap opens the practice sheet; a
+ * Pro word keeps the neutral lock and asks for the paywall.
  */
 @Composable
 fun WordsMenuScreen(
@@ -73,33 +119,76 @@ fun WordsMenuScreen(
     proStrip: Boolean = false,
     onDismissProStrip: () -> Unit = {},
     references: Map<String, WordReference> = emptyMap(),
+    onSettings: () -> Unit = {},
+    onPaper: () -> Unit = {},
+    leftHanded: Boolean = false,
 ) {
+    val colors = LocalAslColors.current
+    val density = LocalDensity.current
+    val reduceMotion = LocalReduceMotion.current
     var selectedGloss by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = state.words.firstOrNull { it.gloss == selectedGloss }
-    Box {
-        FrostedSettingsHero(
-            onBack = onBack,
-            title = stringResource(R.string.words_title),
-            body = if (state.loading) null
-            else stringResource(R.string.words_hero_body, state.completeCount, state.practicable.size),
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    var headerHeight by remember { mutableIntStateOf(0) }
+    val headerDp = with(density) { headerHeight.toDp() }
+    val gutterStart = if (leftHanded) Spacing.indexGutter else Spacing.lg
+    val gutterEnd = if (leftHanded) Spacing.lg else Spacing.indexGutter
+    Box(Modifier.fillMaxSize().background(colors.backgroundGrouped)) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = gutterStart, end = gutterEnd, top = headerDp + Spacing.xs, bottom = Spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             when {
-                state.loading -> Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge)
-                state.words.isEmpty() -> Text(stringResource(R.string.words_empty), style = MaterialTheme.typography.bodyLarge)
-                else -> Column(verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                    state.words.forEachIndexed { index, word ->
-                        WordCard(word, index, state.records[word.gloss], state.isLocked(word)) {
+                state.loading -> item { Text(stringResource(R.string.content_loading), style = MaterialTheme.typography.bodyLarge) }
+                state.words.isEmpty() -> item { Text(stringResource(R.string.words_empty), style = MaterialTheme.typography.bodyLarge) }
+                else -> {
+                    itemsIndexed(state.words, key = { _, word -> word.gloss }) { index, word ->
+                        WordCard(word, index, state.records[word.gloss], state.isLocked(word), references[word.gloss],
+                            selected = word.gloss == selectedGloss) {
                             if (state.isLocked(word)) onLocked(word) else selectedGloss = word.gloss
                         }
                     }
-                    SettingsGroupFooter(stringResource(R.string.words_footer))
+                    item { SettingsGroupFooter(stringResource(R.string.words_footer)) }
                     val locked = state.words.filter(state::isLocked)
-                    if (proStrip && locked.isNotEmpty()) WordsProStrip(
-                        proWordCount = locked.size, examples = locked.take(3).map { it.display },
-                        onSeePro = { onLocked(locked.first()) }, onDismiss = onDismissProStrip,
-                    )
+                    if (proStrip && locked.isNotEmpty()) item {
+                        WordsProStrip(
+                            proWordCount = locked.size, examples = locked.take(3).map { it.display },
+                            onSeePro = { onLocked(locked.first()) }, onDismiss = onDismissProStrip,
+                        )
+                    }
                 }
             }
+        }
+        // Header over the list, like the alphabet's frosted .top-area.
+        Column(
+            Modifier.fillMaxWidth().onSizeChanged { headerHeight = it.height }
+                .background(colors.backgroundGrouped.copy(alpha = 0.94f)),
+        ) {
+            Row(Modifier.fillMaxWidth().padding(start = Spacing.xs, end = Spacing.sm, top = Spacing.xxs),
+                verticalAlignment = Alignment.CenterVertically) {
+                BackChevron(onBack)
+                Text(stringResource(R.string.words_title), style = AslText.largeTitle, color = colors.label,
+                    modifier = Modifier.weight(1f).semantics { heading() })
+                HeaderIcon(R.drawable.ic_settings, stringResource(R.string.menu_open_settings), onSettings)
+                HeaderIcon(R.drawable.ic_paper, stringResource(R.string.menu_open_paper), onPaper)
+            }
+            if (!state.loading) Text(
+                wordsProgressLine(state.completeOfAll, state.words.size), style = AslText.progressLine,
+                color = colors.label.copy(alpha = 0.62f),
+                modifier = Modifier.padding(start = Spacing.lg, top = Spacing.xs, bottom = Spacing.sm)
+                    .semantics { contentDescription = "${state.completeOfAll} of ${state.words.size}" },
+            )
+        }
+        val initials = remember(state.words) { wordInitials(state.words) }
+        if (initials.size > 1) IndexRail(
+            initials,
+            Modifier.align(if (leftHanded) Alignment.TopStart else Alignment.TopEnd)
+                .padding(top = headerDp + Spacing.xs, bottom = Spacing.md, start = Spacing.xs, end = Spacing.xs),
+        ) { position ->
+            scope.launch { if (reduceMotion) listState.scrollToItem(position) else listState.animateScrollToItem(position) }
         }
         AslSheet(visible = selected != null, onDismiss = { selectedGloss = null }) {
             if (selected != null) WordSheet(
@@ -114,8 +203,40 @@ fun WordsMenuScreen(
     }
 }
 
+/** The alphabet's index pill: one small initial per row; a tap jumps to the first word with it. */
 @Composable
-private fun WordCard(word: WordEntry, index: Int, record: WordRecord?, locked: Boolean, onClick: () -> Unit) {
+private fun IndexRail(initials: List<Pair<Char, Int>>, modifier: Modifier, onJump: (Int) -> Unit) {
+    val colors = LocalAslColors.current
+    val shape = RoundedCornerShape(AslShapes.thumb)
+    Column(
+        modifier.width(Spacing.indexRail).clip(shape).background(colors.backgroundGrouped)
+            .border(Spacing.hairline, colors.separator, shape).padding(vertical = Spacing.xxs),
+    ) {
+        initials.forEach { (initial, position) ->
+            val description = stringResource(R.string.words_jump_to, initial.toString())
+            Box(
+                Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.xl)
+                    .clickable(role = Role.Button) { onJump(position) }
+                    .semantics { contentDescription = description },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(initial.toString(), style = AslText.indexGlyph, color = colors.label.copy(alpha = 0.65f),
+                    modifier = Modifier.clearAndSetSemantics {})
+            }
+        }
+    }
+}
+
+@Composable
+private fun WordCard(
+    word: WordEntry,
+    index: Int,
+    record: WordRecord?,
+    locked: Boolean,
+    reference: WordReference?,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
     val colors = LocalAslColors.current
     val complete = record?.complete == true
     val description = when {
@@ -123,34 +244,52 @@ private fun WordCard(word: WordEntry, index: Int, record: WordRecord?, locked: B
         complete -> stringResource(R.string.words_card_complete_description, word.display)
         else -> stringResource(R.string.words_card_description, word.display)
     }
-    Surface(
-        Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.referenceGuide)
-            .clickable(role = Role.Button, onClick = onClick)
-            .semantics(mergeDescendants = true) { contentDescription = description },
-        shape = RoundedCornerShape(AslShapes.large),
-        color = colors.card,
-        contentColor = colors.onCard,
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
+    val shape = RoundedCornerShape(AslShapes.large)
+    Box(
+        Modifier.fillMaxWidth().height(Spacing.letterCard)
+            .graphicsLayer { val s = if (pressed) 0.985f else 1f; scaleX = s; scaleY = s }
+            .clip(shape).background(colors.card)
+            .then(if (selected) Modifier.border(Spacing.hairline, colors.accent.copy(alpha = 0.6f), shape) else Modifier)
+            .clickable(interactions, indication = null, role = Role.Button, onClick = onClick)
+            .semantics(mergeDescendants = true) { contentDescription = description }
+            .padding(horizontal = WORD_CARD_PAD_H, vertical = Spacing.sm),
     ) {
-        Row(
-            Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                word.display, style = MaterialTheme.typography.displaySmall, color = colors.onCard,
-                modifier = Modifier.weight(1f).alpha(if (locked) 0.62f else 1f),
-            )
+        BasicText(
+            word.display,
+            style = AslText.wordCard.copy(color = colors.onCard),
+            maxLines = 1,
+            autoSize = TextAutoSize.StepBased(minFontSize = 20.sp, maxFontSize = AslText.wordCard.fontSize),
+            modifier = Modifier.align(Alignment.CenterStart)
+                .padding(end = Spacing.cardThumbWidth + Spacing.sm).alpha(if (locked) 0.62f else 1f)
+                .clearAndSetSemantics {},
+        )
+        Box(Modifier.align(Alignment.TopEnd)) {
             when {
                 locked -> ProLockLabel(colors.onCardSecondary)
-                complete -> Text(stringResource(R.string.words_card_complete), style = MaterialTheme.typography.labelSmall,
-                    color = colors.accent)
-                else -> Text((index + 1).toString().padStart(2, '0'), style = MaterialTheme.typography.labelSmall,
-                    color = colors.onCardSecondary)
+                complete -> Text(stringResource(R.string.words_card_complete), style = AslText.cardMeta, color = AslPalette.BlueText)
+                else -> Text((index + 1).toString().padStart(2, '0'), style = AslText.cardMeta, color = AslPalette.MetaGrey)
             }
+        }
+        val thumbShape = RoundedCornerShape(AslShapes.thumb)
+        Box(
+            Modifier.align(Alignment.BottomEnd).size(Spacing.cardThumbWidth, Spacing.cardThumbHeight)
+                .clip(thumbShape).border(Spacing.hairline, colors.onCard.copy(alpha = 0.14f), thumbShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (reference != null) WordHandThumbnail(reference, Modifier.fillMaxSize())
         }
     }
 }
 
-/** Practice is always offered, also for a completed word; the second action marks or unmarks it. */
+/** The web card's 19px side padding. */
+private val WORD_CARD_PAD_H = Spacing.lg - Spacing.hairline
+
+/**
+ * The letter sheet for a word: the big off-white tile with the animated example, the word as the title, "COMPLETE"
+ * when it is, the tip and the one-hand hint, then Practice and Mark complete (or Undo) side by side.
+ */
 @Composable
 private fun WordSheet(
     word: WordEntry,
@@ -161,38 +300,33 @@ private fun WordSheet(
     onMarkComplete: (Boolean) -> Unit,
 ) {
     val colors = LocalAslColors.current
-    Surface(
-        Modifier.fillMaxWidth().sizeIn(minHeight = Spacing.referenceGuide * 1.5f),
-        shape = RoundedCornerShape(AslShapes.extraLarge),
-        color = colors.card,
+    Box(
+        Modifier.size(Spacing.practiceTile).clip(RoundedCornerShape(AslShapes.tile)).background(colors.card),
+        contentAlignment = Alignment.Center,
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            // Like the letter sheet's tile, but showing how the word is signed; the word itself is the title below.
-            if (reference != null) WordReferenceView(reference, word.display,
-                Modifier.padding(Spacing.sm).sizeIn(maxWidth = Spacing.referenceGuide * 2.2f).fillMaxWidth(),
-                mutedColor = colors.onCardSecondary)
-            else Text(word.display, style = MaterialTheme.typography.displaySmall, color = colors.accent,
-                fontWeight = FontWeight.Bold, modifier = Modifier.padding(Spacing.xl))
-        }
+        if (reference != null) WordReferenceView(reference, word.display, Modifier.fillMaxSize().padding(Spacing.xs))
+        else Text(word.display, style = AslText.wordCard, color = colors.accent)
     }
-    Text(
-        stringResource(if (complete) R.string.words_sheet_title_complete else R.string.words_sheet_title, word.display),
-        style = MaterialTheme.typography.headlineSmall,
-    )
-    Text(stringResource(R.string.word_drill_hint), style = MaterialTheme.typography.bodyMedium,
-        color = colors.labelSecondary, textAlign = TextAlign.Center)
-    word.tip?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary, textAlign = TextAlign.Center) }
+    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+        Text(word.display, style = AslText.sheetTitle, color = colors.label, textAlign = TextAlign.Center,
+            modifier = Modifier.semantics { heading() })
+        if (complete) Text(stringResource(R.string.words_card_complete).uppercase(), style = AslText.progressLine,
+            color = colors.label.copy(alpha = 0.62f))
+        word.tip?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary, textAlign = TextAlign.Center) }
+        Text(stringResource(R.string.word_drill_hint), style = MaterialTheme.typography.bodyMedium,
+            color = colors.labelSecondary, textAlign = TextAlign.Center)
+    }
     val undo = stringResource(R.string.mark_complete_undo)
     AslButtonPair(
         first = { modifier -> AslButton(stringResource(R.string.words_practice), onPractice, modifier, singleLine = true) },
         second = when {
             markedComplete -> { modifier ->
                 AslButton(stringResource(R.string.mark_complete_undo_short), { onMarkComplete(false) }, modifier,
-                    style = AslButtonStyle.Secondary, contentDescription = undo, singleLine = true)
+                    style = AslButtonStyle.Card, contentDescription = undo, singleLine = true)
             }
             !complete -> { modifier ->
                 AslButton(stringResource(R.string.mark_complete), { onMarkComplete(true) }, modifier,
-                    style = AslButtonStyle.Secondary, singleLine = true)
+                    style = AslButtonStyle.Card, singleLine = true)
             }
             else -> null
         },

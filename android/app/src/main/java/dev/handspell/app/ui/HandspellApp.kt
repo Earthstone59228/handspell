@@ -284,6 +284,9 @@ fun HandspellApp(
                 proStrip = !isPro && !wordsProDismissed && proWordCount > 0,
                 onDismissProStrip = { wordsProDismissed = true },
                 references = wordReferences,
+                onSettings = { navController.navigate(SETTINGS_ROUTE) },
+                onPaper = { navController.navigate(PAPER_ROUTE) },
+                leftHanded = leftHanded,
             )
         }
         composable("$WORD_DRILL_ROUTE/{gloss}") { entry ->

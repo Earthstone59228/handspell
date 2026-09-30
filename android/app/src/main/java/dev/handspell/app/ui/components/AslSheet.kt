@@ -75,7 +75,7 @@ fun AslSheet(
                     .clickable(remember { MutableInteractionSource() }, indication = null) {}
                     .semantics { dialog() }
                     .navigationBarsPadding()
-                    .padding(start = Spacing.xl, end = Spacing.xl, top = Spacing.xl, bottom = Spacing.xl),
+                    .padding(start = Spacing.xl, end = Spacing.xl, top = Spacing.xl + Spacing.xxs, bottom = Spacing.xl),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(Spacing.md),
                 content = content,

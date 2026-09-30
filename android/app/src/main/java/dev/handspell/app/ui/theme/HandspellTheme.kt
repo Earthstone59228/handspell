@@ -36,6 +36,16 @@ object Spacing {
     val captureSignerPicker: Dp = 112.dp
     val captureLetterPicker: Dp = 160.dp
     val captureRecordButton: Dp = 64.dp
+    /** The alphabet page's letter card height, reused by the word cards. */
+    val letterCard: Dp = 100.dp
+    /** The card's bottom-right wireframe thumbnail (web `.sign-placeholder`). */
+    val cardThumbWidth: Dp = 58.dp
+    val cardThumbHeight: Dp = 56.dp
+    /** The practice sheet's big tile (web `.practice-letter`). */
+    val practiceTile: Dp = 174.dp
+    /** Width of the A–Z index rail (web `.alphabet-index`) and the list's gutter beside it. */
+    val indexRail: Dp = 31.dp
+    val indexGutter: Dp = 66.dp
 }
 
 object AslShapes {
@@ -45,6 +55,9 @@ object AslShapes {
     val medium = 16.dp
     val large = 20.dp
     val extraLarge = 28.dp
+    /** Web `.sign-placeholder` and `.practice-letter` radii. */
+    val thumb = 13.dp
+    val tile = 35.dp
 }
 
 /** Motion timings used only to orient feedback changes; callers honour system animation scale. */
@@ -65,6 +78,12 @@ object AslPalette {
     val Slate = Color(0xFF2C2C2E)
     /** The web menu's white (buttons' text, and the light appearance's cards). */
     val White = Color(0xFFFFFFFF)
+    /** The alphabet cards' "complete" meta text (web `.letter-card.done .card-meta`). */
+    val BlueText = Color(0xFF005FCC)
+    /** Card meta grey (web `.card-meta`). */
+    val MetaGrey = Color(0xFF66666B)
+    /** The faint face-and-shoulders outline behind a word example on a light tile. */
+    val Mist = Color(0xFFC7C7CC)
 }
 
 data class AslColors(
@@ -175,6 +194,16 @@ object AslText {
     val footnote = TextStyle(fontFamily = FontFamily.Default, fontSize = 13.sp, lineHeight = 18.sp)
     /** The alphabet sheet's big letter tile (web `.practice-letter`), for a single letter on a reward card. */
     val hero = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, fontSize = 96.sp, lineHeight = 100.sp, letterSpacing = (-3).sp)
+    /** Word on a word card: the letter cards' weight and tracking at a size that fits a word. */
+    val wordCard = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight(650), fontSize = 36.sp, lineHeight = 40.sp, letterSpacing = (-1.5).sp)
+    /** Card meta ("01", "complete"): web `.card-meta`. */
+    val cardMeta = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight(650), fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 0.5.sp)
+    /** Header progress line ("3 / 36"): web `.progress-line`. */
+    val progressLine = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.SemiBold, fontSize = 11.sp, lineHeight = 14.sp, letterSpacing = 1.sp)
+    /** Practice sheet title: web `.practice-sheet h2`. */
+    val sheetTitle = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.Bold, fontSize = 25.sp, lineHeight = 30.sp, letterSpacing = (-0.6).sp)
+    /** A–Z rail glyph: web `.index-cell`. */
+    val indexGlyph = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.SemiBold, fontSize = 10.sp, lineHeight = 12.sp)
     /** Small uppercase-style section label, like the alphabet's progress line. */
     val eyebrow = TextStyle(fontFamily = FontFamily.Default, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, lineHeight = 16.sp, letterSpacing = 1.sp)
 }

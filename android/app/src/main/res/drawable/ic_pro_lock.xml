@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Shackle: a round-capped arch over the body. -->
+    <path
+        android:pathData="M8.2,10.4V7.9a3.8,3.8 0,0 1,7.6 0V10.4"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Body with the keyhole cut out (even-odd), so one tint colour draws the whole icon. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M8,10h8a3,3 0,0 1,3 3v5a3,3 0,0 1,-3 3H8a3,3 0,0 1,-3 -3v-5a3,3 0,0 1,3 -3z
+                          M12,13.2a1.4,1.4 0,1 1,0 2.8a1.4,1.4 0,1 1,0 -2.8z
+                          M11.3,16h1.4v1.7a0.7,0.7 0,0 1,-1.4 0z" />
+</vector>

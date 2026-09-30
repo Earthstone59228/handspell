@@ -155,7 +155,8 @@ fun BackChevron(onBack: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-enum class AslButtonStyle { Primary, Secondary }
+/** Primary: blue. Secondary: grey surface. Card: the alphabet sheet's off-white "Mark complete" button. */
+enum class AslButtonStyle { Primary, Secondary, Card }
 
 /** Blue fill with white text, or a lighter-grey fill with white text for the secondary action. */
 @Composable
@@ -171,8 +172,16 @@ fun AslButton(
     singleLine: Boolean = false,
 ) {
     val colors = LocalAslColors.current
-    val container = if (style == AslButtonStyle.Primary) colors.accent else colors.surface
-    val content = if (style == AslButtonStyle.Primary) colors.onAccent else colors.onSurface
+    val container = when (style) {
+        AslButtonStyle.Primary -> colors.accent
+        AslButtonStyle.Secondary -> colors.surface
+        AslButtonStyle.Card -> colors.card
+    }
+    val content = when (style) {
+        AslButtonStyle.Primary -> colors.onAccent
+        AslButtonStyle.Secondary -> colors.onSurface
+        AslButtonStyle.Card -> colors.onCard
+    }
     Button(
         onClick = onClick,
         enabled = enabled,
@@ -254,19 +263,13 @@ fun ProLockLabel(color: Color, modifier: Modifier = Modifier) {
     }
 }
 
+/** The Pro lock: a rounded body with a keyhole and a round-capped shackle (res/drawable/ic_pro_lock.xml, one tint). */
 @Composable
 fun ProLockIcon(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier.size(Spacing.md)) {
-        drawRoundRect(
-            color, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.3f, size.height * 0.1f),
-            size = androidx.compose.ui.geometry.Size(size.width * 0.4f, size.height * 0.55f),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width * 0.2f),
-            style = Stroke(width = size.width * 0.09f),
-        )
-        drawRoundRect(
-            color, topLeft = androidx.compose.ui.geometry.Offset(size.width * 0.16f, size.height * 0.45f),
-            size = androidx.compose.ui.geometry.Size(size.width * 0.68f, size.height * 0.48f),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width * 0.09f),
-        )
-    }
+    androidx.compose.foundation.Image(
+        painter = androidx.compose.ui.res.painterResource(R.drawable.ic_pro_lock),
+        contentDescription = null,
+        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(color),
+        modifier = modifier.size(Spacing.lg),
+    )
 }

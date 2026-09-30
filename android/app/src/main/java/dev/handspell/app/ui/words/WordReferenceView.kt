@@ -23,6 +23,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.dp
+import dev.handspell.app.ui.theme.AslPalette
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -53,10 +59,25 @@ fun loopFrameIndex(elapsedMs: Long, frameCount: Int, frameMs: Long, holdMs: Long
     return if (t < holdMs) 0 else ((t - holdMs) / frameMs).toInt().coerceIn(0, frameCount - 1)
 }
 
+/** The frame a still thumbnail shows: about 9/20 of the way in (frames 8–10 of 20), where the sign is under way. */
+fun thumbnailFrameIndex(frameCount: Int): Int = (frameCount * 9 / 20).coerceIn(0, (frameCount - 1).coerceAtLeast(0))
+
+/** Bounding box (minX, minY, maxX, maxY) of a 42-float hand. */
+fun handBounds(hand: FloatArray): FloatArray {
+    var minX = Float.MAX_VALUE; var minY = Float.MAX_VALUE; var maxX = -Float.MAX_VALUE; var maxY = -Float.MAX_VALUE
+    for (i in 0 until 21) {
+        val x = hand[i * 2]; val y = hand[i * 2 + 1]
+        if (x < minX) minX = x; if (x > maxX) maxX = x
+        if (y < minY) minY = y; if (y > maxY) maxY = y
+    }
+    return floatArrayOf(minX, minY, maxX, maxY)
+}
+
 /**
- * The animated example of a word: a head oval and shoulder line in a muted tone, the signing hand's skeleton in the
- * accent colour, looped at the data's frame rate with a short hold on the first frame. With reduce motion on it shows
- * one still frame and a small Play control that plays the sign once.
+ * The example of a word: a faint face-and-shoulders outline (head oval, two eyes, a nose tick, a mouth, a shoulder
+ * curve) so the hand's position reads against the body, and the signing hand's skeleton in the accent colour on top.
+ * It loops at the data's frame rate with a short hold on the first frame. With reduce motion on it shows one still
+ * frame and a small Play control that plays the sign once.
  */
 @Composable
 fun WordReferenceView(
@@ -64,7 +85,7 @@ fun WordReferenceView(
     word: String,
     modifier: Modifier = Modifier,
     handColor: Color = LocalAslColors.current.accent,
-    mutedColor: Color = LocalAslColors.current.onSurfaceSecondary,
+    mutedColor: Color = AslPalette.Mist,
 ) {
     val reduceMotion = LocalReduceMotion.current
     val frames = reference.frames
@@ -85,24 +106,19 @@ fun WordReferenceView(
         playing = false
     }
     val description = stringResource(R.string.word_example_description, word)
+    val density = LocalDensity.current
+    val outline = with(density) { FACE_STROKE.toPx() }
+    val handStroke = with(density) { HAND_STROKE.toPx() }
+    val joint = with(density) { JOINT_RADIUS.toPx() }
     Box(modifier.aspectRatio(1f).semantics { contentDescription = description }) {
         Canvas(Modifier.fillMaxSize()) {
-            val w = size.width
-            val h = size.height
-            val stroke = w * 0.018f
-            val body = reference.body
-            val rx = reference.head[0] * w
-            val ry = reference.head[1] * h
-            drawOval(mutedColor, topLeft = Offset(body[0] * w - rx, body[1] * h - ry), size = Size(rx * 2, ry * 2),
-                style = Stroke(stroke))
-            drawLine(mutedColor, Offset(body[2] * w, body[3] * h), Offset(body[4] * w, body[5] * h), stroke, StrokeCap.Round)
+            // Thin lines scale down with small views (the drill card) so the outline never outweighs the hand.
+            val scale = (size.width / with(density) { Spacing.practiceTile.toPx() }).coerceIn(0.5f, 1f)
+            drawFaceOutline(reference, mutedColor, outline * scale)
             frames.getOrNull(index)?.forEach { hand ->
-                if (hand == null) return@forEach
-                fun p(i: Int) = Offset(hand[i * 2] * w, hand[i * 2 + 1] * h)
-                for (connection in HandLandmarker.HAND_CONNECTIONS) {
-                    drawLine(handColor, p(connection.start()), p(connection.end()), stroke, StrokeCap.Round)
+                if (hand != null) drawHand(hand, handColor, handStroke * scale, joint * scale) { x, y ->
+                    Offset(x * size.width, y * size.height)
                 }
-                for (i in 0 until 21) drawCircle(handColor, stroke * 1.2f, p(i))
             }
         }
         if (reduceMotion && !playing) Box(
@@ -116,3 +132,76 @@ fun WordReferenceView(
         }
     }
 }
+
+/**
+ * A still hand for the word card's thumbnail (the letters' wireframe slot): one representative frame, hand only,
+ * scaled to fill the box like the letter wireframes.
+ */
+@Composable
+fun WordHandThumbnail(reference: WordReference, modifier: Modifier = Modifier, color: Color = LocalAslColors.current.accent) {
+    val hand = remember(reference) {
+        val preferred = thumbnailFrameIndex(reference.frames.size)
+        (listOf(preferred) + reference.frames.indices).firstNotNullOfOrNull { reference.frames[it].firstOrNull { h -> h != null } }
+    } ?: return
+    val bounds = remember(hand) { handBounds(hand) }
+    val density = LocalDensity.current
+    val stroke = with(density) { THUMB_STROKE.toPx() }
+    Canvas(modifier.clearAndSetSemantics {}) {
+        val pad = size.minDimension * 0.14f
+        val rangeX = (bounds[2] - bounds[0]).coerceAtLeast(0.0001f)
+        val rangeY = (bounds[3] - bounds[1]).coerceAtLeast(0.0001f)
+        val k = minOf((size.width - 2 * pad) / rangeX, (size.height - 2 * pad) / rangeY)
+        val ox = (size.width - rangeX * k) / 2f
+        val oy = (size.height - rangeY * k) / 2f
+        drawHand(hand, color, stroke, stroke * 0.9f) { x, y -> Offset((x - bounds[0]) * k + ox, (y - bounds[1]) * k + oy) }
+    }
+}
+
+private fun DrawScope.drawHand(hand: FloatArray, color: Color, stroke: Float, joint: Float, map: (Float, Float) -> Offset) {
+    fun p(i: Int) = map(hand[i * 2], hand[i * 2 + 1])
+    for (connection in HandLandmarker.HAND_CONNECTIONS) {
+        drawLine(color, p(connection.start()), p(connection.end()), stroke, StrokeCap.Round)
+    }
+    for (i in 0 until 21) drawCircle(color, joint, p(i))
+}
+
+/** Head oval with eyes, nose tick and mouth, and a neck-and-shoulders curve, from the reference's body anchors. */
+private fun DrawScope.drawFaceOutline(reference: WordReference, color: Color, stroke: Float) {
+    val w = size.width
+    val h = size.height
+    val body = reference.body
+    val nose = Offset(body[0] * w, body[1] * h)
+    val rx = reference.head[0] * w
+    val ry = reference.head[1] * h
+    val line = Stroke(stroke, cap = StrokeCap.Round)
+    drawOval(color, topLeft = Offset(nose.x - rx, nose.y - ry), size = Size(rx * 2, ry * 2), style = line)
+    val eyeY = nose.y - 0.35f * ry
+    drawCircle(color, stroke * 1.3f, Offset(nose.x - 0.4f * rx, eyeY))
+    drawCircle(color, stroke * 1.3f, Offset(nose.x + 0.4f * rx, eyeY))
+    drawLine(color, Offset(nose.x, nose.y - 0.12f * ry), Offset(nose.x, nose.y + 0.06f * ry), stroke, StrokeCap.Round)
+    val mouthY = nose.y + 0.45f * ry
+    val mouth = Path().apply {
+        moveTo(nose.x - 0.28f * rx, mouthY)
+        quadraticTo(nose.x, mouthY + 0.14f * ry, nose.x + 0.28f * rx, mouthY)
+    }
+    drawPath(mouth, color, style = line)
+    // Neck from under the chin, flowing out into rounded shoulders.
+    val left = Offset(body[2] * w, body[3] * h)
+    val right = Offset(body[4] * w, body[5] * h)
+    val chin = nose.y + ry
+    val neck = 0.38f * rx
+    val shoulders = Path().apply {
+        moveTo(left.x - 0.06f * w, left.y + 0.14f * h)
+        cubicTo(left.x - 0.02f * w, left.y, nose.x - neck * 1.6f, left.y - 0.01f * h, nose.x - neck, chin + 0.05f * h)
+        lineTo(nose.x - neck, chin)
+        moveTo(nose.x + neck, chin)
+        lineTo(nose.x + neck, chin + 0.05f * h)
+        cubicTo(nose.x + neck * 1.6f, right.y - 0.01f * h, right.x + 0.02f * w, right.y, right.x + 0.06f * w, right.y + 0.14f * h)
+    }
+    drawPath(shoulders, color, style = line)
+}
+
+private val FACE_STROKE = 1.5.dp
+private val HAND_STROKE = 2.5.dp
+private val JOINT_RADIUS = 2.dp
+private val THUMB_STROKE = 1.9.dp

@@ -49,6 +49,8 @@ import dev.handspell.app.R
 import dev.handspell.app.content.WordEntry
 import dev.handspell.app.content.WordReference
 import androidx.compose.foundation.layout.size
+import androidx.compose.ui.layout.onSizeChanged
+import dev.handspell.app.ui.theme.AslPalette
 import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.ui.components.AslCard
@@ -107,6 +109,7 @@ fun WordDrillRoute(
         showHeader = showHeader,
         modifier = modifier,
         reference = reference,
+        thumbnails = viewModel.previewThumbnail,
     )
 }
 
@@ -122,6 +125,7 @@ private fun WordDrillScreen(
     showHeader: Boolean,
     modifier: Modifier,
     reference: WordReference?,
+    thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>? = null,
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -184,7 +188,7 @@ private fun WordDrillScreen(
                 }
                 AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth().padding(top = Spacing.md))
             }
-            else -> ActiveWordDrill(state, word, reference, onSkip, onContinue, onCameraUnavailable)
+            else -> ActiveWordDrill(state, word, reference, thumbnails, onSkip, onContinue, onCameraUnavailable)
         }
     }
 }
@@ -194,12 +198,14 @@ private fun ActiveWordDrill(
     state: WordDrillUiState,
     word: WordEntry,
     reference: WordReference?,
+    thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>?,
     onSkip: (WordEntry) -> Unit,
     onContinue: (WordEntry) -> Unit,
     onCameraUnavailable: () -> Unit,
 ) {
     val colors = LocalAslColors.current
     val scroll = rememberScrollState()
+    var frameSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
     Column(
         Modifier.fillMaxSize().verticalScroll(scroll, enabled = scroll.maxValue > 0).padding(horizontal = Spacing.md),
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
@@ -210,13 +216,15 @@ private fun ActiveWordDrill(
             val cameraDescription = stringResource(R.string.camera_preview_content_description)
             Box(
                 Modifier.fillMaxWidth().widthIn(max = CAMERA_FRAME_MAX_WIDTH).aspectRatio(CAMERA_PREVIEW_ASPECT_RATIO)
-                    .clip(RoundedCornerShape(FrameGeometry.outerRadius)),
+                    .clip(RoundedCornerShape(FrameGeometry.outerRadius))
+                    .onSizeChanged { frameSize = it },
             ) {
                 androidx.compose.runtime.key(state.cameraSession) {
                     CameraFrame(binding.analyzer, binding.analyzerExecutor, onCameraError = { onCameraUnavailable() })
                 }
                 LandmarkOverlay(state.overlay, Modifier.fillMaxSize().semantics { contentDescription = cameraDescription })
-                WordReferenceCard(word, reference, Modifier.align(Alignment.TopStart).padding(FrameGeometry.guideInset))
+                WordReferenceCard(word, reference, thumbnails, frameSize,
+                    Modifier.align(Alignment.TopStart).padding(FrameGeometry.guideInset))
             }
         }
         Text(
@@ -244,23 +252,35 @@ private fun ActiveWordDrill(
 }
 
 /**
- * The word to sign on the letter drill's reference card (same corner, inset and radius): the looping example when
- * there is one, with the word as its caption.
+ * The word to sign, on the letter drill's reference card: same corner, inset, radius and live frosted patch of the
+ * camera picture as HandshapeGuide, with the looping example and the word as its caption. Text is always light here
+ * because the card sits on a darkened camera patch in both appearances.
  */
 @Composable
-private fun WordReferenceCard(word: WordEntry, reference: WordReference?, modifier: Modifier = Modifier) {
-    val colors = LocalAslColors.current
+private fun WordReferenceCard(
+    word: WordEntry,
+    reference: WordReference?,
+    thumbnails: kotlinx.coroutines.flow.StateFlow<android.graphics.Bitmap?>?,
+    frameSize: androidx.compose.ui.unit.IntSize,
+    modifier: Modifier = Modifier,
+) {
     val label = stringResource(R.string.word_reference, word.display)
-    Column(
-        modifier.clip(RoundedCornerShape(FrameGeometry.guideRadius)).background(colors.surface)
-            .padding(horizontal = Spacing.sm, vertical = Spacing.xs),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
+    var cardSize by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    Box(
+        modifier.clip(RoundedCornerShape(FrameGeometry.guideRadius)).onSizeChanged { cardSize = it }
+            .semantics(mergeDescendants = true) { contentDescription = label },
     ) {
-        Text(stringResource(R.string.word_reference_label), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceSecondary)
-        if (reference != null) WordReferenceView(reference, word.display, Modifier.size(Spacing.referenceGuide))
-        Text(word.display, style = if (reference != null) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
-            color = colors.accent, modifier = Modifier.semantics { contentDescription = label })
+        dev.handspell.app.ui.components.LiveBackdrop(thumbnails, frameSize, cardSize, Modifier.matchParentSize())
+        Column(
+            Modifier.padding(Spacing.xs),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
+        ) {
+            if (reference != null) WordReferenceView(reference, word.display, Modifier.size(Spacing.referenceGuide),
+                mutedColor = AslPalette.Paper.copy(alpha = 0.35f))
+            Text(word.display, style = if (reference != null) MaterialTheme.typography.labelMedium else MaterialTheme.typography.headlineSmall,
+                color = AslPalette.Paper)
+        }
     }
 }
 

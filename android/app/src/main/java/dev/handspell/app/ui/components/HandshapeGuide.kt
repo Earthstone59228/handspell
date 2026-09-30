@@ -131,7 +131,7 @@ fun HandshapeGuide(
  * layer. Before the first frame the card is plain grey.
  */
 @Composable
-private fun LiveBackdrop(thumbnails: StateFlow<Bitmap?>?, frameSize: IntSize, guideSize: IntSize, modifier: Modifier) {
+internal fun LiveBackdrop(thumbnails: StateFlow<Bitmap?>?, frameSize: IntSize, guideSize: IntSize, modifier: Modifier) {
     val thumbnail = thumbnails?.collectAsState()
     val insetPx = with(androidx.compose.ui.platform.LocalDensity.current) { FrameGeometry.guideInset.toPx() }
     Box(modifier.background(LocalAslColors.current.surface)) {
