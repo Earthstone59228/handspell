@@ -5,8 +5,9 @@ camera. It shows a letter or word, watches your hand, and tells you whether you 
 entirely on the device. Built for the RevenueCat Shipaton 2026, Next Gen track.
 
 **Try it:** [download the debug APK](https://github.com/Earthstone59228/handspell/raw/refs/heads/main/artifacts/handspell-debug.apk)
-(also attached to the pre-release `debug-20260930-2f5143f`; install notes and SHA-256 in
-[`artifacts/README.md`](artifacts/README.md)). Purchases use RevenueCat's **Test Store**: they are simulated and
+(install notes and SHA-256 in [`artifacts/README.md`](artifacts/README.md)).
+**Watch the 1:58 demo:** [Shipaton submission video](video/handspell-shipaton-submission.mp4).
+Purchases use RevenueCat's **Test Store**: they are simulated and
 no money changes hands.
 
 ## Features
