@@ -28,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import dev.handspell.app.R
 import dev.handspell.app.content.Tier
 import dev.handspell.app.content.WordEntry
+import dev.handspell.app.content.WordReference
+import androidx.compose.ui.text.style.TextAlign
 import dev.handspell.app.progress.WordRecord
 import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.ui.components.AslButtonStyle
@@ -70,6 +72,7 @@ fun WordsMenuScreen(
     onLocked: (WordEntry) -> Unit,
     proStrip: Boolean = false,
     onDismissProStrip: () -> Unit = {},
+    references: Map<String, WordReference> = emptyMap(),
 ) {
     var selectedGloss by rememberSaveable { mutableStateOf<String?>(null) }
     val selected = state.words.firstOrNull { it.gloss == selectedGloss }
@@ -101,6 +104,7 @@ fun WordsMenuScreen(
         AslSheet(visible = selected != null, onDismiss = { selectedGloss = null }) {
             if (selected != null) WordSheet(
                 word = selected,
+                reference = references[selected.gloss],
                 complete = state.records[selected.gloss]?.complete == true,
                 markedComplete = state.records[selected.gloss]?.markedComplete == true,
                 onPractice = { selectedGloss = null; onPractice(selected) },
@@ -150,6 +154,7 @@ private fun WordCard(word: WordEntry, index: Int, record: WordRecord?, locked: B
 @Composable
 private fun WordSheet(
     word: WordEntry,
+    reference: WordReference?,
     complete: Boolean,
     markedComplete: Boolean,
     onPractice: () -> Unit,
@@ -162,7 +167,11 @@ private fun WordSheet(
         color = colors.card,
     ) {
         Box(contentAlignment = Alignment.Center) {
-            Text(word.display, style = MaterialTheme.typography.displaySmall, color = colors.accent,
+            // Like the letter sheet's tile, but showing how the word is signed; the word itself is the title below.
+            if (reference != null) WordReferenceView(reference, word.display,
+                Modifier.padding(Spacing.sm).sizeIn(maxWidth = Spacing.referenceGuide * 2.2f).fillMaxWidth(),
+                mutedColor = colors.onCardSecondary)
+            else Text(word.display, style = MaterialTheme.typography.displaySmall, color = colors.accent,
                 fontWeight = FontWeight.Bold, modifier = Modifier.padding(Spacing.xl))
         }
     }
@@ -170,6 +179,9 @@ private fun WordSheet(
         stringResource(if (complete) R.string.words_sheet_title_complete else R.string.words_sheet_title, word.display),
         style = MaterialTheme.typography.headlineSmall,
     )
+    Text(stringResource(R.string.word_drill_hint), style = MaterialTheme.typography.bodyMedium,
+        color = colors.labelSecondary, textAlign = TextAlign.Center)
+    word.tip?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary, textAlign = TextAlign.Center) }
     val undo = stringResource(R.string.mark_complete_undo)
     AslButtonPair(
         first = { modifier -> AslButton(stringResource(R.string.words_practice), onPractice, modifier, singleLine = true) },

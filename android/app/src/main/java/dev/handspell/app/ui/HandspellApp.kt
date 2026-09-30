@@ -147,6 +147,9 @@ fun HandspellApp(
     }
     val context = LocalContext.current
     val words by produceState<List<WordEntry>?>(null, context) { value = WordCatalog.load(context.assets) }
+    val wordReferences by produceState(emptyMap<String, dev.handspell.app.content.WordReference>(), context) {
+        value = dev.handspell.app.content.WordReferences.load(context.assets)
+    }
     val currentEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentEntry?.destination?.route
 
@@ -260,7 +263,7 @@ fun HandspellApp(
                 words = WordsMenuState(loading = false, words = words.orEmpty(), isPro = isPro).practicable,
                 wordsAvailable = available,
                 signDetector = signDetector, catalog = canonicalHandshapeCatalog, wordDetector = wordDetector,
-                progressStore = progressStore, snapshot = progress, isPro = isPro,
+                progressStore = progressStore, snapshot = progress, isPro = isPro, references = wordReferences,
                 proMentionDismissed = proMentionDismissed, onDismissProMention = { proMentionDismissed = true },
                 onSeePro = { entitlementGate.requestPaywall(PaywallSource.SPEED_LIMIT) },
                 onBack = { navController.popBackStack() },
@@ -280,6 +283,7 @@ fun HandspellApp(
                 onLocked = { entitlementGate.requestPaywall(PaywallSource.WORDS) },
                 proStrip = !isPro && !wordsProDismissed && proWordCount > 0,
                 onDismissProStrip = { wordsProDismissed = true },
+                references = wordReferences,
             )
         }
         composable("$WORD_DRILL_ROUTE/{gloss}") { entry ->
@@ -289,6 +293,7 @@ fun HandspellApp(
             if (word == null) Box(Modifier.fillMaxSize().background(LocalAslColors.current.backgroundGrouped))
             else WordDrillRoute(
                 word = word, words = practicable, detector = wordDetector(), progressStore = progressStore,
+                reference = wordReferences[word.gloss],
                 onBack = { navController.popBackStack() },
                 onMatched = { matched -> showReward(RewardSubject(RewardSubject.Kind.WORD, matched.gloss, matched.display)) },
                 onNext = { next ->

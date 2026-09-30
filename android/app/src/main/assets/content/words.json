@@ -4,62 +4,74 @@
     {
       "gloss": "hello",
       "display": "hello",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Flat hand at your forehead, then move it out and away, like a salute."
     },
     {
       "gloss": "bye",
       "display": "bye",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Open hand beside your shoulder, then wave it."
     },
     {
       "gloss": "thankyou",
       "display": "thank you",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Flat fingertips at your chin, then move the hand forward and down."
     },
     {
       "gloss": "yes",
       "display": "yes",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Fist in front of you, nodding up and down."
     },
     {
       "gloss": "happy",
       "display": "happy",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Flat hand on your chest, brushing up in circles."
     },
     {
       "gloss": "sad",
       "display": "sad",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Open hand in front of your face, moving down."
     },
     {
       "gloss": "hungry",
       "display": "hungry",
-      "tier": "free"
+      "tier": "free",
+      "tip": "C-shaped hand at the top of your chest, sliding down."
     },
     {
       "gloss": "drink",
       "display": "drink",
-      "tier": "free"
+      "tier": "free",
+      "tip": "C-shaped hand to your mouth, tipping like a cup."
     },
     {
       "gloss": "water",
       "display": "water",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Three fingers up (a W) tapping your chin."
     },
     {
       "gloss": "mom",
       "display": "mom",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Open hand, thumb tapping your chin."
     },
     {
       "gloss": "dad",
       "display": "dad",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Open hand, thumb tapping your forehead."
     },
     {
       "gloss": "home",
       "display": "home",
-      "tier": "free"
+      "tier": "free",
+      "tip": "Flat-O hand touching your mouth, then your cheek."
     },
     {
       "gloss": "bird",

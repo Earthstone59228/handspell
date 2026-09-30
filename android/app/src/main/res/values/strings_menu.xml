@@ -42,7 +42,10 @@
     <string name="words_unavailable_body">The word model isn’t included in this build. Letters work as usual.</string>
     <string name="word_prompt">Sign it</string>
     <string name="word_prompt_matched">Got it</string>
-    <string name="word_drill_hint">Sign the whole word at a steady pace, with your hands and face in the frame.</string>
+    <string name="word_drill_hint">Sign it with one hand. The camera follows your dominant hand.</string>
+    <string name="word_example_description">Example of signing %1$s</string>
+    <string name="word_example_play">Play</string>
+    <string name="word_example_replay">Replay</string>
     <string name="word_reference">Word to sign: %1$s</string>
     <string name="word_reference_label">Sign</string>
     <string name="word_feedback_match">That’s %1$s</string>

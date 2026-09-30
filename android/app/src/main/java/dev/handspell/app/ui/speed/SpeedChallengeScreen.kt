@@ -98,6 +98,7 @@ fun SpeedChallengeRoute(
     wordDetector: () -> WordDetector,
     progressStore: ProgressStore,
     snapshot: ProgressSnapshot?,
+    references: Map<String, dev.handspell.app.content.WordReference> = emptyMap(),
     isPro: Boolean,
     proMentionDismissed: Boolean,
     onDismissProMention: () -> Unit,
@@ -149,7 +150,7 @@ fun SpeedChallengeRoute(
         when {
             running && !state.paused -> RunningChallenge(
                 mode, prompts, state.promptIndex, state.remainingSeconds, state.score, state.generation, drills, words,
-                signDetector, catalog, wordDetector, progressStore,
+                signDetector, catalog, wordDetector, progressStore, references,
                 onResult = { matched -> model.letterResult(state.promptIndex, matched) },
                 onPause = model::pause,
                 onBack = { model.pause(); exitSheet = true },
@@ -275,6 +276,7 @@ private fun RunningChallenge(
     catalog: CanonicalHandshapeCatalog,
     wordDetector: () -> WordDetector,
     progressStore: ProgressStore,
+    references: Map<String, dev.handspell.app.content.WordReference>,
     onResult: (Boolean) -> Unit,
     onPause: () -> Unit,
     onBack: () -> Unit,
@@ -305,6 +307,7 @@ private fun RunningChallenge(
                     word, words, wordDetector(), progressStore, onBack,
                     onNext = { onResult(false) }, onMatched = { onResult(true) },
                     showHeader = false, sessionKey = key, modifier = Modifier.weight(1f),
+                    reference = references[word.gloss],
                 )
             }
         }

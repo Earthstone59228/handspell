@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /** One word sign the Words menu lists. [gloss] is the model's label; [display] is what the learner reads. */
-data class WordEntry(val gloss: String, val display: String, val tier: Tier)
+data class WordEntry(val gloss: String, val display: String, val tier: Tier, val tip: String? = null)
 
 /**
  * `assets/content/words.json`: `{"version":2,"words":[{"gloss","display","tier"}]}`. Data-driven so Pro words can be
@@ -22,7 +22,7 @@ object WordCatalog {
     private data class Document(val version: Int, val words: List<Item>)
 
     @Serializable
-    private data class Item(val gloss: String, val display: String, val tier: String = "free")
+    private data class Item(val gloss: String, val display: String, val tier: String = "free", val tip: String? = null)
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -36,7 +36,10 @@ object WordCatalog {
         if (document.version != SUPPORTED_VERSION) return null
         return document.words
             .filter { it.gloss.isNotBlank() && it.display.isNotBlank() }
-            .map { WordEntry(it.gloss, it.display, if (it.tier.equals("pro", ignoreCase = true)) Tier.PRO else Tier.FREE) }
+            .map {
+                WordEntry(it.gloss, it.display, if (it.tier.equals("pro", ignoreCase = true)) Tier.PRO else Tier.FREE,
+                    it.tip?.takeIf(String::isNotBlank))
+            }
             .distinctBy { it.gloss }
     }
 

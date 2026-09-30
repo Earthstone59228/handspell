@@ -47,6 +47,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.handspell.app.R
 import dev.handspell.app.content.WordEntry
+import dev.handspell.app.content.WordReference
+import androidx.compose.foundation.layout.size
 import dev.handspell.app.progress.ProgressStore
 import dev.handspell.app.ui.components.AslButton
 import dev.handspell.app.ui.components.AslCard
@@ -81,6 +83,7 @@ fun WordDrillRoute(
     showHeader: Boolean = true,
     sessionKey: String = word.gloss,
     modifier: Modifier = Modifier,
+    reference: WordReference? = null,
 ) {
     val viewModel: WordDrillViewModel = viewModel(key = "word-drill", factory = WordDrillViewModel.factory(detector, progressStore))
     LaunchedEffect(word, words, sessionKey) { viewModel.setWord(word, words, sessionKey) }
@@ -103,6 +106,7 @@ fun WordDrillRoute(
         onCameraUnavailable = viewModel::onCameraUnavailable,
         showHeader = showHeader,
         modifier = modifier,
+        reference = reference,
     )
 }
 
@@ -117,6 +121,7 @@ private fun WordDrillScreen(
     onCameraUnavailable: () -> Unit,
     showHeader: Boolean,
     modifier: Modifier,
+    reference: WordReference?,
 ) {
     val context = LocalContext.current
     val activity = context as? Activity
@@ -179,7 +184,7 @@ private fun WordDrillScreen(
                 }
                 AslButton(stringResource(R.string.retry), onRetry, Modifier.fillMaxWidth().padding(top = Spacing.md))
             }
-            else -> ActiveWordDrill(state, word, onSkip, onContinue, onCameraUnavailable)
+            else -> ActiveWordDrill(state, word, reference, onSkip, onContinue, onCameraUnavailable)
         }
     }
 }
@@ -188,6 +193,7 @@ private fun WordDrillScreen(
 private fun ActiveWordDrill(
     state: WordDrillUiState,
     word: WordEntry,
+    reference: WordReference?,
     onSkip: (WordEntry) -> Unit,
     onContinue: (WordEntry) -> Unit,
     onCameraUnavailable: () -> Unit,
@@ -210,7 +216,7 @@ private fun ActiveWordDrill(
                     CameraFrame(binding.analyzer, binding.analyzerExecutor, onCameraError = { onCameraUnavailable() })
                 }
                 LandmarkOverlay(state.overlay, Modifier.fillMaxSize().semantics { contentDescription = cameraDescription })
-                WordReferenceCard(word, Modifier.align(Alignment.TopStart).padding(FrameGeometry.guideInset))
+                WordReferenceCard(word, reference, Modifier.align(Alignment.TopStart).padding(FrameGeometry.guideInset))
             }
         }
         Text(
@@ -224,6 +230,7 @@ private fun ActiveWordDrill(
         ) {
             WordFeedback(state.progress, state.matched, word)
             Text(stringResource(R.string.word_drill_hint), style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary)
+            word.tip?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.labelSecondary) }
             val next = nextWord(state.words, word)
             if (next != null) {
                 if (state.matched) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
@@ -236,19 +243,24 @@ private fun ActiveWordDrill(
     }
 }
 
-/** The word to sign, on the same card as the letter drill's reference (no animation yet). */
+/**
+ * The word to sign on the letter drill's reference card (same corner, inset and radius): the looping example when
+ * there is one, with the word as its caption.
+ */
 @Composable
-private fun WordReferenceCard(word: WordEntry, modifier: Modifier = Modifier) {
+private fun WordReferenceCard(word: WordEntry, reference: WordReference?, modifier: Modifier = Modifier) {
     val colors = LocalAslColors.current
     val label = stringResource(R.string.word_reference, word.display)
     Column(
         modifier.clip(RoundedCornerShape(FrameGeometry.guideRadius)).background(colors.surface)
-            .semantics(mergeDescendants = true) { contentDescription = label }
             .padding(horizontal = Spacing.sm, vertical = Spacing.xs),
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.xxs),
     ) {
         Text(stringResource(R.string.word_reference_label), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceSecondary)
-        Text(word.display, style = MaterialTheme.typography.headlineSmall, color = colors.accent)
+        if (reference != null) WordReferenceView(reference, word.display, Modifier.size(Spacing.referenceGuide))
+        Text(word.display, style = if (reference != null) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall,
+            color = colors.accent, modifier = Modifier.semantics { contentDescription = label })
     }
 }
 
