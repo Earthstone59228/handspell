@@ -1,62 +1,66 @@
 # Handspell
 
-Handspell is an Android app for practising ASL fingerspelling with your phone's front camera. It shows a
-letter, watches your hand, and tells you whether the hand shape matches. Recognition runs entirely on the
-device. Built for the RevenueCat Shipaton 2026, Next Gen track.
+Handspell is an Android app for practising ASL fingerspelling and first word signs with your phone's front
+camera. It shows a letter or word, watches your hand, and tells you whether you signed it. Recognition runs
+entirely on the device. Built for the RevenueCat Shipaton 2026, Next Gen track.
 
-**Testing it:** a debug APK is attached to the GitHub pre-release `debug-20260929-27852be`. Purchases in this
-build use RevenueCat's **Test Store**: they are simulated and no money changes hands.
+**Try it:** [download the debug APK](https://github.com/Earthstone59228/handspell/raw/refs/heads/main/artifacts/handspell-debug.apk)
+(also attached to the pre-release `debug-20260930-2f5143f`; install notes and SHA-256 in
+[`artifacts/README.md`](artifacts/README.md)). Purchases use RevenueCat's **Test Store**: they are simulated and
+no money changes hands.
 
-## What it does
+## Features
 
-Free:
-- Camera drills for all 24 static letters (A–Z without J and Z). The app overlays your hand landmarks, shows
-  three-state feedback (no hand, adjust, match) and confirms a match after a short hold. After a match you can
-  Continue or Skip.
-- A main menu that branches to the alphabet or to word signs, with a streak entry, a daily quest, Progress,
-  Settings and a quick light/dark toggle.
-- An alphabet menu with checkmarks for letters you have completed ("Mark complete"; a completed letter can always be
-  practised again) and an A–Z scrubber.
-- Word signs: 12 free words in a Words menu with a camera drill (Sign it / Got it). Recognition is an on-device
-  network over hand and body landmarks; see the limits below for how well it works.
-- A reward sheet when you complete a letter or word, and a streak screen with a calendar and 3/7/14/30-day markers.
-- Speed challenge: sign a random letter or word against a countdown. One free session a day.
-- A daily quest, and an optional daily streak reminder notification (off by default, made on the phone, nothing sent).
-- A Progress screen (streak, longest streak, letters practised, attempts, per-letter counts), all stored
-  locally.
-- A left-handed layout (Settings, or on the first-run intro) that moves the scrubber to the left edge.
-  Recognition already mirrors left hands.
-- A first-run introduction: what the app does, how to hold the phone, and that the camera stays on the device.
-- Settings for theme, subscription status, data deletion and the legal documents.
+### Free
 
-Handspell Pro (sold through RevenueCat, Test Store only):
-- 3 story packs of 5 word prompts each, 3 timed speed rounds with pause/resume and best scores, unlimited speed
-  challenges, 24 more word signs, and progress insights (weakest letters, this week's practice, a suggestion).
-- A labelled 3-day demo trial of the free-trial flow, and store trial terms on the paywall when the store reports a
-  trial phase. The demo never touches the store.
-- The paywall is an ordinary page with a header and back. It lists what Pro contains, shows the price and
-  period before the purchase button, and offers Continue and Restore. It opens only after a tap on a locked
-  pack or on the Pro row in Settings. Locked packs in the menu show a neutral lock, and nothing shows once you
-  have Pro.
-- The packs are also reachable from Settings → Handspell Pro → Open story and speed packs.
+- **All 26 letters.** Camera drills for A–Z. The 24 static letters use a single-frame classifier with a short
+  hold-to-confirm; **J and Z** are traced motions (starting handshape plus a fingertip-path match) and are marked
+  experimental. The drill shows a reference guide, your hand landmarks, three-state feedback (no hand / adjust /
+  match) and a written hint for each letter.
+- **Alphabet menu** with a hand-shape guide on every letter, completion checkmarks, an A–Z scrubber, and a
+  letter sheet to practise again or undo a completion.
+- **12 word signs** (hello, bye, thank you, yes, happy, sad, hungry, drink, water, mom, dad, home) with an
+  animated front-view example, a camera drill and a Mark complete option. Recognition uses hand and body
+  landmarks from your dominant hand.
+- **Speed challenge:** sign as many letters or words as you can in 60 seconds. One free round a day.
+- **Progress:** current and longest streak, a month calendar, 3/7/14/30-day milestones, letters practised,
+  attempts and matches, per-letter counts.
+- **Today's quest** on the home screen, and an optional daily streak reminder (off by default, made on the phone,
+  nothing sent).
+- **Setup help:** a "lean your phone" step and a camera-permission explainer before the first drill.
+- **Settings:** System / Light / Dark theme (also a quick toggle on the home screen), left-handed layout (moves the
+  scrubber; recognition already mirrors left hands), reminders, delete practice data, and the privacy and license
+  documents.
+
+### Handspell Pro (RevenueCat, Test Store only)
+
+- 24 more word signs (36 in total).
+- Unlimited speed challenges.
+- Three story lessons (Market morning, River walk, Bedtime routine; five fingerspelled words each, with resume)
+  and three timed speed packs, from distinct letters up to the trickiest look-alikes, with pause and best scores.
+- Progress insights: what to practise next, lowest match rate, letters practised this week, average time to a
+  match, best speed score.
+- Paywall with a Free vs Pro table, monthly ($2.00) and yearly ($10.00) plans, Restore purchases, and cancellation
+  instructions. A clearly labelled **3-day demo trial** unlocks Pro locally and never touches the store.
 
 ## Honest limits
 
-- **J and Z are disabled.** They need motion, and the classifier works on single frames.
+- **J and Z are experimental.** Their motion thresholds are backed by synthetic tests only; accuracy on real
+  signers has not been measured.
 - **R, T and U are weaker** and are flagged as experimental in the app. Look-alike letters (A/E/M/N/S/T) are
   the main confusion.
-- Measured recognition is about 92.5% macro F1 on held-out signers, on still images. It has not been
-  measured on a large set of live signers. The training data is public ASLYset (CC BY 4.0) plus 98
-  team-recorded A–D exemplars. Method and numbers: [`docs/research/`](docs/research/) and
+- Static-letter recognition is about 92.5% macro F1 on held-out signers, on still images. It has not been
+  measured on a large set of live signers. Training data is public ASLYset (CC BY 4.0) plus 98 team-recorded
+  A–D exemplars. Method and numbers: [`docs/research/`](docs/research/) and
   [`docs/CLASSIFIER.md`](docs/CLASSIFIER.md).
-- **Word signs are new and only measured on landmark data.** On signers the model never saw, the 12 free words score
-  0.84 top-1 and the 24 Pro words 0.83 (false accepts about 0.5%); see
-  [`docs/research/words-v3-2026-09-30.md`](docs/research/words-v3-2026-09-30.md). That is not yet measured on the
-  phone's own camera and landmarkers, so expect it to be less reliable than the letters. An earlier PopSign attempt
-  failed ([`words-v1`](docs/research/words-v1-2026-09-30.md)). The "word prompts" in Pro packs are words you
-  fingerspell letter by letter.
-- Purchases are Test Store only. There is no store listing.
-- The app is portrait-only and Android-only.
+- **Word signs are measured on landmark data only.** On unseen signers the 12 free words score 0.84 top-1 and the
+  24 Pro words 0.83 (false accepts about 0.5%); see
+  [`docs/research/words-v3-2026-09-30.md`](docs/research/words-v3-2026-09-30.md). Not yet measured through the
+  phone's own camera, so expect them to be less reliable than letters. Signs made near the face are the hardest.
+  An earlier PopSign attempt failed ([`words-v1`](docs/research/words-v1-2026-09-30.md)).
+- Purchases are Test Store only, and Test Store purchases only work in debuggable builds. There is no store
+  listing.
+- Portrait-only, Android-only.
 
 ## Privacy
 
@@ -70,7 +74,8 @@ entitlement check. Progress lives in local storage, and Settings deletes it. Det
 
 Kotlin, Jetpack Compose, CameraX, MediaPipe Hand Landmarker (21 landmarks) and Pose Landmarker lite (for word signs). Landmarks are normalised (wrist
 origin, palm scale, left hands mirrored), classified by a small on-device MLP, then smoothed with a
-hold-to-confirm. The alphabet menu is an Ionic web page in `web/`, bundled as assets. RevenueCat SDK against
+hold-to-confirm; J and Z go through a separate fingertip-path recognizer. Word signs use a small on-device
+convolutional network over hand and pose landmarks. The alphabet menu is an Ionic web page in `web/`, bundled as assets. RevenueCat SDK against
 the Test Store; the paywall is hand-built Compose. Content comes from bundled versioned JSON packs.
 Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Design system: [`docs/DESIGN.md`](docs/DESIGN.md).
 
@@ -81,7 +86,7 @@ Machine setup (JDK, Android SDK) is in [`docs/DEV_SETUP.md`](docs/DEV_SETUP.md).
 ```bash
 source env.sh
 cd android
-./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug   # JVM tests, lint, debug APK
+./gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug   # 224 JVM tests, lint, debug APK
 ./gradlew :app:installDebug                                          # to a connected device
 ```
 
@@ -109,19 +114,20 @@ purchases only work in debuggable builds. See [`docs/research/revenuecat.md`](do
 ```
 android/     Gradle project, single :app module (dev.handspell.app)
 web/         Ionic alphabet menu source (built and copied into Android assets)
+artifacts/   Latest verified debug APK + checksum
 scripts/     Web sync and APK compatibility check
 docs/        Architecture, design, classifier, privacy, research, audits, submission notes
-training/    Python pipeline that trains the classifier from landmark data
+training/    Python pipelines that train the letter classifier and word models
 recorder/    Desktop tool that recorded the A–D reference set
 preview-windows/  Desktop camera preview of the recognition pipeline
 ```
 
 ## Roadmap
 
-Practice-depth features (finger-by-finger feedback, free mode, streak reminders), word signs and motion
-letters, and a store launch are planned in [`docs/ROADMAP.md`](docs/ROADMAP.md).
+Practice-depth features (finger-by-finger feedback, free mode), more word signs, live-signer accuracy
+measurement, and a store launch are planned in [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## License
 
-MIT, see `LICENSE`. Third-party components and data (MediaPipe model and Tasks, AndroidX, Material Symbols,
-RevenueCat SDK, ASLYset) are credited with their licences in `NOTICE`.
+MIT, see `LICENSE`. Third-party components and data (MediaPipe models and Tasks, AndroidX, Material Symbols,
+RevenueCat SDK, Capacitor, ASLYset, Google ISLR word data) are credited with their licences in `NOTICE`.
