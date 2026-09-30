@@ -80,7 +80,7 @@ function renderCards() {
 
 function cardMeta(letter, done) {
   if (!isPracticable(letter)) return 'needs motion';
-  return done ? 'complete' : String(letters.indexOf(letter) + 1).padStart(2, '0');
+  return done ? 'complete' : '';
 }
 
 function signArt(letter) {
@@ -294,7 +294,9 @@ function openPractice(letter) {
   showSetupAfterClose = false;
   selectedLetter = letter;
   previousFocus = document.activeElement;
-  document.querySelector('#practice-letter').textContent = letter;
+  // The handshape guide, larger, as on the list card; the bare letter only when no wireframe exists.
+  const art = document.querySelector('#practice-letter');
+  if (wireframes[letter]) art.innerHTML = `${signArt(letter)}<span class="letter-text">${letter}</span>`; // the letter text stays: the app reads it to open the camera drill else art.textContent = letter;
   document.querySelector('#practice-title').textContent = `Letter ${letter}`;
   // A complete letter stays fully practicable: Practice is always offered; only the second action changes.
   const completed = progress.completed.includes(letter);
@@ -354,7 +356,6 @@ function closeUtility() {
   utilityTrigger?.focus();
 }
 document.querySelector('#open-settings').addEventListener('click', event => openUtility('Settings', event.currentTarget));
-document.querySelector('#open-paper').addEventListener('click', event => openUtility('Paper', event.currentTarget));
 document.querySelector('#utility-back').addEventListener('click', closeUtility);
 function closeSetup() {
   setup.hidden = true;

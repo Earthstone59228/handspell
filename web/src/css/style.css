@@ -436,7 +436,43 @@ html.left-handed .index-surface {
   background:#F5F5F7;
   color:#1D1D1F
 }
-.sheet-actions[hidden],.sheet-actions [hidden],.undo-button[hidden],.practice-status[hidden] {
+.letter-text {
+  position:absolute;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  clip-path:inset(50%)
+}
+.undo-link {
+  min-height:48px;
+  margin-top:8px;
+  padding:0 16px;
+  border:0;
+  background:none;
+  color:inherit;
+  font-size:15px;
+  font-weight:500;
+  text-decoration:underline;
+  opacity:.7;
+  cursor:pointer
+}
+.undo-link:focus-visible {
+  outline:2px solid #007AFF;
+  outline-offset:3px
+}
+.practice-letter .sign-placeholder,.practice-letter .sign-placeholder.wireframe {
+  position:static;
+  display:grid;
+  width:auto;
+  height:auto;
+  border:0
+}
+.practice-letter .sign-placeholder.wireframe svg {
+  width:128px;
+  height:128px;
+  stroke-width:1.5
+}
+.sheet-actions[hidden],.sheet-actions [hidden],.undo-link[hidden],.undo-button[hidden],.practice-status[hidden] {
   display:none
 }
 .practice-status {
